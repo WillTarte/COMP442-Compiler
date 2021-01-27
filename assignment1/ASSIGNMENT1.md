@@ -12,6 +12,7 @@ ___
 | digit    	| ::= 	| **0..9**                               	|
 | nonzero  	| ::= 	| **1..9**                               	|
 | **string**| ::= 	| “ alphanum “                       	|
+| character | ::=   | alphanum | space
 ## Operators, punctuation and reserved words
 |	|	|	|	|	|	|	||
 |----	|---	|----	|---	|----	|---------	|---------	|----------	|
@@ -31,8 +32,8 @@ ___
 ## Lexical Specification
  - **id**: [a..zA..Z]([a..zA..Z] | [0..9] | _ )*
  - **integer**: ([1..9]\([0..9])*) | **0**
- - **string**: "([a..zA..Z] | [0..9] | _ )*"
+ - **string**: "([a..zA..Z] | [0..9] | _ | space)*"
  - For operators, punctuation and reserved keywords: match as is.
- - Single line comments: //.* 
+ - Single line comments: //.? 
     - This is assuming that the "." (dot) operator matches everything but newlines
  - Multiline  comments: /\*.?\*/
