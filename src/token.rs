@@ -1,4 +1,4 @@
-use strum::{EnumIter, IntoEnumIterator};
+use strum::{EnumIter};
 use regex::Regex;
 use crate::token_regex::*;
 
@@ -133,18 +133,34 @@ impl TokenType {
     }
 }
 
-pub struct Token {
+pub struct TokenFragment {
     pub token_type: TokenType,
     pub lexeme: String,
-    pub location: usize,
 }
 
-impl Token {
-    pub(crate) fn new(t_type: TokenType, lexeme: &str, line_num: usize) -> Self {
-        Token {
+impl TokenFragment {
+    pub(crate) fn new(t_type: TokenType, lexeme: &str) -> Self {
+        TokenFragment {
             token_type: t_type,
-            lexeme: lexeme.to_string(),
-            location: line_num,
+            lexeme: lexeme.to_owned(),
+        }
+    }
+}
+
+pub struct Token
+{
+    pub token: TokenFragment,
+    pub line_num: usize
+}
+
+impl Token
+{
+    pub(crate) fn new(tk: TokenFragment, ln: usize) -> Self
+    {
+        Token
+        {
+            token: tk,
+            line_num: ln
         }
     }
 }

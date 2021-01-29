@@ -1,8 +1,14 @@
-use crate::token::{Token, TokenType};
+use crate::token::{TokenFragment, TokenType, Token};
 use std::path::Path;
+use strum::IntoEnumIterator;
+use regex::Regex;
 
 trait LexerAnalyzer {
     type TokenOutput;
+
+    fn back(&mut self);
+
+    fn back_n(&mut self, n: usize);
 
     /// Returns the next character in the input stream without advancing the lexer
     fn peek(&self, input: &str) -> Option<char>;
@@ -14,10 +20,26 @@ trait LexerAnalyzer {
     fn next_char(&mut self, input: &str) -> Option<char>;
 
     /// Returns the next token without advancing the lexer
-    fn peek_token(&mut self, input: &str) -> Self::TokenOutput;
+    fn peek_token(&mut self, input: &str) -> Option<Self::TokenOutput>;
 
     /// Returns the next token, advancing the lexer
-    fn next_token(&mut self, input: &str) -> Self::TokenOutput;
+    fn next_token(&mut self, input: &str) -> Option<Self::TokenOutput>;
+
+    fn skip_whitespace(&mut self, input: &str)
+    {
+        while let Some(c) = self.next_char(input)
+        {
+            if c.is_whitespace()
+            {
+                continue;
+            }
+            else
+            {
+                self.back();
+                break;
+            }
+        }
+    }
 }
 
 struct MyLexerAnalyzer {
@@ -27,32 +49,72 @@ struct MyLexerAnalyzer {
 impl LexerAnalyzer for MyLexerAnalyzer {
     type TokenOutput = Token;
 
+    fn back(&mut self)
+    {
+        assert!(self.idx > 0);
+        self.idx -= 1;
+    }
+
+    fn back_n(&mut self, n: usize)
+    {
+        assert!(self.idx - n >= 0);
+        self.idx -= n;
+    }
+
     fn peek(&self, input: &str) -> Option<char> {
-        input.chars().nth(self.idx)
+        Some(input.as_bytes()[self.idx] as char)
     }
 
     fn peek_n(&self, input: &str, n: usize) -> Option<char> {
-        input.chars().nth(self.idx + n)
+        Some(input.as_bytes()[self.idx + n] as char)
     }
 
     fn next_char(&mut self, input: &str) -> Option<char> {
-        let c = input.chars().nth(self.idx);
+        let c = input.as_bytes()[self.idx];
         self.idx += 1;
-        c
+        Some(c as char)
     }
 
-    fn peek_token(&mut self, input: &str) -> Self::TokenOutput {
+    fn peek_token(&mut self, input: &str) -> Option<Self::TokenOutput> {
         todo!()
     }
 
-    fn next_token(&mut self, input: &str) -> Self::TokenOutput {
-        let char_buffer: Vec<char> = Vec::new();
+    fn next_token(&mut self, input: &str) -> Option<Self::TokenOutput> {
 
-        // Peek next char: If space, go next, else add it to the buffer
-        // Keep going till you reach next space
-        // Special cases: comments & strings
+        self.skip_whitespace(input);
 
-        Token::new(TokenType::Error, "ERROR", 0)
+        if self.peek(input).unwrap() == '/' || self.peek(input).unwrap() =='\"'
+        {
+            // process string and comments
+            if self.peek_n(input, 1).unwrap() == '*'
+            {
+                // opening multiline comment
+            }
+        }
+        else if self.peek(input).unwrap() == '*'
+        {
+            if self.peek_n(input, 1).unwrap() == '/'
+            {
+                // closing multiline comment
+            }
+        }
+
+        // We can easily match operators and punctuations
+        {
+            // = and ==
+            // <> and < and > and <= and >=
+            // + and - and * and /
+            // | and & and ! and ?
+            // ( and ) and { and } and [ and ]
+            // ; and , and . and : and ::
+        }
+
+        // For reserved words, a bit tougher because they are subexpressions of possible identifiers
+        // eg. string_variable
+        // So if we match a reserved keyword, we have to make sure it's alone (doesn't have extra chars)
+
+
+        Some(Token::new(TokenFragment::new(TokenType::Error, "ERROR"), 0))
     }
 }
 

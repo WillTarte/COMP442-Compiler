@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-
 use strum::IntoEnumIterator;
 use crate::token::TokenType;
 
