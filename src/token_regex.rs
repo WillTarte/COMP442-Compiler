@@ -2,12 +2,13 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 //TODO fix regex
-lazy_static!{
+lazy_static! {
     pub static ref ID: Regex = Regex::new("^([[:alpha:]]([[:alpha:]]|[0-9]|_)*)$").unwrap();
     pub static ref INT_LIT: Regex = Regex::new(r"^(([1-9]\d*)|0)$").unwrap();
-    pub static ref FLOAT_LIT: Regex = Regex::new(r"^((([1-9]\d*)|0)(\.(\d*[1-9]|0))(e(\+|\-)?(([1-9]\d*)|0))?)$").unwrap();
-    pub static ref STRING_LIT: Regex = Regex::new("^(\"([a-zA-Z]|[0-9]|_|[[:space:]])*\")$").unwrap();
-
+    pub static ref FLOAT_LIT: Regex =
+        Regex::new(r"^((([1-9]\d*)|0)(\.(\d*[1-9]|0))(e(\+|\-)?(([1-9]\d*)|0))?)$").unwrap();
+    pub static ref STRING_LIT: Regex =
+        Regex::new("^(\"([a-zA-Z]|[0-9]|_|[[:space:]])*\")$").unwrap();
     pub static ref EQEQ: Regex = Regex::new("^(==)$").unwrap();
     pub static ref NOTEQ: Regex = Regex::new("^(<>)$").unwrap();
     pub static ref LT: Regex = Regex::new("^(<)$").unwrap();
@@ -62,14 +63,12 @@ lazy_static!{
 }
 
 #[cfg(test)]
-mod test
-{
+mod test {
     use super::*;
     use crate::token::TokenType::FloatLit;
 
     #[test]
-    fn id_match()
-    {
+    fn id_match() {
         assert!(ID.is_match("abc"));
         assert_eq!(ID.find("abc").unwrap().as_str(), "abc");
         assert!(ID.is_match("abc1"));
@@ -83,8 +82,7 @@ mod test
     }
 
     #[test]
-    fn int_lit_match()
-    {
+    fn int_lit_match() {
         assert!(INT_LIT.is_match("0"));
         assert_eq!(INT_LIT.find("0").unwrap().as_str(), "0");
         assert!(INT_LIT.is_match("1"));
@@ -100,8 +98,7 @@ mod test
     }
 
     #[test]
-    fn float_lit_match()
-    {
+    fn float_lit_match() {
         assert!(FLOAT_LIT.is_match("1.23"));
         assert_eq!(FLOAT_LIT.find("1.23").unwrap().as_str(), "1.23");
         assert!(FLOAT_LIT.is_match("12.34"));
@@ -109,13 +106,21 @@ mod test
         assert!(FLOAT_LIT.is_match("120.34e10"));
         assert_eq!(FLOAT_LIT.find("120.34e10").unwrap().as_str(), "120.34e10");
         assert!(FLOAT_LIT.is_match("12345.6789e-123"));
-        assert_eq!(FLOAT_LIT.find("12345.6789e-123").unwrap().as_str(), "12345.6789e-123");
+        assert_eq!(
+            FLOAT_LIT.find("12345.6789e-123").unwrap().as_str(),
+            "12345.6789e-123"
+        );
     }
 
     #[test]
-    fn string_lit_match()
-    {
+    fn string_lit_match() {
         assert!(STRING_LIT.is_match("\"this is a string literal\""));
-        assert_eq!(STRING_LIT.find("\"this is a string literal\"").unwrap().as_str(), "\"this is a string literal\"");
+        assert_eq!(
+            STRING_LIT
+                .find("\"this is a string literal\"")
+                .unwrap()
+                .as_str(),
+            "\"this is a string literal\""
+        );
     }
 }

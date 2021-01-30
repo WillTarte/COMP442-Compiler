@@ -1,14 +1,22 @@
-use crate::token::{TokenFragment, TokenType, Token};
+use crate::token::InvalidTokenType::{InvalidCharacter, InvalidIdentifier, InvalidNumber};
+use crate::token::{Token, TokenFragment, TokenType};
 use std::path::Path;
-use strum::IntoEnumIterator;
-use regex::Regex;
+use crate::utils;
 
 trait LexerAnalyzer {
     type TokenOutput;
 
+    /// moves the cursor back 1 character
     fn back(&mut self);
 
+    /// moves the cursor back n characters
     fn back_n(&mut self, n: usize);
+
+    /// moves the cursor forwards 1 character
+    fn forward(&mut self);
+
+    /// moves the cursor forwards n characters
+    fn forward_n(&mut self, n: usize);
 
     /// Returns the next character in the input stream without advancing the lexer
     fn peek(&self, input: &str) -> Option<char>;
@@ -25,16 +33,11 @@ trait LexerAnalyzer {
     /// Returns the next token, advancing the lexer
     fn next_token(&mut self, input: &str) -> Option<Self::TokenOutput>;
 
-    fn skip_whitespace(&mut self, input: &str)
-    {
-        while let Some(c) = self.next_char(input)
-        {
-            if c.is_whitespace()
-            {
+    fn skip_whitespace(&mut self, input: &str) {
+        while let Some(c) = self.next_char(input) {
+            if c.is_ascii_whitespace() {
                 continue;
-            }
-            else
-            {
+            } else {
                 self.back();
                 break;
             }
@@ -46,19 +49,81 @@ struct MyLexerAnalyzer {
     idx: usize,
 }
 
+impl MyLexerAnalyzer {
+    /// Parses an input string into a keyword or an identifier.
+    /// If the input is neither, returns an Error token fragment.
+    /// # Arguments
+    /// * `input_fragment` - A string slice to parse. Should always start with a letter
+    /// # Outputs
+    /// * A `TokenFragment`
+    fn parse_kw_or_id(&mut self, input_fragment: &str) -> TokenFragment {
+        let word = input_fragment
+            .chars()
+            .take_while(|c: &char| c.is_ascii_alphanumeric())
+            .collect::<String>();
+
+        for kw_type in &*crate::token::KEYWORD_TOKENS {
+            if kw_type.str_repr().is_match(&word) {
+                return TokenFragment::new(*kw_type, &word);
+            }
+        }
+        return if TokenType::Id.str_repr().is_match(&word) {
+            TokenFragment::new(TokenType::Id, &word)
+        } else {
+            TokenFragment::new(TokenType::Error(InvalidIdentifier), input_fragment)
+        };
+    }
+
+    fn parse_number(&mut self, input_fragment: &str) -> TokenFragment {
+
+        let mut num_str: &str = "";
+
+        let whole_str: String = input_fragment.chars().take_while(|c: &char| c.is_ascii_digit()).collect();
+        if input_fragment.as_bytes()[whole_str.len()].is_ascii_alphabetic() || !TokenType::IntegerLit.str_repr().is_match(&whole_str)
+        {
+            return TokenFragment::new(TokenType::Error(InvalidNumber), &whole_str);
+        }
+        else
+        {
+            let fractional_str: String = format!(".{}", input_fragment.chars().take_while(|c: &char| *c != '.').skip(1).take_while(|c: &char| c.is_ascii_digit()).collect::<String>()); //.integer
+            let exponent_str: String = format!("e{}", input_fragment.chars().skip_while(|c: &char| *c != 'e').skip(1).take_while(|c: &char| c.is_ascii_digit() || *c == '+' || *c == '-').collect::<String>()); //e(+|-)integer
+
+            if fractional_str.len() == 1 && exponent_str.len() == 1
+            {
+                return TokenFragment::new(TokenType::IntegerLit, &whole_str);
+            }
+            else if fractional_str.len() > 1 && exponent_str.len() == 1
+            {
+                return todo!();
+            }
+            return todo!();
+        }
+    }
+
+    fn parse_op_or_punct<'a>(&mut self, input_fragment: &str) -> TokenFragment {
+        todo!()
+    }
+}
+
 impl LexerAnalyzer for MyLexerAnalyzer {
     type TokenOutput = Token;
 
-    fn back(&mut self)
-    {
+    fn back(&mut self) {
         assert!(self.idx > 0);
         self.idx -= 1;
     }
 
-    fn back_n(&mut self, n: usize)
-    {
+    fn back_n(&mut self, n: usize) {
         assert!(self.idx - n >= 0);
         self.idx -= n;
+    }
+
+    fn forward(&mut self) {
+        self.idx += 1;
+    }
+
+    fn forward_n(&mut self, n: usize) {
+        self.idx += n;
     }
 
     fn peek(&self, input: &str) -> Option<char> {
@@ -80,41 +145,33 @@ impl LexerAnalyzer for MyLexerAnalyzer {
     }
 
     fn next_token(&mut self, input: &str) -> Option<Self::TokenOutput> {
-
         self.skip_whitespace(input);
 
-        if self.peek(input).unwrap() == '/' || self.peek(input).unwrap() =='\"'
-        {
-            // process string and comments
-            if self.peek_n(input, 1).unwrap() == '*'
-            {
-                // opening multiline comment
-            }
+        let first_char: char = self.peek(input)?;
+        let input_fragment = input
+            .chars()
+            .skip(self.idx)
+            .take_while(|c: &char| !c.is_ascii_whitespace())
+            .collect::<String>();
+
+        return if first_char.is_ascii_alphabetic() {
+            let token_fragment = self.parse_kw_or_id(&input_fragment);
+            self.forward_n(token_fragment.lexeme.len());
+            Some(Token::new(token_fragment, todo!("line number")))
+        } else if first_char.is_ascii_digit() {
+            let token_fragment = self.parse_number(&input_fragment);
+            todo!()
+        } else if utils::is_valid_character(first_char) {
+            // todo can be comment, string, keyword or operator
+            let token_fragment = self.parse_op_or_punct(&input_fragment);
+            Some(Token::new(token_fragment, todo!("line number")))
+        } else {
+            let c = &*self.next_char(input).unwrap().to_string();
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), c),
+                todo!("line number"),
+            ))
         }
-        else if self.peek(input).unwrap() == '*'
-        {
-            if self.peek_n(input, 1).unwrap() == '/'
-            {
-                // closing multiline comment
-            }
-        }
-
-        // We can easily match operators and punctuations
-        {
-            // = and ==
-            // <> and < and > and <= and >=
-            // + and - and * and /
-            // | and & and ! and ?
-            // ( and ) and { and } and [ and ]
-            // ; and , and . and : and ::
-        }
-
-        // For reserved words, a bit tougher because they are subexpressions of possible identifiers
-        // eg. string_variable
-        // So if we match a reserved keyword, we have to make sure it's alone (doesn't have extra chars)
-
-
-        Some(Token::new(TokenFragment::new(TokenType::Error, "ERROR"), 0))
     }
 }
 

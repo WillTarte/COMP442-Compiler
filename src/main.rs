@@ -1,13 +1,8 @@
-use strum::IntoEnumIterator;
-use crate::token::TokenType;
-
 mod lexer;
 mod token;
 mod token_regex;
+mod utils;
 
 fn main() {
-    for variant in TokenType::iter()
-    {
-        println!("{:?} = {}", variant, variant.str_repr());
-    }
+    println!("Hello Compiler");
 }
