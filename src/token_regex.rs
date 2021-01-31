@@ -7,8 +7,7 @@ lazy_static! {
     pub static ref INT_LIT: Regex = Regex::new(r"^(([1-9]\d*)|0)$").unwrap();
     pub static ref FLOAT_LIT: Regex =
         Regex::new(r"^((([1-9]\d*)|0)(\.(\d*[1-9]|0))(e(\+|\-)?(([1-9]\d*)|0))?)$").unwrap();
-    pub static ref STRING_LIT: Regex =
-        Regex::new("^(\"([a-zA-Z]|[0-9]|_|[[:space:]])*\")$").unwrap();
+    pub static ref STRING_LIT: Regex = Regex::new("\"([[:alpha:]]|[0-9]|_|\\s)*\"").unwrap();
     pub static ref EQEQ: Regex = Regex::new("^(==)$").unwrap();
     pub static ref NOTEQ: Regex = Regex::new("^(<>)$").unwrap();
     pub static ref LT: Regex = Regex::new("^(<)$").unwrap();
@@ -114,13 +113,13 @@ mod test {
 
     #[test]
     fn string_lit_match() {
-        assert!(STRING_LIT.is_match("\"this is a string literal\""));
+        assert!(STRING_LIT.is_match("\"this is a _ string literal\""));
         assert_eq!(
             STRING_LIT
-                .find("\"this is a string literal\"")
+                .find("\"this is a _ string literal\"")
                 .unwrap()
                 .as_str(),
-            "\"this is a string literal\""
+            "\"this is a _ string literal\""
         );
     }
 }

@@ -53,7 +53,7 @@ lazy_static! {
 }
 
 #[cfg(windows)]
-const LINE_ENDINGS: &str = "\r\n";
+pub(crate) const LINE_ENDINGS: &str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDINGS: &str = "\n";
 
@@ -92,7 +92,6 @@ pub enum TokenType {
     Period,
     Colon,
     DoubleColon,
-    Quote,
 
     // reserved keywords
     If,
@@ -157,7 +156,6 @@ impl TokenType {
             TokenType::Period => &*PERIOD,
             TokenType::Colon => &*COLON,
             TokenType::DoubleColon => &*DBCOLON,
-            TokenType::Quote => &*QUOTE,
             TokenType::If => &*IF,
             TokenType::Then => &*THEN,
             TokenType::Else => &*ELSE,
@@ -190,6 +188,7 @@ impl TokenType {
 pub enum InvalidTokenType {
     InvalidIdentifier,
     InvalidNumber,
+    InvalidString,
     InvalidCharacter,
 }
 
@@ -199,6 +198,7 @@ impl ToString for InvalidTokenType {
             InvalidTokenType::InvalidIdentifier => String::from("Invalid identifier"),
             InvalidTokenType::InvalidNumber => String::from("Invalid number"),
             InvalidTokenType::InvalidCharacter => String::from("Invalid character"),
+            InvalidTokenType::InvalidString => String::from("Invalid string"),
         }
     }
 }
