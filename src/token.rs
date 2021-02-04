@@ -1,6 +1,12 @@
+use crate::token::InvalidTokenType::InvalidCharacter;
 use crate::token_regex::*;
 use lazy_static::lazy_static;
 use regex::Regex;
+
+#[cfg(windows)]
+pub(crate) const LINE_ENDINGS: &str = "\r\n";
+#[cfg(not(windows))]
+const LINE_ENDINGS: &str = "\n";
 
 lazy_static! {
     pub static ref KEYWORD_TOKENS: Vec<TokenType> = vec![
@@ -35,7 +41,58 @@ lazy_static! {
         TokenType::Plus,
         TokenType::Minus,
         TokenType::Mult,
-        TokenType::ForwardSlash,
+        TokenType::Div,
+        TokenType::Assignment,
+        TokenType::Or,
+        TokenType::And,
+        TokenType::Bang,
+        TokenType::Question,
+        TokenType::OpenParen,
+        TokenType::CloseParen,
+        TokenType::OpenCurly,
+        TokenType::CloseCurly,
+        TokenType::OpenSquare,
+        TokenType::CloseSquare,
+        TokenType::SemiColon,
+        TokenType::Comma,
+        TokenType::LineComment,
+        TokenType::MultilineComment
+    ];
+    pub static ref ALL_TOKEN_TYPES: Vec<TokenType> = vec![
+        TokenType::Id,
+        TokenType::IntegerLit,
+        TokenType::FloatLit,
+        TokenType::StringLit,
+        TokenType::If,
+        TokenType::Then,
+        TokenType::Else,
+        TokenType::IntegerType,
+        TokenType::FloatType,
+        TokenType::StringType,
+        TokenType::Void,
+        TokenType::Public,
+        TokenType::Private,
+        TokenType::Func,
+        TokenType::Var,
+        TokenType::Class,
+        TokenType::While,
+        TokenType::Read,
+        TokenType::Write,
+        TokenType::Return,
+        TokenType::Main,
+        TokenType::Inherits,
+        TokenType::Break,
+        TokenType::Continue,
+        TokenType::EqEq,
+        TokenType::NotEq,
+        TokenType::GreaterThan,
+        TokenType::LessThan,
+        TokenType::GreaterEqualThan,
+        TokenType::LessEqualThan,
+        TokenType::Plus,
+        TokenType::Minus,
+        TokenType::Mult,
+        TokenType::Div,
         TokenType::Assignment,
         TokenType::Or,
         TokenType::And,
@@ -52,11 +109,6 @@ lazy_static! {
     ];
 }
 
-#[cfg(windows)]
-pub(crate) const LINE_ENDINGS: &str = "\r\n";
-#[cfg(not(windows))]
-const LINE_ENDINGS: &str = "\n";
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum TokenType {
     // Basic
@@ -66,31 +118,57 @@ pub enum TokenType {
     StringLit,
 
     // Operators & punctuation
+    /// ==
     EqEq,
+    /// <>
     NotEq,
+    /// >
     GreaterThan,
+    /// <
     LessThan,
+    /// >=
     GreaterEqualThan,
+    /// <=
     LessEqualThan,
+    /// \+
     Plus,
+    /// \-
     Minus,
+    /// \*
     Mult,
-    ForwardSlash,
+    /// /
+    Div,
+    /// =
     Assignment,
+    /// |
     Or,
+    /// &
     And,
+    /// !
     Bang,
+    /// ?
     Question,
+    /// (
     OpenParen,
+    /// )
     CloseParen,
+    /// {
     OpenCurly,
+    /// }
     CloseCurly,
+    /// [
     OpenSquare,
+    /// ]
     CloseSquare,
+    /// ;
     SemiColon,
+    /// ,
     Comma,
+    /// .
     Period,
+    /// :
     Colon,
+    /// ::
     DoubleColon,
 
     // reserved keywords
@@ -116,9 +194,10 @@ pub enum TokenType {
     Continue,
 
     // comments
+    /// //
     LineComment,
-    OpenMultiLineComment,
-    CloseMultiLineComment,
+    /// /* ~ */
+    MultilineComment,
 
     Error(InvalidTokenType),
 }
@@ -139,7 +218,7 @@ impl TokenType {
             TokenType::Plus => &*PLUS,
             TokenType::Minus => &*MINUS,
             TokenType::Mult => &*MULT,
-            TokenType::ForwardSlash => &*FSLASH,
+            TokenType::Div => &*FSLASH,
             TokenType::Assignment => &*ASSIGN,
             TokenType::Or => &*OR,
             TokenType::And => &*AND,
@@ -178,9 +257,17 @@ impl TokenType {
             TokenType::Continue => &*CONTINUE,
             TokenType::Error(_) => &*ERROR,
             TokenType::LineComment => &*LINE_COMMENT,
-            TokenType::OpenMultiLineComment => &*OPEN_MULTILINE_COMMENT,
-            TokenType::CloseMultiLineComment => &*CLOSE_MULTILINE_COMMENT,
+            TokenType::MultilineComment => &*MULTILINE_COMMENT,
         }
+    }
+
+    pub(crate) fn from_lexeme(lexeme: &str) -> Self {
+        for token_t in &*ALL_TOKEN_TYPES {
+            if token_t.str_repr().is_match(lexeme) {
+                return *token_t;
+            }
+        }
+        return TokenType::Error(InvalidCharacter);
     }
 }
 
@@ -190,6 +277,7 @@ pub enum InvalidTokenType {
     InvalidNumber,
     InvalidString,
     InvalidCharacter,
+    InvalidMultilineComment,
 }
 
 impl ToString for InvalidTokenType {
@@ -199,10 +287,12 @@ impl ToString for InvalidTokenType {
             InvalidTokenType::InvalidNumber => String::from("Invalid number"),
             InvalidTokenType::InvalidCharacter => String::from("Invalid character"),
             InvalidTokenType::InvalidString => String::from("Invalid string"),
+            InvalidTokenType::InvalidMultilineComment => String::from("Invalid multiline comment"),
         }
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct TokenFragment {
     pub token_type: TokenType,
     pub lexeme: String,
@@ -217,15 +307,16 @@ impl TokenFragment {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Token {
-    pub token: TokenFragment,
+    pub token_fragment: TokenFragment,
     pub line_num: usize,
 }
 
 impl Token {
-    pub(crate) fn new(tk: TokenFragment, ln: usize) -> Self {
+    pub(crate) fn new(tkf: TokenFragment, ln: usize) -> Self {
         Token {
-            token: tk,
+            token_fragment: tkf,
             line_num: ln,
         }
     }

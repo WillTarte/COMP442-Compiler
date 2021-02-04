@@ -1,7 +1,6 @@
 use lazy_static::lazy_static;
-use regex::Regex;
+use regex::{Regex, RegexBuilder};
 
-//TODO fix regex
 lazy_static! {
     pub static ref ID: Regex = Regex::new("^([[:alpha:]]([[:alpha:]]|[0-9]|_)*)$").unwrap();
     pub static ref INT_LIT: Regex = Regex::new(r"^(([1-9]\d*)|0)$").unwrap();
@@ -34,8 +33,11 @@ lazy_static! {
     pub static ref PERIOD: Regex = Regex::new(r"^(\.)$").unwrap();
     pub static ref COLON: Regex = Regex::new("^(:)$").unwrap();
     pub static ref DBCOLON: Regex = Regex::new("^(::)$").unwrap();
-    pub static ref QUOTE: Regex = Regex::new("^(\")$").unwrap();
     pub static ref IF: Regex = Regex::new("^(if)$").unwrap();
+}
+
+// Intellij Rust Plugin has a max macro body it evaluates, so we have to split the lazy_static invocation to get code analysis
+lazy_static! {
     pub static ref THEN: Regex = Regex::new("^(then)$").unwrap();
     pub static ref ELSE: Regex = Regex::new("^(else)$").unwrap();
     pub static ref INT_T: Regex = Regex::new("^(integer)$").unwrap();
@@ -55,16 +57,17 @@ lazy_static! {
     pub static ref INHERITS: Regex = Regex::new("^(inherits)$").unwrap();
     pub static ref BREAK: Regex = Regex::new("^(break)$").unwrap();
     pub static ref CONTINUE: Regex = Regex::new("^(continue)$").unwrap();
-    pub static ref LINE_COMMENT: Regex = Regex::new("^(//)$").unwrap();
-    pub static ref OPEN_MULTILINE_COMMENT: Regex = Regex::new(r"^(/\*)$").unwrap();
-    pub static ref CLOSE_MULTILINE_COMMENT: Regex = Regex::new(r"^(\*/)$").unwrap();
+    pub static ref LINE_COMMENT: Regex = Regex::new("^(//[^\r\n]*)").unwrap();
+    pub static ref MULTILINE_COMMENT: Regex = RegexBuilder::new(r"^(/\*(.)*\*/)")
+        .dot_matches_new_line(true)
+        .build()
+        .unwrap();
     pub static ref ERROR: Regex = Regex::new("ERROR").unwrap();
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::token::TokenType::FloatLit;
 
     #[test]
     fn id_match() {
@@ -120,6 +123,66 @@ mod test {
                 .unwrap()
                 .as_str(),
             "\"this is a _ string literal\""
+        );
+    }
+
+    #[test]
+    fn operator_match() {
+        assert!(ASSIGN.is_match("="));
+        assert!(!ASSIGN.is_match("=="));
+
+        assert!(EQEQ.is_match("=="));
+        assert!(NOTEQ.is_match("<>"));
+        assert!(GT.is_match(">"));
+        assert!(LT.is_match("<"));
+        assert!(GTEQ.is_match(">="));
+        assert!(LTEQ.is_match("<="));
+        assert!(PLUS.is_match("+"));
+        assert!(MINUS.is_match("-"));
+        assert!(MULT.is_match("*"));
+        assert!(FSLASH.is_match("/"));
+        assert!(OR.is_match("|"));
+        assert!(AND.is_match("&"));
+        assert!(BANG.is_match("!"));
+        assert!(QUESTION.is_match("?"));
+        assert!(OPENPAREN.is_match("("));
+        assert!(CLOSEPAREN.is_match(")"));
+        assert!(OPENCURLY.is_match("{"));
+        assert!(CLOSECURLY.is_match("}"));
+        assert!(OPENSQUARE.is_match("["));
+        assert!(CLOSESQUARE.is_match("]"));
+        assert!(SEMICOLON.is_match(";"));
+        assert!(COMMA.is_match(","));
+        assert!(PERIOD.is_match("."));
+        assert!(COLON.is_match(":"));
+        assert!(DBCOLON.is_match("::"));
+        assert_eq!(
+            LINE_COMMENT
+                .find("// this is a comment ? 1234 @ _ /")
+                .unwrap()
+                .as_str(),
+            "// this is a comment ? 1234 @ _ /"
+        );
+        assert_eq!(
+            LINE_COMMENT
+                .find("// this is a line comment with new lines \r stuff \n more comment")
+                .unwrap()
+                .as_str(),
+            "// this is a line comment with new lines "
+        );
+        assert_eq!(
+            MULTILINE_COMMENT
+                .find("/* this is a ? _ @ single line block $#comment */")
+                .unwrap()
+                .as_str(),
+            "/* this is a ? _ @ single line block $#comment */"
+        );
+        assert_eq!(
+            MULTILINE_COMMENT
+                .find("/* this is a \r\n multiple#%* \r\n line block comment */")
+                .unwrap()
+                .as_str(),
+            "/* this is a \r\n multiple#%* \r\n line block comment */"
         );
     }
 }
