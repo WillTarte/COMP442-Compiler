@@ -1,5 +1,5 @@
 [package]
-name = "COMP442-Compiler"
+name = "comp442_compiler"
 version = "0.1.0"
 authors = ["WillTarte <William.tarte6@gmail.com>"]
 edition = "2018"
@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 regex = "1.4.3"
 lazy_static = "1.4.0"
+structopt = "0.3"

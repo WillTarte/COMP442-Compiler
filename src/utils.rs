@@ -1,10 +1,20 @@
-pub mod lexer
-{
+use lazy_static::lazy_static;
+use regex::Regex;
+
+#[cfg(windows)]
+pub(crate) const LINE_ENDINGS: &str = "\r\n";
+#[cfg(not(windows))]
+const LINE_ENDINGS: &str = "\n";
+
+lazy_static! {
+    pub static ref LINE_ENDINGS_RE: Regex = Regex::new("(\r\n|\n)").unwrap();
+}
+
+pub mod lexer {
     use crate::token::InvalidTokenType::{
         InvalidCharacter, InvalidIdentifier, InvalidMultilineComment, InvalidNumber, InvalidString,
     };
     use crate::token::{TokenFragment, TokenType};
-    use regex::Match;
 
     const VALID_CHARS: &str = "=<>+-*/|&!?(){}[];,.:";
 
@@ -18,11 +28,11 @@ pub mod lexer
     }
 
     /// Parses an input string into a keyword or an identifier.
-/// If the input is neither, returns an Error token fragment.
-/// # Arguments
-/// * `input_fragment` - A string slice to parse. Should always start with a letter
-/// # Outputs
-/// * A `TokenFragment`
+    /// If the input is neither, returns an Error token fragment.
+    /// # Arguments
+    /// * `input_fragment` - A string slice to parse. Should always start with a letter
+    /// # Outputs
+    /// * A `TokenFragment`
     pub(crate) fn parse_kw_or_id(input_fragment: &str) -> TokenFragment {
         let word = input_fragment
             .chars()
@@ -42,11 +52,11 @@ pub mod lexer
     }
 
     /// Parses an input string into a number (float or int)
-/// If the input is not a well formed number, returns an Error token fragment.
-/// # Arguments
-/// * `input_fragment` - A string slice to parse. Should always start with a digit
-/// # Outputs
-/// * A `TokenFragment`
+    /// If the input is not a well formed number, returns an Error token fragment.
+    /// # Arguments
+    /// * `input_fragment` - A string slice to parse. Should always start with a digit
+    /// # Outputs
+    /// * A `TokenFragment`
     pub(crate) fn parse_number(input_fragment: &str) -> TokenFragment {
         // whole part - nonzero digit* | zero
         let whole_str: String = input_fragment
@@ -107,11 +117,11 @@ pub mod lexer
     }
 
     /// Parses an input string into an operator or punctuation based token.
-/// If the input is not a well formed token fragment, returns an Error token fragment.
-/// # Arguments
-/// * `input_fragment` - A string slice to parse. Never starts with a letter or digit.
-/// # Outputs
-/// * A `TokenFragment`
+    /// If the input is not a well formed token fragment, returns an Error token fragment.
+    /// # Arguments
+    /// * `input_fragment` - A string slice to parse. Never starts with a letter or digit.
+    /// # Outputs
+    /// * A `TokenFragment`
     pub(crate) fn parse_op_or_punct(input_fragment: &str) -> TokenFragment {
         let two_chars: [char; 2] = [
             input_fragment.as_bytes()[0] as char,
@@ -145,8 +155,6 @@ pub mod lexer
                 }
             }
             '/' => {
-                //FIXME parses too much of multiline (e.g. 2 in a row)
-                // single line comment or division or multiline comment
                 if two_chars[1] == '/' {
                     let comment: String = input_fragment
                         .chars()
@@ -161,7 +169,8 @@ pub mod lexer
                         ),
                         Some(m) => match m.start() {
                             0 => {
-                                let comment = input_fragment.chars().take(m.end()).collect::<String>();
+                                let comment =
+                                    input_fragment.chars().take(m.end()).collect::<String>();
                                 return TokenFragment::new(TokenType::MultilineComment, &comment);
                             }
                             _ => {
@@ -181,8 +190,8 @@ pub mod lexer
                     TokenFragment::new(TokenType::Colon, ":")
                 }
             }
-            '+' | '-' | '*' | '|' | '&' | '!' | '?' | ';' | ',' | '.' | '(' | ')' | '{' | '}' | '['
-            | ']' => TokenFragment::new(
+            '+' | '-' | '*' | '|' | '&' | '!' | '?' | ';' | ',' | '.' | '(' | ')' | '{' | '}'
+            | '[' | ']' => TokenFragment::new(
                 TokenType::from_lexeme(&two_chars[0].to_string()),
                 &two_chars[0].to_string(),
             ),
@@ -199,7 +208,7 @@ pub mod lexer
         } else {
             match TokenType::StringLit.str_repr().find(input_fragment) {
                 None => {
-                    panic!("Tried to parse string from the beginning of the input")
+                    return TokenFragment::new(TokenType::Error(InvalidString), input_fragment);
                 }
                 Some(m) => TokenFragment::new(TokenType::StringLit, m.as_str()),
             }
@@ -207,43 +216,85 @@ pub mod lexer
     }
 }
 
-pub mod lexer_serialize
-{
+pub mod lexer_serialize {
     use crate::lexer::LexerAnalyzer;
+    use crate::token::{Token, TokenType};
+    use crate::utils::LINE_ENDINGS;
+    use std::fs::OpenOptions;
     use std::io;
-    use std::fs::{File, OpenOptions};
     use std::io::{BufWriter, Write};
-    use crate::token::{TokenType, Token, LINE_ENDINGS};
 
-    pub fn serialize_lexer_to_file(mut lexer: Box<dyn LexerAnalyzer<TokenOutput=Token>>, file_name: &str) -> io::Result<()>
-    {
-        let file = OpenOptions::new().write(true).create(true).truncate(true).open(file_name)?;
-        let mut buf_write = BufWriter::new(file);
+    pub fn serialize_lexer_to_file(
+        mut lexer: Box<dyn LexerAnalyzer<TokenOutput = Token>>,
+        file_name: &str,
+    ) -> io::Result<()> {
+        let lextokens_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(format!("{}.outlextokens", file_name))?;
+        let mut buf_token_write = BufWriter::new(lextokens_file);
+
+        let lexerrors_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(format!("{}.outlexerrors", file_name))?;
+        let mut buf_err_write = BufWriter::new(lexerrors_file);
+        let mut token_errors: Vec<Token> = Vec::new();
 
         let mut current_line_num = 1;
         let mut line: String = String::new();
 
-        while let Some(token) = lexer.next_token()
-        {
-            if current_line_num != token.line_num
-            {
-                buf_write.write(line.as_bytes());
+        while let Some(token) = lexer.next_token() {
+            if current_line_num != token.line_num {
+                buf_token_write.write(line.as_bytes())?;
                 line.clear();
-                for i in 0..(token.line_num - current_line_num) {
-                    buf_write.write(LINE_ENDINGS.as_bytes());
+                for _ in 0..(token.line_num - current_line_num) {
+                    buf_token_write.write(LINE_ENDINGS.as_bytes())?;
                 }
                 current_line_num = token.line_num;
             }
 
-            line.push_str(&format!("[{:?}, {}, {}]", token.token_fragment.token_type, token.token_fragment.lexeme, token.line_num));
+            line.push_str(&format!(
+                r"[{:?}, {}, {}] ",
+                token.token_type(),
+                token.lexeme(),
+                token.line_num
+            ));
+
+            if token.is_err() {
+                token_errors.push(token);
+            }
         }
 
-        if line.len() > 0
-        {
-            buf_write.write(line.as_bytes());
-            buf_write.flush();
+        if line.len() > 0 {
+            buf_token_write.write(line.as_bytes())?;
+            buf_token_write.flush()?;
             line.clear();
         }
+
+        if token_errors.len() > 0 {
+            for token in token_errors {
+                match token.token_type() {
+                    TokenType::Error(err) => {
+                        buf_err_write.write(
+                            format!(
+                                "Lexical error: {}: {}: line {}.{}",
+                                err.to_string(),
+                                token.lexeme(),
+                                token.line_num,
+                                LINE_ENDINGS
+                            )
+                            .as_bytes(),
+                        )?;
+                        buf_err_write.flush()?;
+                    }
+                    _ => panic!("Trying to write valid token to as error"),
+                }
+            }
+        }
+
         return Ok(());
     }
 }

@@ -5,11 +5,11 @@ ___
 ## Assignment 1 - Lexical Analyzer
 ### Work to submit:
  - Document
-    - [ ] Lexical Specification
-    - [ ] Finite State Automaton (can be generated)
-    - [ ] Design
-    - [ ] Use of tools
+    - [~] Lexical Specification
+    - [~] Finite State Automaton
+    - [~] Design
+    - [~] Use of tools
  - Implementation
-    - [ ] Lexical Analyzer
-    - [ ] Test Cases
-    - [ ] Driver
+    - [~] Lexical Analyzer
+    - [~] Test Cases
+    - [X] Driver

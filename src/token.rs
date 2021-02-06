@@ -3,11 +3,6 @@ use crate::token_regex::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-#[cfg(windows)]
-pub(crate) const LINE_ENDINGS: &str = "\r\n";
-#[cfg(not(windows))]
-const LINE_ENDINGS: &str = "\n";
-
 lazy_static! {
     pub static ref KEYWORD_TOKENS: Vec<TokenType> = vec![
         TokenType::If,
@@ -95,6 +90,7 @@ lazy_static! {
         TokenType::Div,
         TokenType::Assignment,
         TokenType::Or,
+        TokenType::Period,
         TokenType::And,
         TokenType::Bang,
         TokenType::Question,
@@ -319,5 +315,20 @@ impl Token {
             token_fragment: tkf,
             line_num: ln,
         }
+    }
+
+    pub(crate) fn is_err(&self) -> bool {
+        match self.token_fragment.token_type {
+            TokenType::Error(_) => true,
+            _ => false,
+        }
+    }
+
+    pub(crate) fn token_type(&self) -> TokenType {
+        return self.token_fragment.token_type;
+    }
+
+    pub(crate) fn lexeme(&self) -> &str {
+        return self.token_fragment.lexeme.as_ref();
     }
 }

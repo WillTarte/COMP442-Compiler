@@ -1,6 +1,9 @@
 use crate::token::InvalidTokenType::InvalidCharacter;
 use crate::token::{Token, TokenFragment, TokenType};
-use crate::utils::lexer::{parse_kw_or_id, parse_number, parse_op_or_punct, parse_string, is_valid_character};
+use crate::utils::lexer::{
+    is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string,
+};
+use crate::utils::LINE_ENDINGS_RE;
 use std::path::Path;
 
 pub trait LexerAnalyzer {
@@ -37,13 +40,16 @@ pub trait LexerAnalyzer {
 pub(crate) struct MyLexerAnalyzer {
     input: LexerInput,
     idx: usize,
+    line_num: usize,
 }
 
 impl MyLexerAnalyzer {
+    #[allow(dead_code)]
     fn from_str(s: &str) -> Self {
         Self {
             input: LexerInput::from_str(s),
             idx: 0,
+            line_num: 1,
         }
     }
 
@@ -51,6 +57,7 @@ impl MyLexerAnalyzer {
         Self {
             input: LexerInput::from_file(filename),
             idx: 0,
+            line_num: 1,
         }
     }
 }
@@ -108,44 +115,73 @@ impl LexerAnalyzer for MyLexerAnalyzer {
         }
 
         let first_char: char = self.peek()?;
-        let input_fragment = self.input.0.get(self.idx..)?; //.replace(crate::token::LINE_ENDINGS, "");
+        let input_fragment = self.input.0.get(self.idx..)?;
 
         return if first_char.is_ascii_alphabetic() {
             // Probably a keyword or an identifier
             let token_fragment = parse_kw_or_id(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 1)) //todo
+            Some(Token::new(token_fragment, self.line_num))
         } else if first_char.is_ascii_digit() {
             // Probably a number (int or float)
             let token_fragment = parse_number(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 1)) //todo
+            Some(Token::new(token_fragment, self.line_num))
         } else if is_valid_character(first_char) {
             // Probably a punctuation token, operator or comment
             let token_fragment = parse_op_or_punct(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 1)) //todo
+            if token_fragment.token_type == TokenType::MultilineComment {
+                let nl_count = LINE_ENDINGS_RE.find_iter(&token_fragment.lexeme).count();
+                self.line_num += nl_count;
+                return Some(Token::new(token_fragment, self.line_num - nl_count));
+            }
+            Some(Token::new(token_fragment, self.line_num))
         } else if first_char == '"' {
             // Probably a string literal
             let token_fragment = parse_string(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 1)) //todo
+            Some(Token::new(token_fragment, self.line_num))
         } else {
             let c = &*self.next_char().unwrap().to_string();
             Some(Token::new(
                 TokenFragment::new(TokenType::Error(InvalidCharacter), c),
-                1, //todo
+                self.line_num,
             ))
         };
     }
 
     fn skip_whitespace(&mut self) {
-        while let Some(c) = self.next_char() {
-            if c.is_ascii_whitespace() || c == '\t' {
-                continue;
-            } else {
-                self.back();
-                break;
+        while let Some(c) = self.peek() {
+            match c {
+                '\r' => match self.peek_n(1) {
+                    None => {
+                        self.forward();
+                        return;
+                    }
+                    Some(nc) => {
+                        if nc == '\n' {
+                            self.line_num += 1;
+                            self.forward_n(2);
+                            continue;
+                        } else {
+                            self.forward();
+                            continue;
+                        }
+                    }
+                },
+                '\n' => {
+                    self.line_num += 1;
+                    self.forward();
+                    continue;
+                }
+                '\t' | ' ' => {
+                    self.forward();
+                    continue;
+                }
+                _ => {
+                    return;
+                }
             }
         }
     }
@@ -154,6 +190,7 @@ impl LexerAnalyzer for MyLexerAnalyzer {
 struct LexerInput(String);
 
 impl LexerInput {
+    #[allow(dead_code)]
     fn from_str(input: &str) -> Self {
         LexerInput(input.to_string())
     }

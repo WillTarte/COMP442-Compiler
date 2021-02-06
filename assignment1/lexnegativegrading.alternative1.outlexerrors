@@ -3,7 +3,6 @@ Lexical error: Invalid character: "#": line 1.
 Lexical error: Invalid character: "$": line 1.
 Lexical error: Invalid character: "'": line 1.
 Lexical error: Invalid character: "\": line 1.
-Lexical error: Invalid character: "|": line 1.
 Lexical error: Invalid character: "~": line 1.
 Lexical error: Invalid number: "00": line 3.
 Lexical error: Invalid number: "01": line 4.
