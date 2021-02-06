@@ -1,10 +1,9 @@
 use crate::token::InvalidTokenType::InvalidCharacter;
 use crate::token::{Token, TokenFragment, TokenType};
-use crate::utils;
-use crate::utils::{parse_kw_or_id, parse_number, parse_op_or_punct, parse_string};
+use crate::utils::lexer::{parse_kw_or_id, parse_number, parse_op_or_punct, parse_string, is_valid_character};
 use std::path::Path;
 
-pub(crate) trait LexerAnalyzer {
+pub trait LexerAnalyzer {
     type TokenOutput;
 
     /// moves the cursor back 1 character
@@ -115,27 +114,27 @@ impl LexerAnalyzer for MyLexerAnalyzer {
             // Probably a keyword or an identifier
             let token_fragment = parse_kw_or_id(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 0)) //todo
+            Some(Token::new(token_fragment, 1)) //todo
         } else if first_char.is_ascii_digit() {
             // Probably a number (int or float)
             let token_fragment = parse_number(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 0)) //todo
-        } else if utils::is_valid_character(first_char) {
+            Some(Token::new(token_fragment, 1)) //todo
+        } else if is_valid_character(first_char) {
             // Probably a punctuation token, operator or comment
             let token_fragment = parse_op_or_punct(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 0)) //todo
+            Some(Token::new(token_fragment, 1)) //todo
         } else if first_char == '"' {
             // Probably a string literal
             let token_fragment = parse_string(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
-            Some(Token::new(token_fragment, 0)) //todo
+            Some(Token::new(token_fragment, 1)) //todo
         } else {
             let c = &*self.next_char().unwrap().to_string();
             Some(Token::new(
                 TokenFragment::new(TokenType::Error(InvalidCharacter), c),
-                0, //todo
+                1, //todo
             ))
         };
     }

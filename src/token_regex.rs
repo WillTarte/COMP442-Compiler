@@ -58,7 +58,7 @@ lazy_static! {
     pub static ref BREAK: Regex = Regex::new("^(break)$").unwrap();
     pub static ref CONTINUE: Regex = Regex::new("^(continue)$").unwrap();
     pub static ref LINE_COMMENT: Regex = Regex::new("^(//[^\r\n]*)").unwrap();
-    pub static ref MULTILINE_COMMENT: Regex = RegexBuilder::new(r"^(/\*(.)*\*/)")
+    pub static ref MULTILINE_COMMENT: Regex = RegexBuilder::new(r"/\*.*?\*/")
         .dot_matches_new_line(true)
         .build()
         .unwrap();
@@ -183,6 +183,13 @@ mod test {
                 .unwrap()
                 .as_str(),
             "/* this is a \r\n multiple#%* \r\n line block comment */"
+        );
+        assert_eq!(
+            MULTILINE_COMMENT
+                .find("/* this is a single line block comment */\r\n\r\n/* this is a \r\nmultiple line\r\nblock comment \r\n*/")
+                .unwrap()
+                .as_str(),
+            "/* this is a single line block comment */"
         );
     }
 }

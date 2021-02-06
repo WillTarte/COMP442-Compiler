@@ -6,12 +6,10 @@ mod token_regex;
 mod utils;
 
 use lexer::{LexerAnalyzer, MyLexerAnalyzer};
+use crate::utils::lexer_serialize::serialize_lexer_to_file;
 
 fn main() {
-    let mut my_lexer = MyLexerAnalyzer::from_file(Path::new("assignment1/lexpositivegrading.src"));
+    let mut my_lexer =Box::new(MyLexerAnalyzer::from_file(Path::new("assignment1/lexpositivegrading.src")));
 
-    while let Some(token) = my_lexer.next_token()
-    {
-        println!("{:?}", token);
-    }
+    serialize_lexer_to_file(my_lexer, "outlex.src");
 }
