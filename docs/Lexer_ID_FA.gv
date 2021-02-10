@@ -3,12 +3,9 @@ digraph ID_FA
     start -> start [label="[\\s\\r\\n]*", fontname="Times-Bold"];
 
     start -> ID_1 [label="[a-zA-Z]", fontname="Times-Bold"];
-    ID_1 -> ID_1 [label="[a-z]", fontname="Times-Bold"];
+    ID_1 -> ID_1 [label="[a-zA-Z0-9_]", fontname="Times-Bold"];
     ID_1 -> KW [label="matches keyword exactly", fontname="Times-Italic"];
-    ID_1 -> ID_2 [label="[A-Z0-9] | _", fontname="Times-Bold"];
-    ID_2 -> ID_2 [label="[a-zA-Z0-9] | _", fontname="Times-Bold"];
 
     ID_1 [label="ID", peripheries=2,color=red,fontname="Times-Bold"];
-    ID_2 [label="ID", peripheries=2,color=red,fontname="Times-Bold"];
     KW [peripheries=2,color=red,fontname="Times-Bold"];
 }

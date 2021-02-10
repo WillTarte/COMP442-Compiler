@@ -114,8 +114,15 @@ impl LexerAnalyzer for MyLexerAnalyzer {
             return None;
         }
 
-        let first_char: char = self.peek()?;
-        let input_fragment = self.input.0.get(self.idx..)?;
+        let first_char: char = match self.peek() {
+            None => return None,
+            Some(c) => c,
+        };
+
+        let input_fragment = match self.input.0.get(self.idx..) {
+            None => return None,
+            Some(s) => s,
+        };
 
         return if first_char.is_ascii_alphabetic() {
             // Probably a keyword or an identifier
@@ -208,6 +215,7 @@ mod tests {
     use crate::lexer::LexerAnalyzer;
     use std::borrow::Borrow;
     use std::path::Path;
+    use crate::token::{TokenType, Token, TokenFragment};
 
     #[test]
     fn my_lexer_from_str() {
@@ -232,8 +240,6 @@ mod tests {
 
     #[test]
     fn my_lexer_next_char() {
-        let input = std::fs::read_to_string(Path::new("assignment1/lexpositivegrading.src"));
-
         let mut my_lexer =
             MyLexerAnalyzer::from_file(Path::new("assignment1/lexpositivegrading.src"));
 
@@ -245,5 +251,18 @@ mod tests {
         assert_eq!(my_lexer.next_char(), Some('|'));
         assert_eq!(my_lexer.next_char(), Some('\t'));
         assert_eq!(my_lexer.next_char(), Some('('));
+    }
+
+    #[test]
+    fn my_lexer_next_token() {
+        let mut my_lexer =
+            MyLexerAnalyzer::from_file(Path::new("assignment1/lexpositivegrading.src"));
+
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::EqEq, "=="), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Plus, "+"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Or, "|"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::OpenParen, "("), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::SemiColon, ";"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::If, "if"), 1)));
     }
 }

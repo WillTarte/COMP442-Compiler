@@ -288,7 +288,7 @@ impl ToString for InvalidTokenType {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TokenFragment {
     pub token_type: TokenType,
     pub lexeme: String,
@@ -303,7 +303,7 @@ impl TokenFragment {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Token {
     pub token_fragment: TokenFragment,
     pub line_num: usize,

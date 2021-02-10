@@ -58,62 +58,63 @@ pub mod lexer {
     /// # Outputs
     /// * A `TokenFragment`
     pub(crate) fn parse_number(input_fragment: &str) -> TokenFragment {
+
+        if input_fragment.is_empty() {
+            return TokenFragment::new(TokenType::Error(InvalidNumber), "");
+        }
+        if (input_fragment.as_bytes()[0] as char).is_ascii_alphabetic()
+        {
+            return parse_kw_or_id(input_fragment);
+        }
         // whole part - nonzero digit* | zero
         let whole_str: String = input_fragment
             .chars()
             .take_while(|c: &char| c.is_ascii_digit())
-            .collect();
+            .collect::<String>();
 
-        // if the number is followed by letters -> invalid ID
-        return if input_fragment.as_bytes()[whole_str.len()].is_ascii_alphabetic() {
-            TokenFragment::new(TokenType::Error(InvalidIdentifier), &whole_str)
-        } else if input_fragment.as_bytes()[whole_str.len()] as char == '.' {
-            // fractional part - . digit* nonzero | .0
+        if whole_str.len() < input_fragment.len() && input_fragment.as_bytes()[whole_str.len()] as char == '.'
+        {
             let fractional_str: String = input_fragment
                 .chars()
-                .skip(whole_str.len())
-                .skip_while(|c: &char| *c != '.' && *c != '\n' && *c != '\r')
+                .skip_while(|c| *c != '.')
                 .skip(1)
-                .take_while(|c: &char| c.is_ascii_digit())
-                .collect::<String>();
-            // exponent part (optional) - e [+|-] nonzero digit* | zero
-            let exponent_str: String = input_fragment
-                .chars()
-                .skip(whole_str.len() + fractional_str.len())
-                .skip_while(|c: &char| *c != 'e' && *c != '\n' && *c != '\r')
-                .skip(1)
-                .take_while(|c: &char| c.is_ascii_digit() || *c == '+' || *c == '-')
+                .take_while(|c| c.is_ascii_digit())
                 .collect::<String>();
 
-            if fractional_str.len() == 0 && exponent_str.len() == 0 {
-                TokenFragment::new(TokenType::Error(InvalidNumber), &format!("{}", &whole_str))
-            } else if fractional_str.len() > 0 && exponent_str.len() == 0 {
-                let float_str: String = format!("{}.{}", &whole_str, &fractional_str);
-                if TokenType::FloatLit.str_repr().is_match(&float_str) {
-                    TokenFragment::new(TokenType::FloatLit, &float_str)
-                } else {
-                    TokenFragment::new(TokenType::Error(InvalidNumber), &float_str)
-                }
-            } else if fractional_str.len() == 0 && exponent_str.len() > 0 {
-                let invalid_float_str = format!("{}.e{}", &whole_str, &exponent_str);
-                TokenFragment::new(TokenType::Error(InvalidNumber), &invalid_float_str)
-            } else
-            // fractional_str.len > 0 && fractional_str.len() > 0
+            let mut float_str = format!("{}.{}", &whole_str, &fractional_str);
+
+            if float_str.len() < input_fragment.len() && input_fragment.as_bytes()[float_str.len()] as char == 'e'
             {
-                let float_str = format!("{}.{}e{}", &whole_str, &fractional_str, &exponent_str);
-                if TokenType::FloatLit.str_repr().is_match(&float_str) {
-                    TokenFragment::new(TokenType::FloatLit, &float_str)
-                } else {
-                    TokenFragment::new(TokenType::Error(InvalidNumber), &float_str)
+                float_str.push_str("e");
+                if float_str.len() < input_fragment.len() && input_fragment.as_bytes()[float_str.len()] as char == '+'
+                {
+                    float_str.push_str("+");
                 }
+                else if float_str.len() < input_fragment.len() && input_fragment.as_bytes()[float_str.len()] as char == '-'
+                {
+                    float_str.push_str("-");
+                }
+                float_str.push_str(&input_fragment.chars().skip(float_str.len()).take_while(|c| c.is_ascii_digit()).collect::<String>());
             }
-        } else {
-            if TokenType::IntegerLit.str_repr().is_match(&whole_str) {
-                TokenFragment::new(TokenType::IntegerLit, &whole_str)
-            } else {
-                TokenFragment::new(TokenType::Error(InvalidIdentifier), &whole_str)
+
+            if TokenType::FloatLit.str_repr().is_match(&float_str)
+            {
+                return TokenFragment::new(TokenType::FloatLit, &float_str);
             }
-        };
+            else {
+                return TokenFragment::new(TokenType::Error(InvalidNumber), &float_str);
+            }
+
+        }
+        else {
+            if TokenType::IntegerLit.str_repr().is_match(&whole_str)
+            {
+                return TokenFragment::new(TokenType::IntegerLit, &whole_str);
+            }
+            else {
+                return TokenFragment::new(TokenType::Error(InvalidNumber), &whole_str);
+            }
+        }
     }
 
     /// Parses an input string into an operator or punctuation based token.
@@ -296,5 +297,62 @@ pub mod lexer_serialize {
         }
 
         return Ok(());
+    }
+}
+
+#[cfg(test)]
+mod tests
+{
+    use crate::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number};
+    use crate::token::{TokenFragment, TokenType};
+    use crate::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber};
+
+    #[test]
+    fn test_is_valid_character()
+    {
+        assert!(is_valid_character('='));
+        assert!(is_valid_character('<'));
+        assert!(is_valid_character('>'));
+        assert!(is_valid_character('+'));
+        assert!(is_valid_character('-'));
+        assert!(is_valid_character('*'));
+        assert!(is_valid_character('/'));
+        assert!(is_valid_character('('));
+        assert!(is_valid_character(')'));
+        assert!(is_valid_character('{'));
+        assert!(is_valid_character('}'));
+        assert!(is_valid_character('['));
+        assert!(is_valid_character(']'));
+        assert!(is_valid_character(';'));
+        assert!(is_valid_character(','));
+        assert!(is_valid_character('.'));
+        assert!(is_valid_character(':'));
+    }
+
+    #[test]
+    fn test_parse_kw_or_id()
+    {
+        assert_eq!(parse_kw_or_id("abc"), TokenFragment::new(TokenType::Id, "abc"));
+        assert_eq!(parse_kw_or_id("abc123"), TokenFragment::new(TokenType::Id, "abc123"));
+        assert_eq!(parse_kw_or_id("123abc123"), TokenFragment::new(TokenType::Error(InvalidIdentifier), "123abc123"));
+        assert_eq!(parse_kw_or_id("abc_123"), TokenFragment::new(TokenType::Id, "abc_123"));
+        assert_eq!(parse_kw_or_id("_abc123"), TokenFragment::new(TokenType::Error(InvalidIdentifier), "_abc123"));
+        assert_eq!(parse_kw_or_id("abc+3"), TokenFragment::new(TokenType::Id, "abc"));
+        assert_eq!(parse_kw_or_id("abc@"), TokenFragment::new(TokenType::Id, "abc"));
+    }
+
+    #[test]
+    fn test_parse_number()
+    {
+        assert_eq!(parse_number("0"), TokenFragment::new(TokenType::IntegerLit, "0"));
+        assert_eq!(parse_number("123"), TokenFragment::new(TokenType::IntegerLit, "123"));
+        assert_eq!(parse_number("12300"), TokenFragment::new(TokenType::IntegerLit, "12300"));
+        assert_eq!(parse_number("00123"), TokenFragment::new(TokenType::Error(InvalidNumber), "00123"));
+        assert_eq!(parse_number("0.0"), TokenFragment::new(TokenType::FloatLit, "0.0"));
+        assert_eq!(parse_number("0.0123002"), TokenFragment::new(TokenType::FloatLit, "0.0123002"));
+        assert_eq!(parse_number("0.012300200"), TokenFragment::new(TokenType::Error(InvalidNumber), "0.012300200"));
+        assert_eq!(parse_number("abc123"), TokenFragment::new(TokenType::Id, "abc123"));
+        assert_eq!(parse_number("0.0e0"), TokenFragment::new(TokenType::FloatLit, "0.0e0"));
+        assert_eq!(parse_number("0.0e+0"), TokenFragment::new(TokenType::FloatLit, "0.0e+0"));
     }
 }
