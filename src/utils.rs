@@ -1,15 +1,21 @@
+//! Utilities for the compiler
+
 use lazy_static::lazy_static;
 use regex::Regex;
 
+#[doc(hidden)]
 #[cfg(windows)]
 pub(crate) const LINE_ENDINGS: &str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDINGS: &str = "\n";
 
+
 lazy_static! {
+    #[doc(hidden)]
     pub static ref LINE_ENDINGS_RE: Regex = Regex::new("(\r\n|\n)").unwrap();
 }
 
+///Contains utility methods used by the lexer implementation [MyLexerAnalyzer](crate::lexer::MyLexerAnalyzer)
 pub mod lexer {
     use crate::token::InvalidTokenType::{
         InvalidCharacter, InvalidIdentifier, InvalidMultilineComment, InvalidNumber, InvalidString,
@@ -18,6 +24,7 @@ pub mod lexer {
 
     const VALID_CHARS: &str = "=<>+-*/|&!?(){}[];,.:";
 
+    /// Checks if a given character is part of some valid characters defined in the lexical specfification
     pub(crate) fn is_valid_character(c: char) -> bool {
         for vc in VALID_CHARS.chars() {
             if c == vc {
@@ -124,6 +131,11 @@ pub mod lexer {
     /// # Outputs
     /// * A `TokenFragment`
     pub(crate) fn parse_op_or_punct(input_fragment: &str) -> TokenFragment {
+
+        if input_fragment.len() < 2
+        {
+            return TokenFragment::from_lexeme(input_fragment);
+        }
         let two_chars: [char; 2] = [
             input_fragment.as_bytes()[0] as char,
             input_fragment.as_bytes()[1] as char,
@@ -192,10 +204,7 @@ pub mod lexer {
                 }
             }
             '+' | '-' | '*' | '|' | '&' | '!' | '?' | ';' | ',' | '.' | '(' | ')' | '{' | '}'
-            | '[' | ']' => TokenFragment::new(
-                TokenType::from_lexeme(&two_chars[0].to_string()),
-                &two_chars[0].to_string(),
-            ),
+            | '[' | ']' => TokenFragment::from_lexeme(&two_chars[0].to_string()),
             _ => TokenFragment::new(
                 TokenType::Error(InvalidCharacter),
                 &two_chars[0].to_string(),
@@ -203,6 +212,12 @@ pub mod lexer {
         };
     }
 
+    /// Parses an input string into a string literal
+    /// If the input is not a well formed token fragment, returns an Error token fragment.
+    /// # Arguments
+    /// * `input_fragment` - A string slice to parse. Should always start with a `"`.
+    /// # Outputs
+    /// * A `TokenFragment`
     pub(crate) fn parse_string(input_fragment: &str) -> TokenFragment {
         if input_fragment.as_bytes()[0] as char != '"' {
             panic!("Tried to parse string but input didn't start with a quotation mark");
@@ -217,6 +232,7 @@ pub mod lexer {
     }
 }
 
+/// Utilities to serialize a lexer's output
 pub mod lexer_serialize {
     use crate::lexer::LexerAnalyzer;
     use crate::token::{Token, TokenType};
@@ -251,9 +267,7 @@ pub mod lexer_serialize {
             if current_line_num != token.line_num {
                 buf_token_write.write(line.as_bytes())?;
                 line.clear();
-                for _ in 0..(token.line_num - current_line_num) {
-                    buf_token_write.write(LINE_ENDINGS.as_bytes())?;
-                }
+                buf_token_write.write(LINE_ENDINGS.as_bytes())?;
                 current_line_num = token.line_num;
             }
 
@@ -303,9 +317,9 @@ pub mod lexer_serialize {
 #[cfg(test)]
 mod tests
 {
-    use crate::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number};
+    use crate::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct};
     use crate::token::{TokenFragment, TokenType};
-    use crate::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber};
+    use crate::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber, InvalidCharacter};
 
     #[test]
     fn test_is_valid_character()
@@ -354,5 +368,26 @@ mod tests
         assert_eq!(parse_number("abc123"), TokenFragment::new(TokenType::Id, "abc123"));
         assert_eq!(parse_number("0.0e0"), TokenFragment::new(TokenType::FloatLit, "0.0e0"));
         assert_eq!(parse_number("0.0e+0"), TokenFragment::new(TokenType::FloatLit, "0.0e+0"));
+        assert_eq!(parse_number("0.0e-0"), TokenFragment::new(TokenType::FloatLit, "0.0e-0"));
+        assert_eq!(parse_number("0.0e000"), TokenFragment::new(TokenType::Error(InvalidNumber), "0.0e000"));
+        assert_eq!(parse_number("0.0e1230"), TokenFragment::new(TokenType::FloatLit, "0.0e1230"));
+        assert_eq!(parse_number("0.0e-1230"), TokenFragment::new(TokenType::FloatLit, "0.0e-1230"));
+    }
+
+    #[test]
+    fn test_parse_op_or_punct()
+    {
+        assert_eq!(parse_op_or_punct("@"), TokenFragment::new(TokenType::Error(InvalidCharacter), "@"));
+        assert_eq!(parse_op_or_punct("="), TokenFragment::new(TokenType::Assignment, "="));
+        assert_eq!(parse_op_or_punct("=="), TokenFragment::new(TokenType::EqEq, "=="));
+        assert_eq!(parse_op_or_punct("<"), TokenFragment::new(TokenType::LessThan, "<"));
+        assert_eq!(parse_op_or_punct("<="), TokenFragment::new(TokenType::LessEqualThan, "<="));
+        assert_eq!(parse_op_or_punct(">"), TokenFragment::new(TokenType::GreaterThan, ">"));
+        assert_eq!(parse_op_or_punct(">="), TokenFragment::new(TokenType::GreaterEqualThan, ">="));
+        assert_eq!(parse_op_or_punct("<>"), TokenFragment::new(TokenType::NotEq, "<>"));
+        assert_eq!(parse_op_or_punct("::"), TokenFragment::new(TokenType::DoubleColon, "::"));
+        assert_eq!(parse_op_or_punct("// comment"), TokenFragment::new(TokenType::LineComment, "// comment"));
+        assert_eq!(parse_op_or_punct("// comment \r\n more stuff"), TokenFragment::new(TokenType::LineComment, "// comment "));
+        assert_eq!(parse_op_or_punct("/* comment \r\n more stuff */"), TokenFragment::new(TokenType::MultilineComment, "/* comment \r\n more stuff */"));
     }
 }

@@ -10,6 +10,6 @@ ___
     - [X] Design
     - [X] Use of tools
  - Implementation
-    - [~] Lexical Analyzer
-    - [~] Test Cases
+    - [X] Lexical Analyzer
+    - [X] Test Cases
     - [X] Driver

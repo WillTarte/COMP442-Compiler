@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["comp442_compiler"] = [{"text":"impl Debug for TokenType","synthetic":false,"types":[]},{"text":"impl Debug for InvalidTokenType","synthetic":false,"types":[]},{"text":"impl Debug for TokenFragment","synthetic":false,"types":[]},{"text":"impl Debug for Token","synthetic":false,"types":[]},{"text":"impl Debug for Opt","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

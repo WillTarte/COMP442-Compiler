@@ -1,3 +1,5 @@
+//! Lexer implementation for the compiler
+
 use crate::token::InvalidTokenType::InvalidCharacter;
 use crate::token::{Token, TokenFragment, TokenType};
 use crate::utils::lexer::{
@@ -6,6 +8,7 @@ use crate::utils::lexer::{
 use crate::utils::LINE_ENDINGS_RE;
 use std::path::Path;
 
+/// Interface for a Lexer Analyzer
 pub trait LexerAnalyzer {
     type TokenOutput;
 
@@ -37,6 +40,7 @@ pub trait LexerAnalyzer {
     fn skip_whitespace(&mut self);
 }
 
+/// My Implementation of a Lexer Analyzer
 pub(crate) struct MyLexerAnalyzer {
     input: LexerInput,
     idx: usize,
@@ -44,7 +48,9 @@ pub(crate) struct MyLexerAnalyzer {
 }
 
 impl MyLexerAnalyzer {
+
     #[allow(dead_code)]
+    // Builds a LexerInput from a String
     fn from_str(s: &str) -> Self {
         Self {
             input: LexerInput::from_str(s),
@@ -53,6 +59,9 @@ impl MyLexerAnalyzer {
         }
     }
 
+    /// Reads the content of a given file to build the `LexerInput`
+    /// # Arguments
+    /// * `filename` - the file path to read from
     pub(crate) fn from_file<P: AsRef<Path>>(filename: P) -> Self {
         Self {
             input: LexerInput::from_file(filename),
@@ -194,14 +203,19 @@ impl LexerAnalyzer for MyLexerAnalyzer {
     }
 }
 
+/// Represents the input to be fed to a Lexer
 struct LexerInput(String);
 
 impl LexerInput {
-    #[allow(dead_code)]
+
+    /// Builds a LexerInput from a String
     fn from_str(input: &str) -> Self {
         LexerInput(input.to_string())
     }
 
+    /// Reads the content of a given file to build the `LexerInput`
+    /// # Arguments
+    /// * `filename` - the file path to read from
     fn from_file<P: AsRef<Path>>(filename: P) -> Self {
         let content: String =
             std::fs::read_to_string(&filename).expect("Failed to read file content");

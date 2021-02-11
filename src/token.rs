@@ -1,9 +1,12 @@
+//! Tokens used by the compiler
+
 use crate::token::InvalidTokenType::InvalidCharacter;
 use crate::token_regex::*;
 use lazy_static::lazy_static;
 use regex::Regex;
 
 lazy_static! {
+    #[doc(hidden)]
     pub static ref KEYWORD_TOKENS: Vec<TokenType> = vec![
         TokenType::If,
         TokenType::Then,
@@ -26,6 +29,7 @@ lazy_static! {
         TokenType::Break,
         TokenType::Continue
     ];
+    #[doc(hidden)]
     pub static ref OP_PUNCT_TOKENS: Vec<TokenType> = vec![
         TokenType::EqEq,
         TokenType::NotEq,
@@ -53,6 +57,7 @@ lazy_static! {
         TokenType::LineComment,
         TokenType::MultilineComment
     ];
+    #[doc(hidden)]
     pub static ref ALL_TOKEN_TYPES: Vec<TokenType> = vec![
         TokenType::Id,
         TokenType::IntegerLit,
@@ -105,6 +110,7 @@ lazy_static! {
     ];
 }
 
+/// Represents the different types of tokens
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum TokenType {
     // Basic
@@ -199,6 +205,7 @@ pub enum TokenType {
 }
 
 impl TokenType {
+    /// Returns a [Regex](regex::Regex) representing this token type
     pub fn str_repr(&self) -> &Regex {
         match self {
             TokenType::Id => &*ID,
@@ -256,17 +263,9 @@ impl TokenType {
             TokenType::MultilineComment => &*MULTILINE_COMMENT,
         }
     }
-
-    pub(crate) fn from_lexeme(lexeme: &str) -> Self {
-        for token_t in &*ALL_TOKEN_TYPES {
-            if token_t.str_repr().is_match(lexeme) {
-                return *token_t;
-            }
-        }
-        return TokenType::Error(InvalidCharacter);
-    }
 }
 
+/// Reprensents the different types of invalid tokens
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum InvalidTokenType {
     InvalidIdentifier,
@@ -288,6 +287,7 @@ impl ToString for InvalidTokenType {
     }
 }
 
+/// A TokenFragment is a [TokenType] - lexeme pair
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TokenFragment {
     pub token_type: TokenType,
@@ -301,8 +301,20 @@ impl TokenFragment {
             lexeme: lexeme.to_owned(),
         }
     }
+
+    /// Tries to match a given lexeme with each [TokenType]'s Regex.
+    /// Returns an error if no match was found.
+    pub(crate) fn from_lexeme(lexeme: &str) -> Self {
+        for token_t in &*ALL_TOKEN_TYPES {
+            if token_t.str_repr().is_match(lexeme) {
+                return Self::new(*token_t, lexeme);
+            }
+        }
+        return Self::new(TokenType::Error(InvalidCharacter), lexeme);
+    }
 }
 
+/// Reprensents a full token, which includes a [TokenFragment] and a line number from the input.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Token {
     pub token_fragment: TokenFragment,
@@ -317,6 +329,7 @@ impl Token {
         }
     }
 
+    /// Returns true if this token is an error token
     pub(crate) fn is_err(&self) -> bool {
         match self.token_fragment.token_type {
             TokenType::Error(_) => true,
@@ -324,10 +337,12 @@ impl Token {
         }
     }
 
+    /// Returns this token's [TokenType]
     pub(crate) fn token_type(&self) -> TokenType {
         return self.token_fragment.token_type;
     }
 
+    /// Returns this token's lexeme
     pub(crate) fn lexeme(&self) -> &str {
         return self.token_fragment.lexeme.as_ref();
     }

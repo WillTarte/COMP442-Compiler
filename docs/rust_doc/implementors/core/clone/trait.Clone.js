@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["comp442_compiler"] = [{"text":"impl Clone for TokenType","synthetic":false,"types":[]},{"text":"impl Clone for InvalidTokenType","synthetic":false,"types":[]},{"text":"impl Clone for TokenFragment","synthetic":false,"types":[]},{"text":"impl Clone for Token","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

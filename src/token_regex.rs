@@ -1,3 +1,5 @@
+//! Regular Expressions useful to parse tokens
+
 use lazy_static::lazy_static;
 use regex::{Regex, RegexBuilder};
 
