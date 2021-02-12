@@ -40,13 +40,14 @@ ___
 
 ## Finite State Automatons
 ### Finite Automaton for Operators, Punctuation and Comment tokens
-![Symbols FA](../docs/Lexer_Symbols_FA.png)
+![Symbols FA](Lexer_Symbols_FA.png)
+![Symbols_FA2](Lexer_Symbols_2_FA.png)
 ### Finite Automaton for Integer and Float tokens
-![Number FA](../docs/Lexer_Number_FA.png)
+![Number FA](Lexer_Number_FA.png)
 ### Finite Automaton for ID and Keyword tokens
-![ID FA](../docs/Lexer_ID_FA.png)
+![ID FA](Lexer_ID_FA.png)
 ### Finite Automaton for String tokens
-![String FA](../docs/Lexer_String_FA.png)
+![String FA](Lexer_String_FA.png)
 ___
 
 ## Design

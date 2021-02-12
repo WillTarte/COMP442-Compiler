@@ -317,9 +317,9 @@ pub mod lexer_serialize {
 #[cfg(test)]
 mod tests
 {
-    use crate::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct};
+    use crate::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string};
     use crate::token::{TokenFragment, TokenType};
-    use crate::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber, InvalidCharacter};
+    use crate::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber, InvalidCharacter, InvalidMultilineComment, InvalidString};
 
     #[test]
     fn test_is_valid_character()
@@ -389,5 +389,14 @@ mod tests
         assert_eq!(parse_op_or_punct("// comment"), TokenFragment::new(TokenType::LineComment, "// comment"));
         assert_eq!(parse_op_or_punct("// comment \r\n more stuff"), TokenFragment::new(TokenType::LineComment, "// comment "));
         assert_eq!(parse_op_or_punct("/* comment \r\n more stuff */"), TokenFragment::new(TokenType::MultilineComment, "/* comment \r\n more stuff */"));
+        assert_eq!(parse_op_or_punct("/* unterminated block comment"), TokenFragment::new(TokenType::Error(InvalidMultilineComment), "/* unterminated block comment"));
+    }
+
+    #[test]
+    fn test_parse_string()
+    {
+        assert_eq!(parse_string("\"This is a _ _ string literal 111\""), TokenFragment::new(TokenType::StringLit, "\"This is a _ _ string literal 111\""));
+        assert_eq!(parse_string("\"This is a string literal invalid char @@@/\""), TokenFragment::new(TokenType::Error(InvalidString), "\"This is a string literal invalid char @@@/\""));
+        assert_eq!(parse_string("\"This is a string literal unterminated"), TokenFragment::new(TokenType::Error(InvalidString), "\"This is a string literal unterminated"));
     }
 }

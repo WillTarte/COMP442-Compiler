@@ -230,6 +230,7 @@ mod tests {
     use std::borrow::Borrow;
     use std::path::Path;
     use crate::token::{TokenType, Token, TokenFragment};
+    use crate::token::InvalidTokenType::InvalidCharacter;
 
     #[test]
     fn my_lexer_from_str() {
@@ -278,5 +279,32 @@ mod tests {
         assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::OpenParen, "("), 1)));
         assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::SemiColon, ";"), 1)));
         assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::If, "if"), 1)));
+    }
+
+    #[test]
+    fn my_lexer_invalid_characters()
+    {
+        let mut my_lexer =
+            MyLexerAnalyzer::from_str(r"@ # $ ' \ ~ ");
+
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "@"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "#"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "$"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "'"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), r"\"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "~"), 1)));
+    }
+
+    #[test]
+    fn my_lexer_tokens_no_space() {
+        let input =
+            String::from("123<=456.34?");
+
+        let mut my_lexer = MyLexerAnalyzer::from_str(input.borrow());
+
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::IntegerLit, "123"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::LessEqualThan, "<="), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::FloatLit, "456.34"), 1)));
+        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Question, "?"), 1)));
     }
 }
