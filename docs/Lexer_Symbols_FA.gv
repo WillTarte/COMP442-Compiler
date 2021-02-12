@@ -1,0 +1,45 @@
+digraph LexerFA {
+    start;
+    start -> start [label="[\\s\\r\\n]*", fontname="Times-Bold"];
+    start -> ASSIGN [label="=", fontname="Times-Bold"] // can be ASSIGN OR EQ
+    ASSIGN [peripheries=2,color=red];
+
+    ASSIGN -> EQ [label="=", fontname="Times-Bold"]
+    EQ [peripheries=2,color=red];
+
+    start -> LT [label="<", fontname="Times-Bold"] // can be LT, let OR NOTEQ
+    LT [peripheries=2,color=red];
+
+    LT -> LTE [label="=", fontname="Times-Bold"];
+    LTE [peripheries=2,color=red];
+
+    LT -> NOTEQ [label=">", fontname="Times-Bold"];
+    NOTEQ [peripheries=2,color=red];
+
+    start -> GT [label=">", fontname="Times-Bold"] // can be GT OR get
+
+    GT [peripheries=2,color=red];
+
+    GT -> GTE [label="=", fontname="Times-Bold"]
+    GTE [peripheries=2,color=red];
+
+    start -> DIV [label="/"] // can be division single line comment OR multiline comment
+    DIV [peripheries=2,color=red];
+
+    DIV -> 6 [label="/", fontname="Times-Bold"];
+    6 -> 6 [label="[^\\r\\n]", fontname="Times-Bold"];
+    6 -> LINECOMMENT [label="\\r | \\n | \\r\\n", fontname="Times-Bold"];
+    LINECOMMENT [peripheries=2,color=red];
+
+    DIV -> 7 [label="*", fontname="Times-Bold"];
+    7 -> 7 [label="[^*]", fontname="Times-Bold"];
+    7 -> 8 [label="*", fontname="Times-Bold"];
+    8 -> 7 [label="[^/]", fontname="Times-Bold"];
+    8 -> MULTILINECOMMENT [label="/", fontname="Times-Bold"];
+    MULTILINECOMMENT [peripheries=2,color=red];
+
+    start -> COLON [label=":", fontname="Times-Bold"];
+    COLON -> DBCOLON [label=":", fontname="Times-Bold"];
+    COLON [peripheries=2,color=red];
+    DBCOLON [peripheries=2,color=red];
+}

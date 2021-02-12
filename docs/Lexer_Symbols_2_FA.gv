@@ -1,0 +1,53 @@
+digraph Symbols_2_FA
+{
+    start -> start [label="[\\s\\r\\n]*", fontname="Times-Bold"];
+
+    start -> PLUS [label="+", fontname="Times-Bold"];
+
+    start -> MINUS [label="-", fontname="Times-Bold"];
+
+    start -> MULT [label="*", fontname="Times-Bold"];
+
+    start -> OR [label="|", fontname="Times-Bold"];
+
+    start -> AND [label="&", fontname="Times-Bold"];
+
+    start -> BANG [label="!", fontname="Times-Bold"];
+
+    start -> QUEST [label="?", fontname="Times-Bold"];
+
+    start -> OPENPAREN [label="(", fontname="Times-Bold"];
+
+    start -> CLOSEPAREN [label=")", fontname="Times-Bold"];
+
+    start -> OPENCURLY [label="{", fontname="Times-Bold"];
+
+    start -> CLOSECURLY [label="}", fontname="Times-Bold"];
+
+    start -> OPENSQUARE [label="[", fontname="Times-Bold"];
+
+    start -> CLOSESQUARE [label="]", fontname="Times-Bold"];
+
+    start -> SEMICOLON [label=";", fontname="Times-Bold"];
+
+    start -> COMMA [label=",", fontname="Times-Bold"];
+
+    start -> PERIOD [label=".", fontname="Times-Bold"];
+
+    PLUS [peripheries=2,color=red,fontname="Times-Bold"];
+    MINUS [peripheries=2,color=red,fontname="Times-Bold"];
+    MULT [peripheries=2,color=red,fontname="Times-Bold"];
+    OR [peripheries=2,color=red,fontname="Times-Bold"];
+    AND [peripheries=2,color=red,fontname="Times-Bold"];
+    BANG [peripheries=2,color=red,fontname="Times-Bold"];
+    QUEST [peripheries=2,color=red,fontname="Times-Bold"];
+    OPENPAREN [peripheries=2,color=red,fontname="Times-Bold"];
+    CLOSEPAREN [peripheries=2,color=red,fontname="Times-Bold"];
+    OPENCURLY [peripheries=2,color=red,fontname="Times-Bold"];
+    CLOSECURLY [peripheries=2,color=red,fontname="Times-Bold"];
+    OPENSQUARE [peripheries=2,color=red,fontname="Times-Bold"];
+    CLOSESQUARE [peripheries=2,color=red,fontname="Times-Bold"];
+    SEMICOLON [peripheries=2,color=red,fontname="Times-Bold"];
+    COMMA [peripheries=2,color=red,fontname="Times-Bold"];
+    PERIOD [peripheries=2,color=red,fontname="Times-Bold"];
+}

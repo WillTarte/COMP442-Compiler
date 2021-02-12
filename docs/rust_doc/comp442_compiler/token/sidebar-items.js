@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["InvalidTokenType","Reprensents the different types of invalid tokens"],["TokenType","Represents the different types of tokens"]],"struct":[["Token","Reprensents a full token, which includes a [TokenFragment] and a line number from the input."],["TokenFragment","A TokenFragment is a [TokenType] - lexeme pair"]]});
