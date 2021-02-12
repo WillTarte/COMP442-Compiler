@@ -9,7 +9,6 @@ pub(crate) const LINE_ENDINGS: &str = "\r\n";
 #[cfg(not(windows))]
 const LINE_ENDINGS: &str = "\n";
 
-
 lazy_static! {
     #[doc(hidden)]
     pub static ref LINE_ENDINGS_RE: Regex = Regex::new("(\r\n|\n)").unwrap();
@@ -65,12 +64,10 @@ pub mod lexer {
     /// # Outputs
     /// * A `TokenFragment`
     pub(crate) fn parse_number(input_fragment: &str) -> TokenFragment {
-
         if input_fragment.is_empty() {
             return TokenFragment::new(TokenType::Error(InvalidNumber), "");
         }
-        if (input_fragment.as_bytes()[0] as char).is_ascii_alphabetic()
-        {
+        if (input_fragment.as_bytes()[0] as char).is_ascii_alphabetic() {
             return parse_kw_or_id(input_fragment);
         }
         // whole part - nonzero digit* | zero
@@ -79,7 +76,8 @@ pub mod lexer {
             .take_while(|c: &char| c.is_ascii_digit())
             .collect::<String>();
 
-        if whole_str.len() < input_fragment.len() && input_fragment.as_bytes()[whole_str.len()] as char == '.'
+        if whole_str.len() < input_fragment.len()
+            && input_fragment.as_bytes()[whole_str.len()] as char == '.'
         {
             let fractional_str: String = input_fragment
                 .chars()
@@ -90,35 +88,37 @@ pub mod lexer {
 
             let mut float_str = format!("{}.{}", &whole_str, &fractional_str);
 
-            if float_str.len() < input_fragment.len() && input_fragment.as_bytes()[float_str.len()] as char == 'e'
+            if float_str.len() < input_fragment.len()
+                && input_fragment.as_bytes()[float_str.len()] as char == 'e'
             {
                 float_str.push_str("e");
-                if float_str.len() < input_fragment.len() && input_fragment.as_bytes()[float_str.len()] as char == '+'
+                if float_str.len() < input_fragment.len()
+                    && input_fragment.as_bytes()[float_str.len()] as char == '+'
                 {
                     float_str.push_str("+");
-                }
-                else if float_str.len() < input_fragment.len() && input_fragment.as_bytes()[float_str.len()] as char == '-'
+                } else if float_str.len() < input_fragment.len()
+                    && input_fragment.as_bytes()[float_str.len()] as char == '-'
                 {
                     float_str.push_str("-");
                 }
-                float_str.push_str(&input_fragment.chars().skip(float_str.len()).take_while(|c| c.is_ascii_digit()).collect::<String>());
+                float_str.push_str(
+                    &input_fragment
+                        .chars()
+                        .skip(float_str.len())
+                        .take_while(|c| c.is_ascii_digit())
+                        .collect::<String>(),
+                );
             }
 
-            if TokenType::FloatLit.str_repr().is_match(&float_str)
-            {
+            if TokenType::FloatLit.str_repr().is_match(&float_str) {
                 return TokenFragment::new(TokenType::FloatLit, &float_str);
-            }
-            else {
+            } else {
                 return TokenFragment::new(TokenType::Error(InvalidNumber), &float_str);
             }
-
-        }
-        else {
-            if TokenType::IntegerLit.str_repr().is_match(&whole_str)
-            {
+        } else {
+            if TokenType::IntegerLit.str_repr().is_match(&whole_str) {
                 return TokenFragment::new(TokenType::IntegerLit, &whole_str);
-            }
-            else {
+            } else {
                 return TokenFragment::new(TokenType::Error(InvalidNumber), &whole_str);
             }
         }
@@ -131,9 +131,7 @@ pub mod lexer {
     /// # Outputs
     /// * A `TokenFragment`
     pub(crate) fn parse_op_or_punct(input_fragment: &str) -> TokenFragment {
-
-        if input_fragment.len() < 2
-        {
+        if input_fragment.len() < 2 {
             return TokenFragment::from_lexeme(input_fragment);
         }
         let two_chars: [char; 2] = [
@@ -315,15 +313,17 @@ pub mod lexer_serialize {
 }
 
 #[cfg(test)]
-mod tests
-{
-    use crate::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string};
+mod tests {
+    use crate::token::InvalidTokenType::{
+        InvalidCharacter, InvalidIdentifier, InvalidMultilineComment, InvalidNumber, InvalidString,
+    };
     use crate::token::{TokenFragment, TokenType};
-    use crate::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber, InvalidCharacter, InvalidMultilineComment, InvalidString};
+    use crate::utils::lexer::{
+        is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string,
+    };
 
     #[test]
-    fn test_is_valid_character()
-    {
+    fn test_is_valid_character() {
         assert!(is_valid_character('='));
         assert!(is_valid_character('<'));
         assert!(is_valid_character('>'));
@@ -344,59 +344,175 @@ mod tests
     }
 
     #[test]
-    fn test_parse_kw_or_id()
-    {
-        assert_eq!(parse_kw_or_id("abc"), TokenFragment::new(TokenType::Id, "abc"));
-        assert_eq!(parse_kw_or_id("abc123"), TokenFragment::new(TokenType::Id, "abc123"));
-        assert_eq!(parse_kw_or_id("123abc123"), TokenFragment::new(TokenType::Error(InvalidIdentifier), "123abc123"));
-        assert_eq!(parse_kw_or_id("abc_123"), TokenFragment::new(TokenType::Id, "abc_123"));
-        assert_eq!(parse_kw_or_id("_abc123"), TokenFragment::new(TokenType::Error(InvalidIdentifier), "_abc123"));
-        assert_eq!(parse_kw_or_id("abc+3"), TokenFragment::new(TokenType::Id, "abc"));
-        assert_eq!(parse_kw_or_id("abc@"), TokenFragment::new(TokenType::Id, "abc"));
+    fn test_parse_kw_or_id() {
+        assert_eq!(
+            parse_kw_or_id("abc"),
+            TokenFragment::new(TokenType::Id, "abc")
+        );
+        assert_eq!(
+            parse_kw_or_id("abc123"),
+            TokenFragment::new(TokenType::Id, "abc123")
+        );
+        assert_eq!(
+            parse_kw_or_id("123abc123"),
+            TokenFragment::new(TokenType::Error(InvalidIdentifier), "123abc123")
+        );
+        assert_eq!(
+            parse_kw_or_id("abc_123"),
+            TokenFragment::new(TokenType::Id, "abc_123")
+        );
+        assert_eq!(
+            parse_kw_or_id("_abc123"),
+            TokenFragment::new(TokenType::Error(InvalidIdentifier), "_abc123")
+        );
+        assert_eq!(
+            parse_kw_or_id("abc+3"),
+            TokenFragment::new(TokenType::Id, "abc")
+        );
+        assert_eq!(
+            parse_kw_or_id("abc@"),
+            TokenFragment::new(TokenType::Id, "abc")
+        );
     }
 
     #[test]
-    fn test_parse_number()
-    {
-        assert_eq!(parse_number("0"), TokenFragment::new(TokenType::IntegerLit, "0"));
-        assert_eq!(parse_number("123"), TokenFragment::new(TokenType::IntegerLit, "123"));
-        assert_eq!(parse_number("12300"), TokenFragment::new(TokenType::IntegerLit, "12300"));
-        assert_eq!(parse_number("00123"), TokenFragment::new(TokenType::Error(InvalidNumber), "00123"));
-        assert_eq!(parse_number("0.0"), TokenFragment::new(TokenType::FloatLit, "0.0"));
-        assert_eq!(parse_number("0.0123002"), TokenFragment::new(TokenType::FloatLit, "0.0123002"));
-        assert_eq!(parse_number("0.012300200"), TokenFragment::new(TokenType::Error(InvalidNumber), "0.012300200"));
-        assert_eq!(parse_number("abc123"), TokenFragment::new(TokenType::Id, "abc123"));
-        assert_eq!(parse_number("0.0e0"), TokenFragment::new(TokenType::FloatLit, "0.0e0"));
-        assert_eq!(parse_number("0.0e+0"), TokenFragment::new(TokenType::FloatLit, "0.0e+0"));
-        assert_eq!(parse_number("0.0e-0"), TokenFragment::new(TokenType::FloatLit, "0.0e-0"));
-        assert_eq!(parse_number("0.0e000"), TokenFragment::new(TokenType::Error(InvalidNumber), "0.0e000"));
-        assert_eq!(parse_number("0.0e1230"), TokenFragment::new(TokenType::FloatLit, "0.0e1230"));
-        assert_eq!(parse_number("0.0e-1230"), TokenFragment::new(TokenType::FloatLit, "0.0e-1230"));
+    fn test_parse_number() {
+        assert_eq!(
+            parse_number("0"),
+            TokenFragment::new(TokenType::IntegerLit, "0")
+        );
+        assert_eq!(
+            parse_number("123"),
+            TokenFragment::new(TokenType::IntegerLit, "123")
+        );
+        assert_eq!(
+            parse_number("12300"),
+            TokenFragment::new(TokenType::IntegerLit, "12300")
+        );
+        assert_eq!(
+            parse_number("00123"),
+            TokenFragment::new(TokenType::Error(InvalidNumber), "00123")
+        );
+        assert_eq!(
+            parse_number("0.0"),
+            TokenFragment::new(TokenType::FloatLit, "0.0")
+        );
+        assert_eq!(
+            parse_number("0.0123002"),
+            TokenFragment::new(TokenType::FloatLit, "0.0123002")
+        );
+        assert_eq!(
+            parse_number("0.012300200"),
+            TokenFragment::new(TokenType::Error(InvalidNumber), "0.012300200")
+        );
+        assert_eq!(
+            parse_number("abc123"),
+            TokenFragment::new(TokenType::Id, "abc123")
+        );
+        assert_eq!(
+            parse_number("0.0e0"),
+            TokenFragment::new(TokenType::FloatLit, "0.0e0")
+        );
+        assert_eq!(
+            parse_number("0.0e+0"),
+            TokenFragment::new(TokenType::FloatLit, "0.0e+0")
+        );
+        assert_eq!(
+            parse_number("0.0e-0"),
+            TokenFragment::new(TokenType::FloatLit, "0.0e-0")
+        );
+        assert_eq!(
+            parse_number("0.0e000"),
+            TokenFragment::new(TokenType::Error(InvalidNumber), "0.0e000")
+        );
+        assert_eq!(
+            parse_number("0.0e1230"),
+            TokenFragment::new(TokenType::FloatLit, "0.0e1230")
+        );
+        assert_eq!(
+            parse_number("0.0e-1230"),
+            TokenFragment::new(TokenType::FloatLit, "0.0e-1230")
+        );
     }
 
     #[test]
-    fn test_parse_op_or_punct()
-    {
-        assert_eq!(parse_op_or_punct("@"), TokenFragment::new(TokenType::Error(InvalidCharacter), "@"));
-        assert_eq!(parse_op_or_punct("="), TokenFragment::new(TokenType::Assignment, "="));
-        assert_eq!(parse_op_or_punct("=="), TokenFragment::new(TokenType::EqEq, "=="));
-        assert_eq!(parse_op_or_punct("<"), TokenFragment::new(TokenType::LessThan, "<"));
-        assert_eq!(parse_op_or_punct("<="), TokenFragment::new(TokenType::LessEqualThan, "<="));
-        assert_eq!(parse_op_or_punct(">"), TokenFragment::new(TokenType::GreaterThan, ">"));
-        assert_eq!(parse_op_or_punct(">="), TokenFragment::new(TokenType::GreaterEqualThan, ">="));
-        assert_eq!(parse_op_or_punct("<>"), TokenFragment::new(TokenType::NotEq, "<>"));
-        assert_eq!(parse_op_or_punct("::"), TokenFragment::new(TokenType::DoubleColon, "::"));
-        assert_eq!(parse_op_or_punct("// comment"), TokenFragment::new(TokenType::LineComment, "// comment"));
-        assert_eq!(parse_op_or_punct("// comment \r\n more stuff"), TokenFragment::new(TokenType::LineComment, "// comment "));
-        assert_eq!(parse_op_or_punct("/* comment \r\n more stuff */"), TokenFragment::new(TokenType::MultilineComment, "/* comment \r\n more stuff */"));
-        assert_eq!(parse_op_or_punct("/* unterminated block comment"), TokenFragment::new(TokenType::Error(InvalidMultilineComment), "/* unterminated block comment"));
+    fn test_parse_op_or_punct() {
+        assert_eq!(
+            parse_op_or_punct("@"),
+            TokenFragment::new(TokenType::Error(InvalidCharacter), "@")
+        );
+        assert_eq!(
+            parse_op_or_punct("="),
+            TokenFragment::new(TokenType::Assignment, "=")
+        );
+        assert_eq!(
+            parse_op_or_punct("=="),
+            TokenFragment::new(TokenType::EqEq, "==")
+        );
+        assert_eq!(
+            parse_op_or_punct("<"),
+            TokenFragment::new(TokenType::LessThan, "<")
+        );
+        assert_eq!(
+            parse_op_or_punct("<="),
+            TokenFragment::new(TokenType::LessEqualThan, "<=")
+        );
+        assert_eq!(
+            parse_op_or_punct(">"),
+            TokenFragment::new(TokenType::GreaterThan, ">")
+        );
+        assert_eq!(
+            parse_op_or_punct(">="),
+            TokenFragment::new(TokenType::GreaterEqualThan, ">=")
+        );
+        assert_eq!(
+            parse_op_or_punct("<>"),
+            TokenFragment::new(TokenType::NotEq, "<>")
+        );
+        assert_eq!(
+            parse_op_or_punct("::"),
+            TokenFragment::new(TokenType::DoubleColon, "::")
+        );
+        assert_eq!(
+            parse_op_or_punct("// comment"),
+            TokenFragment::new(TokenType::LineComment, "// comment")
+        );
+        assert_eq!(
+            parse_op_or_punct("// comment \r\n more stuff"),
+            TokenFragment::new(TokenType::LineComment, "// comment ")
+        );
+        assert_eq!(
+            parse_op_or_punct("/* comment \r\n more stuff */"),
+            TokenFragment::new(TokenType::MultilineComment, "/* comment \r\n more stuff */")
+        );
+        assert_eq!(
+            parse_op_or_punct("/* unterminated block comment"),
+            TokenFragment::new(
+                TokenType::Error(InvalidMultilineComment),
+                "/* unterminated block comment"
+            )
+        );
     }
 
     #[test]
-    fn test_parse_string()
-    {
-        assert_eq!(parse_string("\"This is a _ _ string literal 111\""), TokenFragment::new(TokenType::StringLit, "\"This is a _ _ string literal 111\""));
-        assert_eq!(parse_string("\"This is a string literal invalid char @@@/\""), TokenFragment::new(TokenType::Error(InvalidString), "\"This is a string literal invalid char @@@/\""));
-        assert_eq!(parse_string("\"This is a string literal unterminated"), TokenFragment::new(TokenType::Error(InvalidString), "\"This is a string literal unterminated"));
+    fn test_parse_string() {
+        assert_eq!(
+            parse_string("\"This is a _ _ string literal 111\""),
+            TokenFragment::new(TokenType::StringLit, "\"This is a _ _ string literal 111\"")
+        );
+        assert_eq!(
+            parse_string("\"This is a string literal invalid char @@@/\""),
+            TokenFragment::new(
+                TokenType::Error(InvalidString),
+                "\"This is a string literal invalid char @@@/\""
+            )
+        );
+        assert_eq!(
+            parse_string("\"This is a string literal unterminated"),
+            TokenFragment::new(
+                TokenType::Error(InvalidString),
+                "\"This is a string literal unterminated"
+            )
+        );
     }
 }

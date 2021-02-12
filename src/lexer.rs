@@ -48,7 +48,6 @@ pub(crate) struct MyLexerAnalyzer {
 }
 
 impl MyLexerAnalyzer {
-
     #[allow(dead_code)]
     // Builds a LexerInput from a String
     fn from_str(s: &str) -> Self {
@@ -207,7 +206,6 @@ impl LexerAnalyzer for MyLexerAnalyzer {
 struct LexerInput(String);
 
 impl LexerInput {
-
     /// Builds a LexerInput from a String
     fn from_str(input: &str) -> Self {
         LexerInput(input.to_string())
@@ -227,10 +225,10 @@ impl LexerInput {
 mod tests {
     use super::MyLexerAnalyzer;
     use crate::lexer::LexerAnalyzer;
+    use crate::token::InvalidTokenType::InvalidCharacter;
+    use crate::token::{Token, TokenFragment, TokenType};
     use std::borrow::Borrow;
     use std::path::Path;
-    use crate::token::{TokenType, Token, TokenFragment};
-    use crate::token::InvalidTokenType::InvalidCharacter;
 
     #[test]
     fn my_lexer_from_str() {
@@ -273,38 +271,110 @@ mod tests {
         let mut my_lexer =
             MyLexerAnalyzer::from_file(Path::new("assignment1/lexpositivegrading.src"));
 
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::EqEq, "=="), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Plus, "+"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Or, "|"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::OpenParen, "("), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::SemiColon, ";"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::If, "if"), 1)));
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::EqEq, "=="), 1))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::Plus, "+"), 1))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::Or, "|"), 1))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::OpenParen, "("), 1))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::SemiColon, ";"), 1))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::If, "if"), 1))
+        );
     }
 
     #[test]
-    fn my_lexer_invalid_characters()
-    {
-        let mut my_lexer =
-            MyLexerAnalyzer::from_str(r"@ # $ ' \ ~ ");
+    fn my_lexer_invalid_characters() {
+        let mut my_lexer = MyLexerAnalyzer::from_str(r"@ # $ ' \ ~ ");
 
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "@"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "#"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "$"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "'"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), r"\"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Error(InvalidCharacter), "~"), 1)));
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), "@"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), "#"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), "$"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), "'"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), r"\"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::Error(InvalidCharacter), "~"),
+                1
+            ))
+        );
     }
 
     #[test]
     fn my_lexer_tokens_no_space() {
-        let input =
-            String::from("123<=456.34?");
+        let input = String::from("123<=456.34?");
 
         let mut my_lexer = MyLexerAnalyzer::from_str(input.borrow());
 
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::IntegerLit, "123"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::LessEqualThan, "<="), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::FloatLit, "456.34"), 1)));
-        assert_eq!(my_lexer.next_token(), Some(Token::new(TokenFragment::new(TokenType::Question, "?"), 1)));
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::IntegerLit, "123"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::LessEqualThan, "<="),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(
+                TokenFragment::new(TokenType::FloatLit, "456.34"),
+                1
+            ))
+        );
+        assert_eq!(
+            my_lexer.next_token(),
+            Some(Token::new(TokenFragment::new(TokenType::Question, "?"), 1))
+        );
     }
 }
