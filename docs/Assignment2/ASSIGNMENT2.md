@@ -16,3 +16,23 @@
         - [ ] Error recovery
         - [ ] Test cases
         - [ ] Driver
+
+## Steps to transform grammar to LL(1)
+    - Run it through the grammar tool to:
+        - Remove optionality constructs
+        - Remove repetitions (0 or more and 1 or more)
+        - Remove left recursion
+        - Generate UCalgary version for further processing
+    - Remove ambiguities:
+
+The grammar is not LL(1) because:
+ARRAYSIZE has a first set conflict. [X] Remove ambiguity
+EXPR has a first set conflict.
+FACTOR has a first set conflict.
+FUNCDECL has a first set conflict.
+FUNCHEAD has a first set conflict.
+IDNEST has a first set conflict.
+OPTFUNCHEAD1 is nullable with clashing first and follow sets.
+REPTFUNCTIONCALL0 is nullable with clashing first and follow sets.
+REPTVARIABLE0 is nullable with clashing first and follow sets.
+STATEMENT has a first set conflict.

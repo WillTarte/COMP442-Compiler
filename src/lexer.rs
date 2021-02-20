@@ -132,7 +132,7 @@ impl LexerAnalyzer for MyLexerAnalyzer {
             Some(s) => s,
         };
 
-        return if first_char.is_ascii_alphabetic() {
+        return if first_char.is_ascii_alphabetic() || first_char == '_'{
             // Probably a keyword or an identifier
             let token_fragment = parse_kw_or_id(input_fragment);
             self.forward_n(token_fragment.lexeme.len());

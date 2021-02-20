@@ -39,7 +39,7 @@ pub mod lexer {
     /// * `input_fragment` - A string slice to parse. Should always start with a letter
     /// # Outputs
     /// * A `TokenFragment`
-    pub(crate) fn parse_kw_or_id(input_fragment: &str) -> TokenFragment {
+    pub(crate) fn parse_kw_or_id(input_fragment: &str) -> TokenFragment { //FIXME: leading underscore for ID
         let word = input_fragment
             .chars()
             .take_while(|c: &char| c.is_ascii_alphanumeric() || *c == '_')

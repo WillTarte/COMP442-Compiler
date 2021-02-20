@@ -16,5 +16,8 @@ Lexical error: Invalid number: 12.340: line 12.
 Lexical error: Invalid number: 012.340: line 13.
 Lexical error: Invalid number: 012.34e10: line 15.
 Lexical error: Invalid number: 12.34e010: line 16.
-Lexical error: Invalid character: _: line 18.
-Lexical error: Invalid character: _: line 20.
+Lexical error: Invalid identifier: _abc 
+1abc 
+_1abc 
+
+: line 18.

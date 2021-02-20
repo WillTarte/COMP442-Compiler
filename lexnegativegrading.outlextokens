@@ -11,6 +11,8 @@
 [Error(InvalidNumber), 012.340, 13] 
 [Error(InvalidNumber), 012.34e10, 15] 
 [Error(InvalidNumber), 12.34e010, 16] 
-[Error(InvalidCharacter), _, 18] [Id, abc, 18] 
-[IntegerLit, 1, 19] [Id, abc, 19] 
-[Error(InvalidCharacter), _, 20] [IntegerLit, 1, 20] [Id, abc, 20] 
+[Error(InvalidIdentifier), _abc 
+1abc 
+_1abc 
+
+, 18] 
