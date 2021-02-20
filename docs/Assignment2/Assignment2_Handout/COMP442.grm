@@ -9,12 +9,12 @@
 <addOp> ::= '-' 
 <addOp> ::= 'or' 
 
-<arithExpr> ::= <term> <rightrec-arithExpr>
+<arithExpr> ::= <term> <rightrec-arithExpr> 
 
 <arraySize> ::= '[' <arraySizeAmb1> 
 
-<arraySizeAmb1> ::= 'intNum' ']'
-<arraySizeAmb1> ::= ']'
+<arraySizeAmb1> ::= 'intNum' ']' 
+<arraySizeAmb1> ::= ']' 
 
 <assignOp> ::= '=' 
 
@@ -22,8 +22,7 @@
 
 <classDecl> ::= 'class' 'id' <opt-classDecl2> '{' <rept-classDecl8> '}' ';' 
 
-<expr> ::= <arithExpr> 
-<expr> ::= <relExpr>
+<expr> ::= <arithExpr> <relExprAmb1> 
 
 <fParams> ::= <type> 'id' <rept-fParams2> <rept-fParams3> 
 <fParams> ::= EPSILON 
@@ -73,9 +72,12 @@
 <opt-funcHead1> ::= 'id' 'sr' 
 <opt-funcHead1> ::= EPSILON 
 
-<prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody>
+<prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody> 
 
-<relExpr> ::= <arithExpr> <relOp> <arithExpr>
+<relExpr> ::= <arithExpr> <relOp> <arithExpr> 
+
+<relExprAmb1> ::= <relOp> <arithExpr> 
+<relExprAmb1> ::= EPSILON 
 
 <relOp> ::= 'eq' 
 <relOp> ::= 'neq' 
