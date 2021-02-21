@@ -28,7 +28,7 @@
 The grammar is not LL(1) because:
 ARRAYSIZE has a first set conflict. [X] Remove ambiguity
 EXPR has a first set conflict. [X] Remove ambiguity between relExpr and arithExpr
-FACTOR has a first set conflict. [X] remove ambiguity between variable and functionCall (merge rept-functionCall0 and rept-variable0 & remove ambiguity) 
+FACTOR has a first set conflict. [X] remove ambiguity between variable and functionCall (merge factor -> variable | funcCall rule and factorize what follows 'id') 
 FUNCDECL has a first set conflict.
 FUNCHEAD has a first set conflict.
 IDNEST has a first set conflict.
