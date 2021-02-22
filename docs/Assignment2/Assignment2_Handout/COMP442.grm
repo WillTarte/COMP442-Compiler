@@ -51,7 +51,10 @@
 
 <funcDef> ::= <funcHead> <funcBody> 
 
-<funcHead> ::= 'func' <opt-funcHead1> 'id' '(' <fParams> ')' ':' <funcHeadReturnType>
+<funcHead> ::= 'func' 'id' <funcHeadAmb1>
+
+<funcHeadAmb1> ::= 'sr' 'id' '(' <fParams> ')' ':' <funcHeadReturnType>
+<funcHeadAmb1> ::= '(' <fParams> ')' ':' <funcHeadReturnType>
 
 <funcHeadReturnType> ::= <type>
 <funcHeadReturnType> ::= 'void'
@@ -74,10 +77,7 @@
 <opt-classDecl2> ::= EPSILON 
 
 <opt-funcBody1> ::= 'var' '{' <rept-funcBody4> '}' 
-<opt-funcBody1> ::= EPSILON 
-
-<opt-funcHead1> ::= 'id' 'sr' 
-<opt-funcHead1> ::= EPSILON 
+<opt-funcBody1> ::= EPSILON
 
 <prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody> 
 

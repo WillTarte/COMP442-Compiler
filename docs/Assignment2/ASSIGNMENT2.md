@@ -33,3 +33,5 @@ FUNCDECL has a first set conflict. [X] remove ambiguity between return types by 
 FUNCHEAD has a first set conflict. [X] remove ambiguity between return types by factorizing
 IDNEST has a first set conflict. [X] remove ambiguity by factorizing
 STATEMENT has a first set conflict. [X] remove ambiguity by merging and factorizing statement -> assignStat | funcCall
+OPTFUNCHEAD1 is nullable with clashing first and follow sets. [X] replace rule with factorization
+REPTVARFUNC is nullable with clashing first and follow sets.
