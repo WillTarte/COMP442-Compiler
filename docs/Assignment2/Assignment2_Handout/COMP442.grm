@@ -61,8 +61,10 @@
 <funcHeadReturnType> ::= <type>
 <funcHeadReturnType> ::= 'void'
 
-<idnest> ::= 'id' <rept-idnest1> '.' 
-<idnest> ::= 'id' '(' <aParams> ')' '.' 
+<idnest> ::= 'id' <idnestAmb1> '.'
+
+<idnestAmb1> ::= <rept-idnest1>
+<idnestAmb1> ::= '(' <aParams> ')'
 
 <indice> ::= '[' <arithExpr> ']' 
 

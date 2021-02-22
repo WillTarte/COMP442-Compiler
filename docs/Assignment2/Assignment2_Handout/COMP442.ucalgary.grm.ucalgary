@@ -54,8 +54,10 @@ FUNCHEADRETURNTYPE -> void  .
 
 FUNCTIONCALL -> REPTVARFUNC id lpar APARAMS rpar  . 
 
-IDNEST -> id REPTIDNEST1 dot  . 
-IDNEST -> id lpar APARAMS rpar dot  . 
+IDNEST -> id IDNESTAMB1 dot  . 
+
+IDNESTAMB1 -> REPTIDNEST1  . 
+IDNESTAMB1 -> lpar APARAMS rpar  . 
 
 INDICE -> lsqbr ARITHEXPR rsqbr  . 
 

@@ -31,7 +31,7 @@ EXPR has a first set conflict. [X] Remove ambiguity between relExpr and arithExp
 FACTOR has a first set conflict. [X] remove ambiguity between variable and functionCall (merge factor -> variable | funcCall rule and factorize what follows 'id') 
 FUNCDECL has a first set conflict. [X] remove ambiguity between return types by factorizing
 FUNCHEAD has a first set conflict. [X] remove ambiguity between return types by factorizing
-IDNEST has a first set conflict.
+IDNEST has a first set conflict. [X] remove ambiguity by factorizing
 OPTFUNCHEAD1 is nullable with clashing first and follow sets.
 REPTFUNCTIONCALL0 is nullable with clashing first and follow sets.
 REPTVARIABLE0 is nullable with clashing first and follow sets.
