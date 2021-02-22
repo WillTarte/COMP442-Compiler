@@ -49,8 +49,10 @@
 
 <funcBody> ::= '{' <opt-funcBody1> <rept-funcBody7> '}' 
 
-<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <type> ';' 
-<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' 'void' ';' 
+<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <funcDeclReturnType> ';'
+
+<funcDeclReturnType> ::= 'void'
+<funcDeclReturnType> ::= <type>
 
 <funcDef> ::= <funcHead> <funcBody> 
 

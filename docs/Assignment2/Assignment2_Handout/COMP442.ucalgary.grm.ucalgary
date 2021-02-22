@@ -40,8 +40,10 @@ FPARAMSTAIL -> comma TYPE id REPTFPARAMSTAIL3  .
 
 FUNCBODY -> lcurbr OPTFUNCBODY1 REPTFUNCBODY7 rcurbr  . 
 
-FUNCDECL -> func id lpar FPARAMS rpar colon TYPE semi  . 
-FUNCDECL -> func id lpar FPARAMS rpar colon void semi  . 
+FUNCDECL -> func id lpar FPARAMS rpar colon FUNCDECLRETURNTYPE semi  . 
+
+FUNCDECLRETURNTYPE -> void  . 
+FUNCDECLRETURNTYPE -> TYPE  . 
 
 FUNCDEF -> FUNCHEAD FUNCBODY  . 
 
