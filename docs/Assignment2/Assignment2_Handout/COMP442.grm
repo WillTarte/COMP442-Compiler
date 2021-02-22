@@ -16,9 +16,7 @@
 <arraySizeAmb1> ::= 'intNum' ']' 
 <arraySizeAmb1> ::= ']' 
 
-<assignOp> ::= '=' 
-
-<assignStat> ::= <variable> <assignOp> <expr> 
+<assignOp> ::= '='
 
 <classDecl> ::= 'class' 'id' <opt-classDecl2> '{' <rept-classDecl8> '}' ';' 
 
@@ -27,10 +25,7 @@
 <fParams> ::= <type> 'id' <rept-fParams2> <rept-fParams3> 
 <fParams> ::= EPSILON 
 
-<fParamsTail> ::= ',' <type> 'id' <rept-fParamsTail3> 
-
-<variable> ::= <rept-varfunc> 'id' <rept-variable2>
-<functionCall> ::= <rept-varfunc> 'id' '(' <aParams> ')'
+<fParamsTail> ::= ',' <type> 'id' <rept-fParamsTail3>
 
 <rept-varfunc> ::= <idnest> <rept-varfunc>
 <rept-varfunc> ::= EPSILON
@@ -153,7 +148,6 @@
 <statBlock> ::= <statement> 
 <statBlock> ::= EPSILON 
 
-<statement> ::= <assignStat> ';' 
 <statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';' 
 <statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';' 
 <statement> ::= 'read' '(' <variable> ')' ';' 
@@ -161,7 +155,13 @@
 <statement> ::= 'return' '(' <expr> ')' ';' 
 <statement> ::= 'break' ';' 
 <statement> ::= 'continue' ';' 
-<statement> ::= <functionCall> ';' 
+<statement> ::= <statementAmb1> ';'
+
+<statementAmb1> ::= <rept-varfunc> 'id' <assignStatOrFuncCall>
+<assignStatOrFuncCall> ::= <rept-variable2> <assignOp> <expr>
+<assignStatOrFuncCall> ::= '(' <aParams> ')'
+
+<variable> ::= <rept-varfunc> 'id' <rept-variable2>
 
 <term> ::= <factor> <rightrec-term> 
 
