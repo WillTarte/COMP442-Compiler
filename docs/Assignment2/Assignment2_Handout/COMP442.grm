@@ -56,8 +56,10 @@
 
 <funcDef> ::= <funcHead> <funcBody> 
 
-<funcHead> ::= 'func' <opt-funcHead1> 'id' '(' <fParams> ')' ':' <type> 
-<funcHead> ::= 'func' <opt-funcHead1> 'id' '(' <fParams> ')' ':' 'void'
+<funcHead> ::= 'func' <opt-funcHead1> 'id' '(' <fParams> ')' ':' <funcHeadReturnType>
+
+<funcHeadReturnType> ::= <type>
+<funcHeadReturnType> ::= 'void'
 
 <idnest> ::= 'id' <rept-idnest1> '.' 
 <idnest> ::= 'id' '(' <aParams> ')' '.' 

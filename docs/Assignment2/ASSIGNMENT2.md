@@ -30,7 +30,7 @@ ARRAYSIZE has a first set conflict. [X] Remove ambiguity
 EXPR has a first set conflict. [X] Remove ambiguity between relExpr and arithExpr
 FACTOR has a first set conflict. [X] remove ambiguity between variable and functionCall (merge factor -> variable | funcCall rule and factorize what follows 'id') 
 FUNCDECL has a first set conflict. [X] remove ambiguity between return types by factorizing
-FUNCHEAD has a first set conflict.
+FUNCHEAD has a first set conflict. [X] remove ambiguity between return types by factorizing
 IDNEST has a first set conflict.
 OPTFUNCHEAD1 is nullable with clashing first and follow sets.
 REPTFUNCTIONCALL0 is nullable with clashing first and follow sets.
