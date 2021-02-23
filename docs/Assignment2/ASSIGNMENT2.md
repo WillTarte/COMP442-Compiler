@@ -24,14 +24,4 @@
         - Remove left recursion
         - Generate UCalgary version for further processing
     - Remove ambiguities:
-
-The grammar is not LL(1) because:
-ARRAYSIZE has a first set conflict. [X] Remove ambiguity
-EXPR has a first set conflict. [X] Remove ambiguity between relExpr and arithExpr
-FACTOR has a first set conflict. [X] remove ambiguity between variable and functionCall (merge factor -> variable | funcCall rule and factorize what follows 'id') 
-FUNCDECL has a first set conflict. [X] remove ambiguity between return types by factorizing
-FUNCHEAD has a first set conflict. [X] remove ambiguity between return types by factorizing
-IDNEST has a first set conflict. [X] remove ambiguity by factorizing
-STATEMENT has a first set conflict. [X] remove ambiguity by merging and factorizing statement -> assignStat | funcCall
-OPTFUNCHEAD1 is nullable with clashing first and follow sets. [X] replace rule with factorization
-REPTVARFUNC is nullable with clashing first and follow sets.
+        - First set clashes & Factorizations

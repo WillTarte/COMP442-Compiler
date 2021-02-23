@@ -1,5 +1,8 @@
 <START> ::= <prog> 
 
+<VarOrFuncAmb1> ::= <rept-variable2> 
+<VarOrFuncAmb1> ::= '(' <aParams> ')' 
+
 <aParams> ::= <expr> <rept-aParams1> 
 <aParams> ::= EPSILON 
 
@@ -16,7 +19,10 @@
 <arraySizeAmb1> ::= 'intNum' ']' 
 <arraySizeAmb1> ::= ']' 
 
-<assignOp> ::= '='
+<assignOp> ::= '=' 
+
+<assignStatOrFuncCall> ::= <rept-variable2> <assignOp> <expr> 
+<assignStatOrFuncCall> ::= '(' <aParams> ')' 
 
 <classDecl> ::= 'class' 'id' <opt-classDecl2> '{' <rept-classDecl8> '}' ';' 
 
@@ -25,15 +31,9 @@
 <fParams> ::= <type> 'id' <rept-fParams2> <rept-fParams3> 
 <fParams> ::= EPSILON 
 
-<fParamsTail> ::= ',' <type> 'id' <rept-fParamsTail3>
+<fParamsTail> ::= ',' <type> 'id' <rept-fParamsTail3> 
 
-<rept-varfunc> ::= <idnest> <rept-varfunc>
-<rept-varfunc> ::= EPSILON
-
-<VarOrFuncAmb1> ::= <rept-variable2>
-<VarOrFuncAmb1> ::= '(' <aParams> ')'
-
-<factor> ::= <rept-varfunc> 'id' <VarOrFuncAmb1>
+<factor> ::= <rept-varfunc> 'id' <VarOrFuncAmb1> 
 <factor> ::= 'intLit' 
 <factor> ::= 'floatLit' 
 <factor> ::= 'stringLit' 
@@ -44,25 +44,23 @@
 
 <funcBody> ::= '{' <opt-funcBody1> <rept-funcBody7> '}' 
 
-<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <funcDeclReturnType> ';'
+<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <funcDeclReturnType> ';' 
 
-<funcDeclReturnType> ::= 'void'
-<funcDeclReturnType> ::= <type>
+<funcDeclReturnType> ::= 'void' 
+<funcDeclReturnType> ::= <type> 
 
 <funcDef> ::= <funcHead> <funcBody> 
 
-<funcHead> ::= 'func' 'id' <funcHeadAmb1>
+<funcHead> ::= 'func' 'id' <funcHeadAmb1> 
 
-<funcHeadAmb1> ::= 'sr' 'id' '(' <fParams> ')' ':' <funcHeadReturnType>
-<funcHeadAmb1> ::= '(' <fParams> ')' ':' <funcHeadReturnType>
+<funcHeadAmb1> ::= 'sr' 'id' '(' <fParams> ')' ':' <funcHeadReturnType> 
+<funcHeadAmb1> ::= '(' <fParams> ')' ':' <funcHeadReturnType> 
 
-<funcHeadReturnType> ::= <type>
-<funcHeadReturnType> ::= 'void'
+<funcHeadReturnType> ::= <type> 
+<funcHeadReturnType> ::= 'void' 
 
-<idnest> ::= 'id' <idnestAmb1> '.'
-
-<idnestAmb1> ::= <rept-idnest1>
-<idnestAmb1> ::= '(' <aParams> ')'
+<idnestAmb1> ::= <rept-idnest1> 
+<idnestAmb1> ::= '(' <aParams> ')' 
 
 <indice> ::= '[' <arithExpr> ']' 
 
@@ -77,7 +75,7 @@
 <opt-classDecl2> ::= EPSILON 
 
 <opt-funcBody1> ::= 'var' '{' <rept-funcBody4> '}' 
-<opt-funcBody1> ::= EPSILON
+<opt-funcBody1> ::= EPSILON 
 
 <prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody> 
 
@@ -115,7 +113,7 @@
 <rept-funcBody4> ::= EPSILON 
 
 <rept-funcBody7> ::= <statement> <rept-funcBody7> 
-<rept-funcBody7> ::= EPSILON
+<rept-funcBody7> ::= EPSILON 
 
 <rept-idnest1> ::= <indice> <rept-idnest1> 
 <rept-idnest1> ::= EPSILON 
@@ -130,7 +128,12 @@
 <rept-statBlock1> ::= EPSILON 
 
 <rept-varDecl2> ::= <arraySize> <rept-varDecl2> 
-<rept-varDecl2> ::= EPSILON
+<rept-varDecl2> ::= EPSILON 
+
+<rept-varfunc> ::= 'id' <rept-varfuncAmb1> 
+
+<rept-varfuncAmb1> ::= <idnestAmb1> '.' 
+<rept-varfuncAmb1> ::= EPSILON 
 
 <rept-variable2> ::= <indice> <rept-variable2> 
 <rept-variable2> ::= EPSILON 
@@ -155,13 +158,7 @@
 <statement> ::= 'return' '(' <expr> ')' ';' 
 <statement> ::= 'break' ';' 
 <statement> ::= 'continue' ';' 
-<statement> ::= <statementAmb1> ';'
-
-<statementAmb1> ::= <rept-varfunc> 'id' <assignStatOrFuncCall>
-<assignStatOrFuncCall> ::= <rept-variable2> <assignOp> <expr>
-<assignStatOrFuncCall> ::= '(' <aParams> ')'
-
-<variable> ::= <rept-varfunc> 'id' <rept-variable2>
+<statement> ::= <rept-varfunc> 'id' <assignStatOrFuncCall> ';' 
 
 <term> ::= <factor> <rightrec-term> 
 
@@ -170,7 +167,9 @@
 <type> ::= 'string' 
 <type> ::= 'id' 
 
-<varDecl> ::= <type> 'id' <rept-varDecl2> ';'
+<varDecl> ::= <type> 'id' <rept-varDecl2> ';' 
+
+<variable> ::= <rept-varfunc> 'id' <rept-variable2> 
 
 <visibility> ::= 'public' 
 <visibility> ::= 'private' 
