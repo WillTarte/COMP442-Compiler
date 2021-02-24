@@ -1,12 +1,10 @@
 //! Lexer implementation for the compiler
 
-use crate::token::InvalidTokenType::InvalidCharacter;
-use crate::token::{Token, TokenFragment, TokenType};
-use crate::utils::lexer::{
-    is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string,
-};
-use crate::utils::LINE_ENDINGS_RE;
 use std::path::Path;
+use crate::lexer::token::InvalidTokenType::InvalidCharacter;
+use crate::lexer::token::{Token, TokenFragment, TokenType};
+use crate::lexer::utils::lexer::{parse_string, parse_op_or_punct, is_valid_character, parse_number, parse_kw_or_id};
+use crate::lexer::utils::LINE_ENDINGS_RE;
 
 /// Interface for a Lexer Analyzer
 pub trait LexerAnalyzer {
@@ -229,6 +227,9 @@ mod tests {
     use crate::token::{Token, TokenFragment, TokenType};
     use std::borrow::Borrow;
     use std::path::Path;
+    use crate::lexer::token::{Token, TokenFragment, TokenType};
+    use crate::lexer::token::InvalidTokenType::InvalidCharacter;
+    use crate::lexer::lexer::LexerAnalyzer;
 
     #[test]
     fn my_lexer_from_str() {

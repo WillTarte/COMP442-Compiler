@@ -1,9 +1,10 @@
 //! Tokens used by the compiler
 
-use crate::token::InvalidTokenType::InvalidCharacter;
-use crate::token_regex::*;
 use lazy_static::lazy_static;
 use regex::Regex;
+
+use crate::lexer::token_regex::*;
+use crate::lexer::token::InvalidTokenType::InvalidCharacter;
 
 lazy_static! {
     #[doc(hidden)]

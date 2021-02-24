@@ -1,13 +1,10 @@
 use std::path::PathBuf;
+use structopt::StructOpt;
+use crate::lexer::lexer::MyLexerAnalyzer;
+use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 
 mod lexer;
-mod token;
-mod token_regex;
-mod utils;
-
-use crate::utils::lexer_serialize::serialize_lexer_to_file;
-use lexer::MyLexerAnalyzer;
-use structopt::StructOpt;
+mod parser;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Lexer Driver")]
@@ -19,7 +16,7 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    let my_lexer = Box::new(MyLexerAnalyzer::from_file(&opt.file));
+    let my_lexer = MyLexerAnalyzer::from_file(&opt.file);
 
     let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
 
