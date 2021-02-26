@@ -16,7 +16,9 @@ Method:
                 output the production X->Y1Y2…Yk
             else error()
     until X = $
- */
+    https://courses.cs.vt.edu/cs3304/Fall16/meng/lecture_notes/cs3304-7.pdf
+
+*/
 
 use crate::lexer::lexer::LexerAnalyzer;
 use crate::lexer::token::{Token, TokenType};
@@ -36,7 +38,7 @@ pub struct GrammarRule
     pub rhs: Vec<GrammarSymbol>
 }
 
-
+//https://stackoverflow.com/questions/45786717/how-to-implement-hashmap-with-two-keys
 pub fn parse<T>(mut lexer: T) -> ()//bool
     where T: LexerAnalyzer<TokenOutput = Token>
 {

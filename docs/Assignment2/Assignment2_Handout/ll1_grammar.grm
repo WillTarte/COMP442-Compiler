@@ -9,10 +9,10 @@
 <addOp> ::= '-' 
 <addOp> ::= 'or' 
 
-<arithExpr> ::= <term> <rightrec-arithExpr> 
+<arraySize> ::= '[' <arraySizeAmb1>
 
-<arraySize> ::= '[' 'intNum' ']' 
-<arraySize> ::= '[' ']' 
+<arraySizeAmb1> ::= 'intNum' ']'
+<arraySizeAmb1> ::= ']'
 
 <assignOp> ::= '=' 
 
@@ -20,8 +20,13 @@
 
 <classDecl> ::= 'class' 'id' <opt-classDecl2> '{' <rept-classDecl4> '}' ';' 
 
-<expr> ::= <arithExpr> 
-<expr> ::= <relExpr> 
+<expr> ::= <arithExpr> <exprAmb1>
+
+<exprAmb1> ::= <relOp> <arithExpr>
+<exprAmb1> ::= EPSILON
+
+<arithExpr> ::= <term> <rightrec-arithExpr>
+<relExpr> ::= <arithExpr> <relOp> <arithExpr>
 
 <fParams> ::= <type> 'id' <rept-fParams2> <rept-fParams3> 
 <fParams> ::= EPSILON 
@@ -40,13 +45,20 @@
 
 <funcBody> ::= '{' <opt-funcBody1> <rept-funcBody2> '}' 
 
-<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <type> ';' 
-<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' 'void' ';' 
+<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <funcDeclAmb1>
+
+<funcDeclAmb1> ::= <type> ';'
+<funcDeclAmb1> ::= 'void' ';'
 
 <funcDef> ::= <funcHead> <funcBody> 
 
-<funcHead> ::= 'func' <opt-funcHead1> 'id' '(' <fParams> ')' ':' <type> 
-<funcHead> ::= 'func' <opt-funcHead1> 'id' '(' <fParams> ')' ':' 'void' 
+<funcHead> ::= 'func' 'id' <funcHeadAmb1>
+
+<funcHeadAmb1> ::= '(' <fParams> ')' ':' <funcHeadAmb2>
+<funcHeadAmb1> ::= 'sr' 'id' '(' <fParams> ')' ':' <funcHeadAmb2>
+
+<funcHeadAmb2> ::= 'void'
+<funcHeadAmb2> ::= <type>
 
 <functionCall> ::= <rept-functionCall0> 'id' '(' <aParams> ')'
 
@@ -68,12 +80,7 @@
 <opt-funcBody1> ::= 'var' '{' <rept-opt-funcBody12> '}' 
 <opt-funcBody1> ::= EPSILON 
 
-<opt-funcHead1> ::= 'id' 'sr' 
-<opt-funcHead1> ::= EPSILON 
-
-<prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody> 
-
-<relExpr> ::= <arithExpr> <relOp> <arithExpr> 
+<prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody>
 
 <relOp> ::= 'eq' 
 <relOp> ::= 'neq' 

@@ -25,3 +25,5 @@
         - Generate UCalgary version for further processing
     - Remove ambiguities:
         - First set clashes & Factorizations
+
+https://www.cs.bgu.ac.il/~comp171/wiki.files/ps5.pdf
