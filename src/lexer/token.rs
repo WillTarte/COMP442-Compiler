@@ -112,7 +112,7 @@ lazy_static! {
 }
 
 /// Represents the different types of tokens
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum TokenType {
     // Basic
     Id,
@@ -267,7 +267,7 @@ impl TokenType {
 }
 
 /// Reprensents the different types of invalid tokens
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum InvalidTokenType {
     InvalidIdentifier,
     InvalidNumber,

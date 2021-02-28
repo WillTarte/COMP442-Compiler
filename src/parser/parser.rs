@@ -19,43 +19,55 @@ Method:
     https://courses.cs.vt.edu/cs3304/Fall16/meng/lecture_notes/cs3304-7.pdf
 
 */
+use lazy_static::lazy_static;
 
+use crate::parser::utils::KeyPair;
 use crate::lexer::lexer::LexerAnalyzer;
 use crate::lexer::token::{Token, TokenType};
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
+use std::borrow::Borrow;
 
-#[derive(Eq, PartialEq, Copy, Clone)]
+
+
+
+#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
 pub enum GrammarSymbol
 {
-    Terminal,
+    Terminal(TokenType),
     NonTerminal,
     STOP
 }
 //todo EPSILON
+
+#[derive(Eq, PartialEq, Debug)]
 pub struct GrammarRule
 {
     pub lhs: GrammarSymbol,
     pub rhs: Vec<GrammarSymbol>
 }
 
-//https://stackoverflow.com/questions/45786717/how-to-implement-hashmap-with-two-keys
 pub fn parse<T>(mut lexer: T) -> ()//bool
     where T: LexerAnalyzer<TokenOutput = Token>
 {
     let mut stack: Vec<GrammarSymbol> = Vec::new();
-
     let table: HashMap<(GrammarSymbol, GrammarSymbol), GrammarRule> = HashMap::new();
 
-    let ip: usize = 0;
+    let mut ip: usize = 0;
 
     loop {
+        if stack.is_empty()
+        {
+            break;
+        }
         let x = stack.last().unwrap();
         match x
         {
-            GrammarSymbol::Terminal => {
+            GrammarSymbol::Terminal(_) => {
                 if *x == stack[ip]
                 {
                     stack.pop();
+                    ip += 1;
                 }
                 else {
                     todo!("errorHandling()");
