@@ -1,9 +1,7 @@
 <START> ::= <prog> 
 
-<aParams> ::= <expr> <rept-aParams1> 
-<aParams> ::= EPSILON 
-
-<aParamsTail> ::= ',' <expr> 
+<params> ::= <expr> <rept-params> 
+<params> ::= EPSILON
 
 <addOp> ::= '+' 
 <addOp> ::= '-' 
@@ -16,7 +14,7 @@
 
 <assignOp> ::= '='
 
-<classDecl> ::= 'class' 'id' <opt-classDecl2> '{' <rept-classDecl4> '}' ';'
+<classDecl> ::= 'class' 'id' <opt-classDecl> '{' <rept-classDecl> '}' ';'
 
 <expr> ::= <arithExpr> <exprAmb1>
 
@@ -26,10 +24,8 @@
 <arithExpr> ::= <term> <rightrec-arithExpr>
 <relExpr> ::= <arithExpr> <relOp> <arithExpr>
 
-<fParams> ::= <type> 'id' <rept-fParams2> <rept-fParams3>
-<fParams> ::= EPSILON
-
-<fParamsTail> ::= ',' <type> 'id' <rept-fParamsTail3>
+<funcParams> ::= <type> 'id' <rept-funcParams0> <rept-funcParams1>
+<funcParams> ::= EPSILON
 
 <factor> ::= 'intLit'
 <factor> ::= 'floatLit'
@@ -40,14 +36,14 @@
 <factor> ::= 'qm' '[' <expr> ':' <expr> ':' <expr> ']'
 
 <factor> ::= 'id' <factorAmb1>
-<factorAmb1> ::= '(' <aParams> ')' <factorAmb2>
-<factorAmb1> ::= <rept-variable2> <factorAmb2>
+<factorAmb1> ::= '(' <params> ')' <factorAmb2>
+<factorAmb1> ::= <rept-variable> <factorAmb2>
 <factorAmb2> ::= '.' 'id' <factorAmb1>
 <factorAmb2> ::= EPSILON
 
-<funcBody> ::= '{' <opt-funcBody1> <rept-funcBody2> '}'
+<funcBody> ::= '{' <opt-funcBody> <rept-funcBody> '}'
 
-<funcDecl> ::= 'func' 'id' '(' <fParams> ')' ':' <funcDeclAmb1>
+<funcDecl> ::= 'func' 'id' '(' <funcParams> ')' ':' <funcDeclAmb1>
 
 <funcDeclAmb1> ::= <type> ';'
 <funcDeclAmb1> ::= 'void' ';'
@@ -56,8 +52,8 @@
 
 <funcHead> ::= 'func' 'id' <funcHeadAmb1>
 
-<funcHeadAmb1> ::= '(' <fParams> ')' ':' <funcHeadAmb2>
-<funcHeadAmb1> ::= 'sr' 'id' '(' <fParams> ')' ':' <funcHeadAmb2>
+<funcHeadAmb1> ::= '(' <funcParams> ')' ':' <funcHeadAmb2>
+<funcHeadAmb1> ::= 'sr' 'id' '(' <funcParams> ')' ':' <funcHeadAmb2>
 
 <funcHeadAmb2> ::= 'void'
 <funcHeadAmb2> ::= <type>
@@ -71,11 +67,11 @@
 <multOp> ::= '/'
 <multOp> ::= 'and'
 
-<opt-classDecl2> ::= 'inherits' 'id' <rept-opt-classDecl22>
-<opt-classDecl2> ::= EPSILON
+<opt-classDecl> ::= 'inherits' 'id' <rept-opt-classDecl>
+<opt-classDecl> ::= EPSILON
 
-<opt-funcBody1> ::= 'var' '{' <rept-opt-funcBody12> '}'
-<opt-funcBody1> ::= EPSILON
+<opt-funcBody> ::= 'var' '{' <rept-opt-funcBody> '}'
+<opt-funcBody> ::= EPSILON
 
 <prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody>
 
@@ -86,29 +82,29 @@
 <relOp> ::= 'leq'
 <relOp> ::= 'geq'
 
-<rept-aParams1> ::= <aParamsTail> <rept-aParams1>
-<rept-aParams1> ::= EPSILON
+<rept-params> ::= ',' <expr> <rept-params>
+<rept-params> ::= EPSILON
 
-<rept-classDecl4> ::= <visibility> <memberDecl> <rept-classDecl4>
-<rept-classDecl4> ::= EPSILON
+<rept-classDecl> ::= <visibility> <memberDecl> <rept-classDecl>
+<rept-classDecl> ::= EPSILON
 
-<rept-fParams2> ::= <arraySize> <rept-fParams2>
-<rept-fParams2> ::= EPSILON
+<rept-funcParams0> ::= <arraySize> <rept-funcParams0>
+<rept-funcParams0> ::= EPSILON
 
-<rept-fParams3> ::= <fParamsTail> <rept-fParams3>
-<rept-fParams3> ::= EPSILON
+<rept-funcParams1> ::= ',' <type> 'id' <rept-funcParamsTail> <rept-funcParams1>
+<rept-funcParams1> ::= EPSILON
 
-<rept-fParamsTail3> ::= <arraySize> <rept-fParamsTail3>
-<rept-fParamsTail3> ::= EPSILON
+<rept-funcParamsTail> ::= <arraySize> <rept-funcParamsTail>
+<rept-funcParamsTail> ::= EPSILON
 
-<rept-funcBody2> ::= <statement> <rept-funcBody2>
-<rept-funcBody2> ::= EPSILON
+<rept-funcBody> ::= <statement> <rept-funcBody>
+<rept-funcBody> ::= EPSILON
 
-<rept-opt-classDecl22> ::= ',' 'id' <rept-opt-classDecl22>
-<rept-opt-classDecl22> ::= EPSILON
+<rept-opt-classDecl> ::= ',' 'id' <rept-opt-classDecl>
+<rept-opt-classDecl> ::= EPSILON
 
-<rept-opt-funcBody12> ::= <varDecl> <rept-opt-funcBody12>
-<rept-opt-funcBody12> ::= EPSILON
+<rept-opt-funcBody> ::= <varDecl> <rept-opt-funcBody>
+<rept-opt-funcBody> ::= EPSILON
 
 <rept-prog0> ::= <classDecl> <rept-prog0>
 <rept-prog0> ::= EPSILON
@@ -116,25 +112,25 @@
 <rept-prog1> ::= <funcDef> <rept-prog1>
 <rept-prog1> ::= EPSILON
 
-<rept-statBlock1> ::= <statement> <rept-statBlock1>
-<rept-statBlock1> ::= EPSILON
+<rept-statBlock> ::= <statement> <rept-statBlock>
+<rept-statBlock> ::= EPSILON
 
-<rept-varDecl2> ::= <arraySize> <rept-varDecl2>
-<rept-varDecl2> ::= EPSILON
+<rept-varDecl> ::= <arraySize> <rept-varDecl>
+<rept-varDecl> ::= EPSILON
 
-<rept-variable2> ::= <indice> <rept-variable2>
-<rept-variable2> ::= EPSILON
+<rept-variable> ::= <indice> <rept-variable>
+<rept-variable> ::= EPSILON
 
-<rightrec-arithExpr> ::= EPSILON
 <rightrec-arithExpr> ::= <addOp> <term> <rightrec-arithExpr>
+<rightrec-arithExpr> ::= EPSILON
 
-<rightrec-term> ::= EPSILON
 <rightrec-term> ::= <multOp> <factor> <rightrec-term>
+<rightrec-term> ::= EPSILON
 
 <sign> ::= '+'
 <sign> ::= '-'
 
-<statBlock> ::= '{' <rept-statBlock1> '}'
+<statBlock> ::= '{' <rept-statBlock> '}'
 <statBlock> ::= <statement>
 <statBlock> ::= EPSILON
 
@@ -147,8 +143,8 @@
 <statement> ::= 'continue' ';'
 
 <statement> ::= 'id' <statementAmb1>
-<statementAmb1> ::= <indice> <rept-variable2> <statementAmb2>
-<statementAmb1> ::= '(' <aParams> ')' <statementAmb3>
+<statementAmb1> ::= <indice> <rept-variable> <statementAmb2>
+<statementAmb1> ::= '(' <params> ')' <statementAmb3>
 <statementAmb1> ::= <assignOp> <expr> ';'
 <statementAmb2> ::= '.' 'id' <statementAmb1>
 <statementAmb2> ::= <assignOp> <expr> ';'
@@ -156,8 +152,8 @@
 <statementAmb3> ::= ';'
 
 <variable> ::= 'id' <variableAmb1>
-<variableAmb1> ::= <rept-variable2> '.' 'id' <variableAmb1>
-<variableAmb1> ::= '(' <aParams> ')' '.' 'id' <variableAmb1>
+<variableAmb1> ::= <rept-variable> '.' 'id' <variableAmb1>
+<variableAmb1> ::= '(' <params> ')' '.' 'id' <variableAmb1>
 <variableAmb1> ::= EPSILON
 
 <term> ::= <factor> <rightrec-term>
@@ -167,7 +163,7 @@
 <type> ::= 'string'
 <type> ::= 'id'
 
-<varDecl> ::= <type> 'id' <rept-varDecl2> ';'
+<varDecl> ::= <type> 'id' <rept-varDecl> ';'
 
 <visibility> ::= 'public' 
 <visibility> ::= 'private' 
