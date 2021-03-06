@@ -1,0 +1,225 @@
+[LineComment, // ====== Class declarations ====== //, 1] 
+[Class, class, 2] [Id, POLYNOMIAL, 2] [OpenCurly, {, 2] 
+[Public, public, 3] [Func, func, 3] [Id, evaluate, 3] [OpenParen, (, 3] [FloatType, float, 3] [Id, x, 3] [CloseParen, ), 3] [Colon, :, 3] [FloatType, float, 3] [SemiColon, ;, 3] 
+[CloseCurly, }, 4] [SemiColon, ;, 4] 
+[Class, class, 6] [Id, LINEAR, 6] [Inherits, inherits, 6] [Id, POLYNOMIAL, 6] [OpenCurly, {, 6] 
+[Private, private, 7] [FloatType, float, 7] [Id, a, 7] [SemiColon, ;, 7] 
+[Private, private, 8] [FloatType, float, 8] [Id, b, 8] [SemiColon, ;, 8] 
+[Public, public, 10] [Func, func, 10] [Id, build, 10] [OpenParen, (, 10] [FloatType, float, 10] [Id, A, 10] [Comma, ,, 10] [FloatType, float, 10] [Id, B, 10] [CloseParen, ), 10] [Colon, :, 10] [Id, LINEAR, 10] [SemiColon, ;, 10] 
+[Public, public, 11] [Func, func, 11] [Id, evaluate, 11] [OpenParen, (, 11] [FloatType, float, 11] [Id, x, 11] [CloseParen, ), 11] [Colon, :, 11] [FloatType, float, 11] [SemiColon, ;, 11] 
+[CloseCurly, }, 12] 
+[Class, class, 14] [Id, QUADRATIC, 14] [Inherits, inherits, 14] [Id, POLYNOMIAL, 14] [OpenCurly, {, 14] 
+[Private, private, 15] [FloatType, float, 15] [Id, a, 15] [SemiColon, ;, 15] 
+[Private, private, 16] [FloatType, float, 16] [Id, b, 16] [SemiColon, ;, 16] 
+[Private, private, 17] [FloatType, float, 17] [Id, c, 17] [SemiColon, ;, 17] 
+[Public, public, 19] [Func, func, 19] [Id, build, 19] [OpenParen, (, 19] [FloatType, float, 19] [Id, A, 19] [Comma, ,, 19] [FloatType, float, 19] [Id, B, 19] [Comma, ,, 19] [FloatType, float, 19] [Id, C, 19] [CloseParen, ), 19] [Colon, :, 19] [Id, QUADRATIC, 19] [SemiColon, ;, 19] 
+[Public, public, 20] [Func, func, 20] [Id, evaluate, 20] [OpenParen, (, 20] [FloatType, float, 20] [Id, x, 20] [CloseParen, ), 20] [Colon, :, 20] [FloatType, float, 20] [SemiColon, ;, 20] 
+[CloseCurly, }, 21] 
+[LineComment, // ====== Function Definitions ====== //, 23] 
+[Func, func, 24] [Id, POLYNOMIAL, 24] [DoubleColon, ::, 24] [Id, evaluate, 24] [OpenParen, (, 24] [FloatType, float, 24] [Id, x, 24] [CloseParen, ), 24] [Colon, :, 24] [FloatType, float, 24] 
+[OpenCurly, {, 25] 
+[Return, return, 26] [OpenParen, (, 26] [IntegerLit, 0, 26] [CloseParen, ), 26] [SemiColon, ;, 26] 
+[CloseCurly, }, 27] 
+[Func, func, 29] [Id, LINEAR, 29] [DoubleColon, ::, 29] [Id, evaluate, 29] [OpenParen, (, 29] [FloatType, float, 29] [Id, x, 29] [CloseParen, ), 29] [Colon, :, 29] [FloatType, float, 29] 
+[OpenCurly, {, 30] 
+[Var, var, 31] 
+[OpenCurly, {, 32] 
+[FloatType, float, 33] [Id, result, 33] [SemiColon, ;, 33] 
+[CloseCurly, }, 34] 
+[Id, result, 35] [Assignment, =, 35] [FloatLit, 0.0, 35] [SemiColon, ;, 35] 
+[Id, result, 36] [Assignment, =, 36] [Id, a, 36] [Mult, *, 36] [Id, x, 36] [Plus, +, 36] [Id, b, 36] [SemiColon, ;, 36] 
+[Return, return, 37] [OpenParen, (, 37] [Id, result, 37] [CloseParen, ), 37] [SemiColon, ;, 37] 
+[CloseCurly, }, 38] 
+[Func, func, 40] [Id, QUADRATIC, 40] [DoubleColon, ::, 40] [Id, evaluate, 40] [OpenParen, (, 40] [FloatType, float, 40] [Id, x, 40] [CloseParen, ), 40] [Colon, :, 40] [FloatType, float, 40] 
+[OpenCurly, {, 41] 
+[Var, var, 42] 
+[OpenCurly, {, 43] 
+[FloatType, float, 44] [Id, result, 44] [SemiColon, ;, 44] 
+[CloseCurly, }, 45] 
+[LineComment, //Using Horner's method, 46] 
+[Id, result, 47] [Assignment, =, 47] [Id, a, 47] [SemiColon, ;, 47] 
+[Id, result, 48] [Assignment, =, 48] [Id, result, 48] [Mult, *, 48] [Id, x, 48] [Plus, +, 48] [Id, b, 48] [SemiColon, ;, 48] 
+[Id, result, 49] [Assignment, =, 49] [Id, result, 49] [Mult, *, 49] [Id, x, 49] [Plus, +, 49] [Id, c, 49] [SemiColon, ;, 49] 
+[Return, return, 50] [OpenParen, (, 50] [Id, result, 50] [CloseParen, ), 50] [SemiColon, ;, 50] 
+[CloseCurly, }, 51] 
+[Func, func, 53] [Id, LINEAR, 53] [DoubleColon, ::, 53] [Id, build, 53] [OpenParen, (, 53] [FloatType, float, 53] [Id, A, 53] [Comma, ,, 53] [FloatType, float, 53] [Id, B, 53] [CloseParen, ), 53] [Colon, :, 53] [Id, LINEAR, 53] 
+[OpenCurly, {, 54] 
+[Var, var, 55] 
+[OpenCurly, {, 56] 
+[Id, LINEAR, 57] [Id, new_function, 57] [SemiColon, ;, 57] 
+[CloseCurly, }, 58] 
+[Id, new_function, 59] [Period, ., 59] [Id, a, 59] [Assignment, =, 59] [Id, A, 59] [SemiColon, ;, 59] 
+[Id, new_function, 60] [Period, ., 60] [Id, b, 60] [Assignment, =, 60] [Id, B, 60] [SemiColon, ;, 60] 
+[Return, return, 61] [OpenParen, (, 61] [Id, new_function, 61] [CloseParen, ), 61] [SemiColon, ;, 61] 
+[CloseCurly, }, 62] 
+[Func, func, 64] [Id, QUADRATIC, 64] [DoubleColon, ::, 64] [Id, build, 64] [OpenParen, (, 64] [FloatType, float, 64] [Id, A, 64] [Comma, ,, 64] [FloatType, float, 64] [Id, B, 64] [Comma, ,, 64] [FloatType, float, 64] [Id, C, 64] [CloseParen, ), 64] [Colon, :, 64] [Id, QUADRATIC, 64] 
+[OpenCurly, {, 65] 
+[Var, var, 66] 
+[OpenCurly, {, 67] 
+[Id, QUADRATIC, 68] [Id, new_function, 68] [SemiColon, ;, 68] 
+[CloseCurly, }, 69] 
+[Id, new_function, 70] [Period, ., 70] [Id, a, 70] [Assignment, =, 70] [Id, A, 70] [SemiColon, ;, 70] 
+[Id, new_function, 71] [Period, ., 71] [Id, b, 71] [Assignment, =, 71] [Id, B, 71] [SemiColon, ;, 71] 
+[Id, new_function, 72] [Period, ., 72] [Id, c, 72] [Assignment, =, 72] [Id, C, 72] [SemiColon, ;, 72] 
+[Return, return, 73] [OpenParen, (, 73] [Id, new_function, 73] [CloseParen, ), 73] [SemiColon, ;, 73] 
+[CloseCurly, }, 74] 
+[LineComment, // ====== main ====== //, 77] 
+[Main, main, 78] 
+[OpenCurly, {, 79] 
+[Var, var, 80] 
+[OpenCurly, {, 81] 
+[Id, linear, 82] [Id, f1, 82] [SemiColon, ;, 82] 
+[Id, quadratic, 83] [Id, f2, 83] [SemiColon, ;, 83] 
+[IntegerType, integer, 84] [Id, counter, 84] [SemiColon, ;, 84] 
+[CloseCurly, }, 85] 
+[Id, f1, 86] [Assignment, =, 86] [Id, f1, 86] [Period, ., 86] [Id, build, 86] [OpenParen, (, 86] [IntegerLit, 2, 86] [Comma, ,, 86] [FloatLit, 3.5, 86] [CloseParen, ), 86] [SemiColon, ;, 86] 
+[Id, f2, 87] [Assignment, =, 87] [Id, f2, 87] [Period, ., 87] [Id, build, 87] [OpenParen, (, 87] [Minus, -, 87] [FloatLit, 2.0, 87] [Comma, ,, 87] [FloatLit, 1.0, 87] [Comma, ,, 87] [FloatLit, 0.0, 87] [CloseParen, ), 87] [SemiColon, ;, 87] 
+[Id, counter, 88] [Assignment, =, 88] [IntegerLit, 1, 88] [SemiColon, ;, 88] 
+[While, while, 90] [OpenParen, (, 90] [Id, counter, 90] [LessEqualThan, <=, 90] [IntegerLit, 10, 90] [CloseParen, ), 90] 
+[OpenCurly, {, 91] 
+[Write, write, 92] [OpenParen, (, 92] [Id, counter, 92] [CloseParen, ), 92] [SemiColon, ;, 92] 
+[Write, write, 93] [OpenParen, (, 93] [Id, f1, 93] [Period, ., 93] [Id, evaluate, 93] [OpenParen, (, 93] [Id, counter, 93] [CloseParen, ), 93] [CloseParen, ), 93] [SemiColon, ;, 93] 
+[Write, write, 94] [OpenParen, (, 94] [Id, f2, 94] [Period, ., 94] [Id, evaluate, 94] [OpenParen, (, 94] [Id, counter, 94] [CloseParen, ), 94] [CloseParen, ), 94] [SemiColon, ;, 94] 
+[CloseCurly, }, 95] [SemiColon, ;, 95] 
+[CloseCurly, }, 96] 
+[MultilineComment, /*
+    classes
+    --------------------------------------
+| | no class declaration
+| | class declaration
+|X| multiple class declarations
+|X| no data member declaration
+|X| data member declaration
+|X| multiple data member declaration
+| | no member function declaration
+|X| member function declaration
+|X| multiple member function declaration
+| | no member
+|X| no inherited class
+|X| one inherited class
+| | multiple inherited classes
+|X| private member specifier
+|X| public member specifier
+| | absence of member specifier
+
+    functions: definitions
+    --------------------------------------
+| | no main function definition (not allowed)
+|X| main function definition
+| | multiple main function definitions (not allowed)
+|X| no free function definition
+| | free function definition
+| | multiple free function definitions
+| | no member function definition
+|X| member function definition
+|X| multiple member function definitions
+| | return type: void
+| | return type: integer
+|X| return type: float
+| | return type: string
+|X| return type: id
+| | return type: array (not allowed)
+
+
+    functions: formal parameters
+    --------------------------------------
+| | type: integer
+|X| type: float
+| | type: string
+| | type: id
+| | type: 1-dim array 
+| | type: n-dim array
+| | type: array (with size)
+| | type: array (without size)
+
+    functions: calls
+    --------------------------------------
+| | free function call
+|X| member function call
+| | parameters:0
+|X| parameters:1
+|X| parameters:n
+| | array parameter - 1-dim
+| | array parameter - n-dim
+| | array parameter - with size
+| | array parameter - without size
+| | function call as statement
+|X| function call as expression factor
+| | expression as parameter
+
+    variable declaration
+    --------------------------------------
+| | type: integer
+| | type: float
+| | type: string
+|X| type: id
+| | type: 1-dim array 
+| | type: n-dim array
+| | type: array (with size)
+| | type: array (without size)
+
+    function body: local variable declaration block
+    --------------------------------------
+| | no local variable declarations block
+|X| local variable declaration block
+| | multiple local variable declarations block (not allowed)
+| | no variables in block
+|X| 1 variable declared in block
+|X| multiple variables declared in block
+
+    function body: statements
+    --------------------------------------
+| | no statement
+| | 1 statement
+|X| n statements
+| | if statement
+| | if: empty then or else blocks
+| | if: 1-statement then or else blocks
+| | if: n-statements then or else blocks
+|X| while statement
+| | while: empty block
+| | while: 1-statement block
+|X| while: n-statement block
+| | read(<variable>) statement
+|X| write(<expr>) statement
+|X| return(<expr>) statement
+| | break statement
+| | continue statement
+|X| assignment statement
+
+    variable + idnest
+    --------------------------------------
+|X| id
+|X| id.id
+|X| id.id(id)
+| | id(id).id
+| | id(id).id()
+| | id.id[id]
+| | id[id].id
+| | id[id].id[id]
+| | id.id[id][id]
+| | id[id][id].id
+| | id[id][id].id[id][id]
+| | id(id).id[id]
+| | id(id).id[id][id]
+| | expression as array index
+
+    expressions
+    --------------------------------------
+| | single variable
+| | involving addop
+| | involving multop
+| | involving relop
+|X| involving addop + multop
+| | involving multop + relop
+| | involving addop + multop + relop
+| | involving parentheses
+| | involving nested parenhteses
+| | involving ternary operator
+| | involving not
+| | involving sign
+| | involving literals
+|X| involving variable + idnest
+|X| involving function calls
+| | involving all the above in one expression
+*/, 97] 

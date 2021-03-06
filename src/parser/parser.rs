@@ -10,7 +10,7 @@ use std::hash::{Hash, Hasher};
 use std::borrow::Borrow;
 use crate::parser::grammar::GrammarSymbol::{STOP, NonTerminal, Terminal, START, EPSILON};
 use crate::parser::grammar::{GrammarSymbol, GrammarRule};
-use crate::parser::grammar::PARSING_TABLE;
+use crate::parser::data::PARSING_TABLE;
 
 pub fn parse<T>(mut lexer: T) -> bool
     where T: LexerAnalyzer<TokenOutput = Token>
@@ -19,7 +19,7 @@ pub fn parse<T>(mut lexer: T) -> bool
     stack.push(STOP);
     stack.push(START);
 
-    let mut next_token = lexer.next_token(); //todo
+    let mut next_token = lexer.next_token();
 
     while *stack.last().unwrap() != STOP //todo
     {
@@ -34,7 +34,11 @@ pub fn parse<T>(mut lexer: T) -> bool
                 }
                 else
                 {
-                    todo!("handle errors"); // can we just scan?
+                    // scan for correct token from input
+                    while next_token.is_some() && next_token.as_ref().unwrap().token_type() != *token_t
+                    {
+                        next_token = lexer.next_token();
+                    }
                 }
             },
             NonTerminal(named_symbol) => {
@@ -49,10 +53,12 @@ pub fn parse<T>(mut lexer: T) -> bool
                             let grammar_symbol = NonTerminal(*named_symbol);
                             let first = grammar_symbol.first_set();
                             let follow = grammar_symbol.follow_set();
+                            // pop
                             if next_token.is_none() || follow.contains(&Terminal(next_token.as_ref().unwrap().token_type()))
                             {
                                 stack.pop();
                             }
+                            // scan
                             else {
                                 while !first.contains(&Terminal(next_token.as_ref().unwrap().token_type())) || (first.contains(&EPSILON) && !follow.contains(&Terminal(next_token.as_ref().unwrap().token_type())))
                                 {
@@ -71,7 +77,44 @@ pub fn parse<T>(mut lexer: T) -> bool
                     }
                 }
             },
-            EPSILON | START | STOP => { panic!() }
+            START => {
+                if next_token.is_none()
+                {
+                    continue;
+                }
+                else {
+                    match PARSING_TABLE.get(&(START, Terminal(next_token.as_ref().unwrap().token_type())))
+                    {
+                        None => {
+                            let grammar_symbol = START;
+                            let first = grammar_symbol.first_set();
+                            let follow = grammar_symbol.follow_set();
+                            // pop
+                            if next_token.is_none() || follow.contains(&Terminal(next_token.as_ref().unwrap().token_type()))
+                            {
+                                stack.pop();
+                            }
+                            // scan
+                            else {
+                                while !first.contains(&Terminal(next_token.as_ref().unwrap().token_type())) || (first.contains(&EPSILON) && !follow.contains(&Terminal(next_token.as_ref().unwrap().token_type())))
+                                {
+                                    next_token = lexer.next_token();
+                                }
+                            }
+                        }
+                        Some(rule) => {
+                            println!("Applied derivation: {}", rule.to_string());
+                            stack.pop();
+                            for rhs_symbol in rule.rhs.iter().rev()
+                            {
+                                stack.push(*rhs_symbol);
+                            }
+                        }
+                    }
+                }
+            },
+            EPSILON => { stack.pop(); continue; }
+            STOP => { panic!() }
         };
     }
     // if a not None or error == true
