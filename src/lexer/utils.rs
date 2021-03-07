@@ -16,8 +16,10 @@ lazy_static! {
 
 ///Contains utility methods used by the lexer implementation [MyLexerAnalyzer](crate::lexer::MyLexerAnalyzer)
 pub mod lexer {
+    use crate::lexer::token::InvalidTokenType::{
+        InvalidCharacter, InvalidIdentifier, InvalidMultilineComment, InvalidNumber, InvalidString,
+    };
     use crate::lexer::token::{TokenFragment, TokenType};
-    use crate::lexer::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber, InvalidMultilineComment, InvalidCharacter, InvalidString};
 
     const VALID_CHARS: &str = "=<>+-*/|&!?(){}[];,.:";
 
@@ -37,7 +39,8 @@ pub mod lexer {
     /// * `input_fragment` - A string slice to parse. Should always start with a letter
     /// # Outputs
     /// * A `TokenFragment`
-    pub(crate) fn parse_kw_or_id(input_fragment: &str) -> TokenFragment { //FIXME: leading underscore for ID
+    pub(crate) fn parse_kw_or_id(input_fragment: &str) -> TokenFragment {
+        //FIXME: leading underscore for ID
         let word = input_fragment
             .chars()
             .take_while(|c: &char| c.is_ascii_alphanumeric() || *c == '_')
@@ -230,18 +233,16 @@ pub mod lexer {
 
 /// Utilities to serialize a lexer's output
 pub mod lexer_serialize {
-    use std::fs::OpenOptions;
-    use std::io;
-    use std::io::{BufWriter, Write};
     use crate::lexer::lexer::LexerAnalyzer;
     use crate::lexer::token::{Token, TokenType};
     use crate::lexer::utils::LINE_ENDINGS;
+    use std::fs::OpenOptions;
+    use std::io;
+    use std::io::{BufWriter, Write};
 
-    pub fn serialize_lexer_to_file<T>(
-        mut lexer: T,
-        file_name: &str,
-    ) -> io::Result<()>
-        where T: LexerAnalyzer<TokenOutput = Token>
+    pub fn serialize_lexer_to_file<T>(mut lexer: T, file_name: &str) -> io::Result<()>
+    where
+        T: LexerAnalyzer<TokenOutput = Token>,
     {
         let lextokens_file = OpenOptions::new()
             .write(true)
@@ -314,16 +315,13 @@ pub mod lexer_serialize {
 
 #[cfg(test)]
 mod tests {
-    use crate::token::InvalidTokenType::{
+    use crate::lexer::token::InvalidTokenType::{
         InvalidCharacter, InvalidIdentifier, InvalidMultilineComment, InvalidNumber, InvalidString,
     };
-    use crate::token::{TokenFragment, TokenType};
-    use crate::utils::lexer::{
+    use crate::lexer::token::{TokenFragment, TokenType};
+    use crate::lexer::utils::lexer::{
         is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string,
     };
-    use crate::lexer::utils::lexer::{is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string};
-    use crate::lexer::token::{TokenFragment, TokenType};
-    use crate::lexer::token::InvalidTokenType::{InvalidIdentifier, InvalidNumber, InvalidCharacter, InvalidMultilineComment, InvalidString};
 
     #[test]
     fn test_is_valid_character() {

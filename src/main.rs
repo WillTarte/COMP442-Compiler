@@ -1,8 +1,10 @@
-use std::path::PathBuf;
-use structopt::StructOpt;
 use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parser::parse;
+use std::path::PathBuf;
+use structopt::StructOpt;
+use crate::lexer::token::Token;
+use crate::lexer::token::TokenType::{LineComment, MultilineComment};
 
 mod lexer;
 mod parser;
@@ -22,8 +24,7 @@ struct Opt {
 fn main() {
     let opt = Opt::from_args();
 
-    if opt.lexer
-    {
+    if opt.lexer {
         let my_lexer = MyLexerAnalyzer::from_file(&opt.file);
 
         let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
@@ -31,12 +32,17 @@ fn main() {
         serialize_lexer_to_file(my_lexer, file_name).unwrap();
     }
 
-    if opt.parser
-    {
+    if opt.parser {
         let my_lexer = MyLexerAnalyzer::from_file(&opt.file);
 
         let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
 
-        parse(my_lexer);
+        if parse(my_lexer)
+        {
+            println!("Successfully parsed");
+        }
+        else {
+            println!("ERROR DURING PARSING");
+        }
     }
 }

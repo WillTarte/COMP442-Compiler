@@ -8,17 +8,16 @@ pub trait KeyPair<A, B> {
 }
 
 impl<'a, A, B> Borrow<dyn KeyPair<A, B> + 'a> for (A, B)
-    where
-        A: Eq + Hash + 'a,
-        B: Eq + Hash + 'a,
+where
+    A: Eq + Hash + 'a,
+    B: Eq + Hash + 'a,
 {
     fn borrow(&self) -> &(dyn KeyPair<A, B> + 'a) {
         self
     }
 }
 
-impl<A: Hash, B: Hash> Hash for (dyn KeyPair<A, B> + '_)
-{
+impl<A: Hash, B: Hash> Hash for (dyn KeyPair<A, B> + '_) {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.first().hash(state);
         self.second().hash(state);

@@ -1,10 +1,12 @@
 //! Lexer implementation for the compiler
 
-use std::path::Path;
 use crate::lexer::token::InvalidTokenType::InvalidCharacter;
 use crate::lexer::token::{Token, TokenFragment, TokenType};
-use crate::lexer::utils::lexer::{parse_string, parse_op_or_punct, is_valid_character, parse_number, parse_kw_or_id};
+use crate::lexer::utils::lexer::{
+    is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string,
+};
 use crate::lexer::utils::LINE_ENDINGS_RE;
+use std::path::Path;
 
 /// Interface for a Lexer Analyzer
 pub trait LexerAnalyzer {
@@ -130,7 +132,7 @@ impl LexerAnalyzer for MyLexerAnalyzer {
             Some(s) => s,
         };
 
-        return if first_char.is_ascii_alphabetic() || first_char == '_'{
+        return if first_char.is_ascii_alphabetic() || first_char == '_' {
             // Probably a keyword or an identifier
             let token_fragment = parse_kw_or_id(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
@@ -200,6 +202,21 @@ impl LexerAnalyzer for MyLexerAnalyzer {
     }
 }
 
+impl IntoIterator for MyLexerAnalyzer
+{
+    type Item = <Self as LexerAnalyzer>::TokenOutput;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(mut self) -> Self::IntoIter {
+        let mut acc = Vec::new();
+        while let Some(token) = self.next_token()
+        {
+            acc.push(token);
+        }
+        acc.into_iter()
+    }
+}
+
 /// Represents the input to be fed to a Lexer
 struct LexerInput(String);
 
@@ -222,14 +239,11 @@ impl LexerInput {
 #[cfg(test)]
 mod tests {
     use super::MyLexerAnalyzer;
-    use crate::lexer::LexerAnalyzer;
-    use crate::token::InvalidTokenType::InvalidCharacter;
-    use crate::token::{Token, TokenFragment, TokenType};
+    use crate::lexer::lexer::LexerAnalyzer;
+    use crate::lexer::token::InvalidTokenType::InvalidCharacter;
+    use crate::lexer::token::{Token, TokenFragment, TokenType};
     use std::borrow::Borrow;
     use std::path::Path;
-    use crate::lexer::token::{Token, TokenFragment, TokenType};
-    use crate::lexer::token::InvalidTokenType::InvalidCharacter;
-    use crate::lexer::lexer::LexerAnalyzer;
 
     #[test]
     fn my_lexer_from_str() {
