@@ -36,8 +36,8 @@
 <factor> ::= 'qm' '[' <expr> ':' <expr> ':' <expr> ']'
 
 <factor> ::= 'id' <factorAmb1>
-<factorAmb1> ::= '(' <params> ')' <factorAmb2>
 <factorAmb1> ::= <rept-variable> <factorAmb2>
+<factorAmb1> ::= '(' <params> ')' <factorAmb2>
 <factorAmb2> ::= '.' 'id' <factorAmb1>
 <factorAmb2> ::= EPSILON
 
