@@ -41,14 +41,15 @@ where
                     println!("Found Token: {}", next_token.as_ref().unwrap().lexeme());
                     stack.pop();
                     next_token = token_stream.next();
+                    println!("STACK: {:?}", &stack);
                 } else {
                     // scan for correct token from input
                     while next_token.is_some()
                         && next_token.as_ref().unwrap().token_type() != *token_t
                     {
+                        println!("SCANNING FOR {:?} : {:?}", token_t, &next_token);
                         error = true;
                         next_token = token_stream.next();
-                        println!("SCANNING FOR {:?} : {:?}", token_t, &next_token);
                     }
                 }
             }
@@ -98,12 +99,14 @@ where
                             for rhs_symbol in rule.rhs.iter().rev() {
                                 stack.push(*rhs_symbol);
                             }
+                            println!("STACK: {:?}", &stack);
                         }
                     }
                 }
             }
             EPSILON => {
                 stack.pop();
+                println!("STACK: {:?}", &stack);
                 continue;
             }
             STOP => {

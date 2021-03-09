@@ -143,7 +143,6 @@ pub const FACTORAMB1_FIRST: &'static [GrammarSymbol] = &[
     Terminal(OpenSquare),
     Terminal(OpenParen),
     Terminal(Period),
-    EPSILON,
 ];
 pub const FACTORAMB1_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(Plus),
@@ -514,7 +513,7 @@ pub const STATEMENT_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(Continue),
 ];
 pub const STATEMENTAMB1_FIRST: &'static [GrammarSymbol] =
-    &[Terminal(OpenSquare), Terminal(EqEq), Terminal(OpenParen)];
+    &[Terminal(OpenSquare), Terminal(EqEq), Terminal(OpenParen), Terminal(Period),];
 pub const STATEMENTAMB1_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(Id),
     Terminal(CloseCurly),
@@ -2683,7 +2682,7 @@ lazy_static! {
             },
         );
         table.insert(
-            (NonTerminal(RightRecTerm), Terminal(Plus)),
+            (NonTerminal(Sign), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(Sign),
                 rhs: vec![Terminal(Plus)],
@@ -2895,6 +2894,18 @@ lazy_static! {
                     NonTerminal(AssignOp),
                     NonTerminal(Expr),
                     Terminal(SemiColon),
+                ],
+            },
+        );
+
+        table.insert(
+            (NonTerminal(StatementAmb1), Terminal(Period)),
+            GrammarRule {
+                lhs: NonTerminal(StatementAmb1),
+                rhs: vec![
+                    Terminal(Period),
+                    Terminal(Id),
+                    NonTerminal(StatementAmb1),
                 ],
             },
         );

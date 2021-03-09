@@ -146,6 +146,7 @@
 <statementAmb1> ::= <indice> <rept-variable> <statementAmb2>
 <statementAmb1> ::= '(' <params> ')' <statementAmb3>
 <statementAmb1> ::= <assignOp> <expr> ';'
+<statementAmb1> ::= '.' 'id' <statementAmb1>
 <statementAmb2> ::= '.' 'id' <statementAmb1>
 <statementAmb2> ::= <assignOp> <expr> ';'
 <statementAmb3> ::= '.' <statementAmb1>
