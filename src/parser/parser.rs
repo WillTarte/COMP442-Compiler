@@ -6,8 +6,10 @@ use crate::lexer::lexer::LexerAnalyzer;
 use crate::lexer::token::{Token, TokenType};
 use crate::parser::data::PARSING_TABLE;
 use crate::parser::grammar::GrammarSymbol::{NonTerminal, Terminal, EPSILON, STOP};
-use crate::parser::grammar::{GrammarRule, GrammarSymbol};
+use crate::parser::grammar::{GrammarRule, GrammarSymbol, DerivationRecord};
 use crate::parser::utils::KeyPair;
+use crate::parser::grammar::DerivationTable;
+use crate::parser::ast::AST;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -15,11 +17,13 @@ use crate::lexer::token::TokenType::{Error, LineComment, MultilineComment, Class
 use crate::parser::grammar::NamedSymbol::Start;
 use std::ops::Deref;
 
-pub fn parse<T>(mut lexer: T) -> bool
+pub fn parse<T>(mut lexer: T) -> Result<(DerivationTable, AST), ()>
 where
     T: LexerAnalyzer<TokenOutput = Token> + IntoIterator<Item = <T as LexerAnalyzer>::TokenOutput>,
 {
     lazy_static::initialize(&PARSING_TABLE);
+
+    let mut derivation_table = DerivationTable::new();
 
     let mut stack: Vec<GrammarSymbol> = Vec::new();
     stack.push(STOP);
@@ -31,6 +35,8 @@ where
 
     let mut error = false;
 
+    derivation_table.add_record(DerivationRecord::new(&stack, &next_token, None));
+
     while *stack.last().unwrap() != STOP {
 
         let top_symbol = stack.last().unwrap();
@@ -41,7 +47,7 @@ where
                     println!("Found Token: {}", next_token.as_ref().unwrap().lexeme());
                     stack.pop();
                     next_token = token_stream.next();
-                    println!("STACK: {:?}", &stack);
+                    derivation_table.add_record(DerivationRecord::new(&stack, &next_token, None))
                 } else {
                     // scan for correct token from input
                     while next_token.is_some()
@@ -99,7 +105,7 @@ where
                             for rhs_symbol in rule.rhs.iter().rev() {
                                 stack.push(*rhs_symbol);
                             }
-                            println!("STACK: {:?}", &stack);
+                            derivation_table.add_record(DerivationRecord::new(&stack,&next_token, Some(rule)));
                         }
                     }
                 }
@@ -116,8 +122,8 @@ where
     }
 
     return if next_token.is_some() || stack.len() > 1 || error {
-        false
+        Err(())
     } else {
-        true
+        Ok((derivation_table, AST::new()))
     };
 }

@@ -37,7 +37,7 @@ fn main() {
 
         let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
 
-        if parse(my_lexer)
+        if parse(my_lexer).is_ok()
         {
             println!("Successfully parsed");
         }

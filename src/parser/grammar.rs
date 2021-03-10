@@ -385,7 +385,7 @@ impl GrammarSymbol {
     }
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 pub struct GrammarRule {
     pub lhs: GrammarSymbol,
     pub rhs: Vec<GrammarSymbol>,
@@ -460,4 +460,39 @@ pub enum NamedSymbol {
     Variable,
     VariableAmb1,
     Visibility,
+}
+
+pub struct DerivationTable(Vec<DerivationRecord>);
+
+impl DerivationTable
+{
+    pub fn add_record(&mut self, record: DerivationRecord)
+    {
+        self.0.push(record);
+    }
+
+    pub fn new() -> Self
+    {
+        DerivationTable(Vec::new())
+    }
+}
+
+pub struct DerivationRecord
+{
+    stack_state: Vec<GrammarSymbol>,
+    lookahead_token: Option<Token>,
+    derived_rule: Option<GrammarRule>
+}
+
+impl DerivationRecord
+{
+    pub fn new(stack_state: &Vec<GrammarSymbol>, lookahead_token: &Option<Token>, derived_rule: Option<&GrammarRule>) -> Self
+    {
+        Self
+        {
+            stack_state: stack_state.clone(),
+            lookahead_token: lookahead_token.clone(),
+            derived_rule: derived_rule.cloned()
+        }
+    }
 }
