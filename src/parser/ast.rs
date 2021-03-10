@@ -69,11 +69,11 @@ impl Node
         {
             new_sib.borrow_mut().leftmost_sibling = self.leftmost_sibling.clone();
             new_sib.borrow_mut().parent = self.parent.clone();
-            new_sib = Rc::clone(new_sib.borrow().into_inner())
+            //new_sib = Rc::clone(new_sib.borrow().into_inner())
         }
     }
 
-    pub fn add_sibling_node(&mut self, mut new_sibling: Node)
+    /*pub fn add_sibling_node(&mut self, mut new_sibling: Node)
     {
         let mut xsib: Link = None;
         while self.right_sibling.is_some()
@@ -93,7 +93,7 @@ impl Node
         new_sibling.leftmost_sibling = self.leftmost_sibling.clone();
         new_sibling.parent = self.parent.clone();
 
-    }
+    }*/
 }
 
 #[derive(Clone, Debug)]
@@ -138,7 +138,7 @@ mod test {
     {
         let ast: AST = AST::from_node(Node::new(Internal(NonTerminal(Start))));
 
-        let other_node = None::new(Internal(NonTerminal(Expr)));
+        let other_node = Node::new(Internal(NonTerminal(Expr)));
 
         //ast.
     }
