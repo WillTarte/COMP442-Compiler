@@ -1,145 +1,97 @@
-use crate::lexer::token::Token;
-use crate::parser::grammar::GrammarSymbol;
-use std::rc::{Rc, Weak};
-use std::cell::RefCell;
-use std::borrow::Borrow;
-use crate::lexer::token::TokenType::Read;
-
-type Link = Option<Rc<RefCell<Node>>>;
-
+use crate::lexer::token::{Token, TokenType};
+use crate::parser::grammar::{NamedSymbol};
 //https://cs.nyu.edu/courses/spring01/G22.2130-001/parsing-slides/ppframe.htm
+
 #[derive(Clone, Debug)]
 pub struct Node {
-    parent: Link,
-    right_sibling: Link,
-    leftmost_sibling: Link,
-    children: Vec<Node>,
-    val: Option<NodeVal>,
+    pub(crate) val: Option<NodeVal>,
+    pub(crate) children: Vec<Node>,
 }
 
-impl Node
+impl Node {
+    pub fn new_empty() -> Self {
+        Self {
+            children: Vec::new(),
+            val: None,
+        }
+    }
+
+    pub fn new_with_val(val: NodeVal) -> Self {
+        Self {
+            children: Vec::new(),
+            val: Some(val),
+        }
+    }
+
+    pub fn add_child(&mut self, child: Node) {
+        self.children.push(child);
+    }
+
+    pub fn add_children(&mut self, children: &mut Vec<Node>)
+    {
+        self.children.append(children);
+    }
+}
+
+impl ToString for Node
 {
-    pub fn new(val: NodeVal) -> Self
-    {
-        Self
+    fn to_string(&self) -> String {
+        match &self.val
         {
-            parent: None,
-            right_sibling: None,
-            leftmost_sibling: None,
-            children: Vec::new(),
-            val: Some(val)
+            None => { String::from("None") }
+            Some(node_val) => {
+                match node_val
+                {
+                    NodeVal::NonParsed(t_type) => { format!("{:?}", t_type) }
+                    NodeVal::Leaf(t) => { format!("\"{}\"", t.lexeme()) }
+                    NodeVal::Internal(s) => { format!("{:?}", s) }
+                }
+            }
         }
     }
-
-    pub fn make_empty() -> Self
-    {
-        Self
-        {
-            parent: None,
-            right_sibling: None,
-            leftmost_sibling: None,
-            children: Vec::new(),
-            val: None
-        }
-    }
-
-    pub fn add_sibling_tree(&mut self, mut new_sibling: Rc<RefCell<Node>>)
-    {
-        let mut xsib: Link = None;
-        while self.right_sibling.is_some()
-        {
-            xsib = self.right_sibling.clone();
-        }
-
-        let mut ysib: Link = Some(new_sibling.clone());
-
-        match (xsib, ysib)
-        {
-            (None, None) => { self.right_sibling = Some(new_sibling.clone()) },
-            (None, Some(y)) => { self.right_sibling = Some(y.clone()) },
-            (Some(x), None) => { x.borrow_mut().right_sibling = Some(new_sibling.clone()) },
-            (Some(x), Some(y)) => { x.borrow_mut().right_sibling = Some(y.clone()) }
-        };
-
-        new_sibling.borrow_mut().leftmost_sibling = self.leftmost_sibling.clone();
-        new_sibling.borrow_mut().parent = self.parent.clone();
-
-        let mut new_sib = new_sibling.clone();
-        while new_sib.borrow_mut().right_sibling.is_some()
-        {
-            new_sib.borrow_mut().leftmost_sibling = self.leftmost_sibling.clone();
-            new_sib.borrow_mut().parent = self.parent.clone();
-            //new_sib = Rc::clone(new_sib.borrow().into_inner())
-        }
-    }
-
-    /*pub fn add_sibling_node(&mut self, mut new_sibling: Node)
-    {
-        let mut xsib: Link = None;
-        while self.right_sibling.is_some()
-        {
-            xsib = self.right_sibling.clone();
-        }
-
-        let ysib: Link = new_sibling.leftmost_sibling.clone();
-
-        match (xsib, ysib) {
-            (None, None) => { self.right_sibling = Some(Rc::new(RefCell::new(new_sibling))) },
-            (None, Some(y)) => { self.right_sibling = Some(y.clone()) },
-            (Some(x), None) => { x.borrow_mut().right_sibling = Some(Rc::new(RefCell::new(new_sibling))) },
-            (Some(x), Some(y)) => { x.borrow_mut().right_sibling = Some(y.clone()) }
-        }
-
-        new_sibling.leftmost_sibling = self.leftmost_sibling.clone();
-        new_sibling.parent = self.parent.clone();
-
-    }*/
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum NodeVal {
+    NonParsed(TokenType),
     Leaf(Token),
-    Internal(GrammarSymbol),
+    Internal(NamedSymbol),
 }
 
-pub struct AST
-{
-    root: Link
-}
+#[derive(Debug)]
+pub struct SemanticStack(pub(crate) Vec<Node>);
 
-impl AST
-{
-    pub fn new() -> Self
-    {
-        AST
-        {
-            root: None
-        }
+impl SemanticStack {
+    pub fn new() -> Self {
+        Self(Vec::new())
     }
 
-    pub fn from_node(root: Node) -> Self
-    {
-        AST
-        {
-            root: Some(Rc::new(RefCell::new(root)))
+    pub fn add_node(&mut self, node: Node) {
+        self.0.push(node);
+    }
+
+    pub fn replace_last(&mut self, node: Node) {
+        self.0.pop();
+        self.0.push(node);
+    }
+
+    pub fn make_family(&mut self, n: usize) {
+        if n >= self.0.len() {
+            panic!(
+                "Tried to make family with {} + 1 nodes, but only had {} nodes",
+                n,
+                self.0.len()
+            );
         }
+        else if n == 0
+        {
+            return;
+        }
+
+        let mut temp = self.0.drain(self.0.len() - n .. self.0.len()).rev().collect();
+        self.0.last_mut().unwrap().add_children(&mut temp);
     }
 }
 
 #[cfg(test)]
-mod test {
-    use super::*;
-    use crate::parser::ast::NodeVal::Internal;
-    use crate::parser::grammar::GrammarSymbol::NonTerminal;
-    use crate::parser::grammar::NamedSymbol::{Start, Expr};
-
-    #[test]
-    fn add_sibling()
-    {
-        let ast: AST = AST::from_node(Node::new(Internal(NonTerminal(Start))));
-
-        let other_node = Node::new(Internal(NonTerminal(Expr)));
-
-        //ast.
-    }
-}
+mod test {}

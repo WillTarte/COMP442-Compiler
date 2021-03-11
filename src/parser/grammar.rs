@@ -1,16 +1,13 @@
-use crate::lexer::token::TokenType::OpenSquare;
-use crate::lexer::token::TokenType::*;
 use crate::lexer::token::{Token, TokenType};
 use crate::parser::data::*;
 use crate::parser::grammar::GrammarSymbol::*;
 use crate::parser::grammar::NamedSymbol::*;
-use lazy_static::lazy_static;
-use std::collections::HashMap;
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
 pub enum GrammarSymbol {
     Terminal(TokenType),
     NonTerminal(NamedSymbol),
+    MakeFamilyAttribute(usize),
     EPSILON,
     STOP,
 }
@@ -191,10 +188,7 @@ impl GrammarSymbol {
                     return VISIBILITY_FIRST;
                 }
             },
-            EPSILON => {
-                panic!()
-            }
-            STOP => {
+            EPSILON | STOP | MakeFamilyAttribute(_) => {
                 panic!()
             }
         }
@@ -375,10 +369,7 @@ impl GrammarSymbol {
                     return VISIBILITY_FOLLOW;
                 }
             },
-            EPSILON => {
-                panic!()
-            },
-            STOP => {
+            EPSILON | STOP | MakeFamilyAttribute(_) => {
                 panic!()
             }
         }
@@ -462,37 +453,36 @@ pub enum NamedSymbol {
     Visibility,
 }
 
-pub struct DerivationTable(Vec<DerivationRecord>);
+#[derive(Debug)]
+pub struct DerivationTable(pub(crate) Vec<DerivationRecord>);
 
-impl DerivationTable
-{
-    pub fn add_record(&mut self, record: DerivationRecord)
-    {
+impl DerivationTable {
+    pub fn add_record(&mut self, record: DerivationRecord) {
         self.0.push(record);
     }
 
-    pub fn new() -> Self
-    {
+    pub fn new() -> Self {
         DerivationTable(Vec::new())
     }
 }
 
-pub struct DerivationRecord
-{
-    stack_state: Vec<GrammarSymbol>,
-    lookahead_token: Option<Token>,
-    derived_rule: Option<GrammarRule>
+#[derive(Debug)]
+pub struct DerivationRecord {
+    pub stack_state: Vec<GrammarSymbol>,
+    pub lookahead_token: Option<Token>,
+    pub derived_rule: Option<GrammarRule>,
 }
 
-impl DerivationRecord
-{
-    pub fn new(stack_state: &Vec<GrammarSymbol>, lookahead_token: &Option<Token>, derived_rule: Option<&GrammarRule>) -> Self
-    {
-        Self
-        {
+impl DerivationRecord {
+    pub fn new(
+        stack_state: &Vec<GrammarSymbol>,
+        lookahead_token: &Option<Token>,
+        derived_rule: Option<&GrammarRule>,
+    ) -> Self {
+        Self {
             stack_state: stack_state.clone(),
             lookahead_token: lookahead_token.clone(),
-            derived_rule: derived_rule.cloned()
+            derived_rule: derived_rule.cloned(),
         }
     }
 }

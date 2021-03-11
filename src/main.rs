@@ -3,8 +3,7 @@ use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parser::parse;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use crate::lexer::token::Token;
-use crate::lexer::token::TokenType::{LineComment, MultilineComment};
+use crate::parser::utils::{serialize_parsing_table_to_file, serialize_tree_to_file};
 
 mod lexer;
 mod parser;
@@ -37,12 +36,14 @@ fn main() {
 
         let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
 
-        if parse(my_lexer).is_ok()
+        match parse(my_lexer)
         {
-            println!("Successfully parsed");
-        }
-        else {
-            println!("ERROR DURING PARSING");
+            Ok((table, ast)) => {
+                println!("success");
+                serialize_parsing_table_to_file(table, file_name);
+                serialize_tree_to_file(ast, file_name);
+            }
+            Err(_) => { println!("failure"); }
         }
     }
 }

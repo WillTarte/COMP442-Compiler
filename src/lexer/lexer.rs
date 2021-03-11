@@ -202,15 +202,13 @@ impl LexerAnalyzer for MyLexerAnalyzer {
     }
 }
 
-impl IntoIterator for MyLexerAnalyzer
-{
+impl IntoIterator for MyLexerAnalyzer {
     type Item = <Self as LexerAnalyzer>::TokenOutput;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(mut self) -> Self::IntoIter {
         let mut acc = Vec::new();
-        while let Some(token) = self.next_token()
-        {
+        while let Some(token) = self.next_token() {
             acc.push(token);
         }
         acc.into_iter()

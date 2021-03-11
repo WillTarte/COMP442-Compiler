@@ -139,11 +139,8 @@ pub const FACTOR_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(GreaterEqualThan),
     Terminal(Comma),
 ];
-pub const FACTORAMB1_FIRST: &'static [GrammarSymbol] = &[
-    Terminal(OpenSquare),
-    Terminal(OpenParen),
-    Terminal(Period),
-];
+pub const FACTORAMB1_FIRST: &'static [GrammarSymbol] =
+    &[Terminal(OpenSquare), Terminal(OpenParen), Terminal(Period)];
 pub const FACTORAMB1_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(Plus),
     Terminal(Minus),
@@ -512,8 +509,12 @@ pub const STATEMENT_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(Break),
     Terminal(Continue),
 ];
-pub const STATEMENTAMB1_FIRST: &'static [GrammarSymbol] =
-    &[Terminal(OpenSquare), Terminal(EqEq), Terminal(OpenParen), Terminal(Period),];
+pub const STATEMENTAMB1_FIRST: &'static [GrammarSymbol] = &[
+    Terminal(OpenSquare),
+    Terminal(EqEq),
+    Terminal(OpenParen),
+    Terminal(Period),
+];
 pub const STATEMENTAMB1_FOLLOW: &'static [GrammarSymbol] = &[
     Terminal(Id),
     Terminal(CloseCurly),
@@ -1003,45 +1004,278 @@ lazy_static! {
             },
         );
 
-        table.insert((NonTerminal(FactorAmb1), Terminal(Plus)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Minus)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Or)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(OpenSquare)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(CloseSquare)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(SemiColon)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(OpenParen)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![Terminal(OpenParen), NonTerminal(Params), Terminal(CloseParen), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(CloseParen)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Colon)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Period)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Mult)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Div)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(And)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(EqEq)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(NotEq)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(LessThan)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(GreaterThan)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(LessEqualThan)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(GreaterEqualThan)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
-        table.insert((NonTerminal(FactorAmb1), Terminal(Comma)), GrammarRule {lhs: NonTerminal(FactorAmb1), rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)]});
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Plus)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Minus)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Or)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(OpenSquare)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(CloseSquare)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(SemiColon)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(OpenParen)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![
+                    Terminal(OpenParen),
+                    NonTerminal(Params),
+                    Terminal(CloseParen),
+                    NonTerminal(FactorAmb2),
+                ],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(CloseParen)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Colon)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Period)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Mult)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Div)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(And)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(EqEq)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(NotEq)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(LessThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(GreaterThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(LessEqualThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(GreaterEqualThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb1), Terminal(Comma)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb1),
+                rhs: vec![NonTerminal(ReptVariable), NonTerminal(FactorAmb2)],
+            },
+        );
 
-        table.insert((NonTerminal(FactorAmb2), Terminal(Plus)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Minus)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Or)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(CloseSquare)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(SemiColon)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(CloseParen)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Colon)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Period)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![Terminal(Period), Terminal(Id), NonTerminal(FactorAmb1)]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Mult)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Div)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(And)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(EqEq)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(NotEq)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(LessThan)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(GreaterThan)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(LessEqualThan)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(GreaterEqualThan)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
-        table.insert((NonTerminal(FactorAmb2), Terminal(Comma)), GrammarRule {lhs: NonTerminal(FactorAmb2), rhs: vec![EPSILON]});
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Plus)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Minus)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Or)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(CloseSquare)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(SemiColon)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(CloseParen)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Colon)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Period)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![Terminal(Period), Terminal(Id), NonTerminal(FactorAmb1)],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Mult)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Div)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(And)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(EqEq)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(NotEq)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(LessThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(GreaterThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(LessEqualThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(GreaterEqualThan)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
+        table.insert(
+            (NonTerminal(FactorAmb2), Terminal(Comma)),
+            GrammarRule {
+                lhs: NonTerminal(FactorAmb2),
+                rhs: vec![EPSILON],
+            },
+        );
 
         table.insert(
             (NonTerminal(FuncBody), Terminal(OpenCurly)),
@@ -2669,11 +2903,7 @@ lazy_static! {
             (NonTerminal(StatementAmb1), Terminal(Period)),
             GrammarRule {
                 lhs: NonTerminal(StatementAmb1),
-                rhs: vec![
-                    Terminal(Period),
-                    Terminal(Id),
-                    NonTerminal(StatementAmb1),
-                ],
+                rhs: vec![Terminal(Period), Terminal(Id), NonTerminal(StatementAmb1)],
             },
         );
 
