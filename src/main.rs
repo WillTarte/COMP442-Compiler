@@ -1,7 +1,7 @@
 use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parser::parse;
-use crate::parser::utils::{serialize_parsing_table_to_file/*, serialize_tree_to_file*/};
+use crate::parser::utils::{serialize_parsing_table_to_file, serialize_tree_to_file};
 use log::{error, info, warn};
 use std::io::Error;
 use std::path::PathBuf;
@@ -54,7 +54,7 @@ fn main() {
                 );
                 info!("Writing derivation table and abstract syntax tree to file");
                 serialize_parsing_table_to_file(table, file_name);
-                //serialize_tree_to_file(ast, file_name);
+                serialize_tree_to_file(ast, file_name);
             }
             Err(_) => {
                 error!("Failed to parse token stream for {}", file_name)

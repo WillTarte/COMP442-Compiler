@@ -1,11 +1,13 @@
 use log::{warn, debug};
 use crate::lexer::token::{Token};
+use std::fmt::{Display, Formatter};
+use std::fmt;
 
 #[derive(Clone, Debug)]
 pub struct Node
 {
     val: Option<NodeVal>,
-    children: Vec<Node>
+    pub(crate) children: Vec<Node>
 }
 
 impl Node
@@ -34,7 +36,30 @@ impl Node
     }
 }
 
-pub struct SemanticStack(Vec<Node>);
+
+impl Display for Node {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match &self.val {
+            None => {
+                write!(f, "None")
+            }
+            Some(node_val) => {
+                match node_val
+                {
+                    NodeVal::Leaf(token) => {
+                        write!(f, "{}", token.lexeme())
+                    }
+                    NodeVal::Internal(internal) => {
+                        write!(f, "{}", internal.to_string().as_str())
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SemanticStack(pub(crate) Vec<Node>);
 
 impl SemanticStack
 {
@@ -47,12 +72,14 @@ impl SemanticStack
     {
         debug!("Making family with {:?}", node_t);
         self.0.push(Node::new_with_val(NodeVal::Internal(node_t)));
+        debug!("{:?}", self);
     }
 
     pub fn make_terminal_node(&mut self, token: &Token)
     {
         debug!("Making terminal node with: {:?}", token);
         self.0.push(Node::new_with_val(NodeVal::Leaf(token.clone())));
+        debug!("{:?}", self);
     }
 
     pub fn make_relative_operation(&mut self)
@@ -64,6 +91,18 @@ impl SemanticStack
         if rhs.is_none() || op.is_none() || lhs.is_none()
         {
             warn!("Failed to make relative operation node: {:?} {:?} {:?}", lhs, op, rhs);
+            /*if lhs.is_some()
+            {
+                self.0.push(lhs.unwrap());
+            }
+            if op.is_some()
+            {
+                self.0.push(op.unwrap());
+            }
+            if rhs.is_some()
+            {
+                self.0.push(rhs.unwrap());
+            }*/
             return;
         }
 
@@ -76,6 +115,7 @@ impl SemanticStack
         op.add_child(lhs);
         op.add_child(rhs);
         self.0.push(op);
+        debug!("{:?}", self);
     }
 
     pub fn make_empty_node(&mut self)
@@ -92,6 +132,10 @@ impl SemanticStack
         if child.is_none() || top.is_none()
         {
             warn!("Failed to add child {:?} to {:?}", child, top);
+            /*if child.is_some()
+            {
+                self.0.push(child.unwrap());
+            }*/
             return;
         }
 
@@ -100,7 +144,7 @@ impl SemanticStack
 
         debug!("Adding {:?} as a child of {:?}", child.val, top.val);
         top.children.push(child);
-
+        debug!("{:?}", self);
     }
 }
 
@@ -112,6 +156,13 @@ pub enum SemanticAction
     MakeRelativeOperation,
     MakeEmptyNode,
     AddChild
+}
+
+impl Display for SemanticAction
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -175,4 +226,11 @@ pub enum InternalNodeType
     ContinueStatement,
     GenericStatement,
     Variable
+}
+
+impl Display for InternalNodeType
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }

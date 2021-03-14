@@ -1,5 +1,6 @@
 use crate::parser::ast::{Node, NodeVal, SemanticStack};
 use crate::parser::grammar::{DerivationTable, GrammarSymbol};
+use log::warn;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
@@ -91,33 +92,36 @@ pub fn serialize_parsing_table_to_file(table: DerivationTable, file_name: &str) 
     Ok(())
 }
 
-/*pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::Result<()> {
-    let mut _node_labels_count: HashMap<String, usize> = HashMap::new();
+pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::Result<()> {
 
+    warn!("{:?}", tree);
     let tree_file = OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
         .open(format!("{}.ast.gv", file_name))?;
     let mut buf_writer = BufWriter::new(tree_file);
-
     buf_writer.write("digraph AST {\n".as_bytes());
 
-    let mut root_stack: Vec<Node> = Vec::new();
+    let mut node_label_count: HashMap<String, usize> = HashMap::new();
 
+    let mut root_stack: Vec<Node> = Vec::new();
     root_stack.append(&mut tree.0);
 
     while !root_stack.is_empty() {
-        let mut current_root: Node = root_stack.remove(0);
-        buf_writer.write(format!("{};\n", current_root.label()).as_bytes());
-        let root_label = current_root.label().to_string();
+        let mut root = root_stack.remove(0);
+        let root_label = format!("{}{}", root.to_string(), node_label_count.entry(root.to_string()).or_insert(0));
 
-        for child in current_root.children.drain(..) {
-            buf_writer.write(format!("{} -> {};\n", root_label, child.label()).as_bytes());
+        buf_writer.write(format!("{} [label=\"{}\"];", root_label, root.to_string()).as_bytes());
+        for child in root.children.drain(..)
+        {
+            let child_label = format!("{}{}", child.to_string(), node_label_count.entry(child.to_string()).or_insert(0));
+            buf_writer.write(format!("{} -> {};", root_label, child_label).as_bytes());
             root_stack.push(child);
         }
     }
+
     buf_writer.write("}".as_bytes());
     buf_writer.flush()?;
     Ok(())
-}*/
+}

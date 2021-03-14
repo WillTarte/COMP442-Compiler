@@ -1,7 +1,7 @@
 <START> ::= #MakeFamilyRootNode("Root") <prog>
 
 <params> ::= #MakeFamilyRootNode("FuncCallParams") <expr> #AddChild <rept-params>
-<params> ::= #MakeFamilyRootNode("FuncCallParams") #MakeEmptyNode EPSILON #AddChild
+<params> ::= #MakeFamilyRootNode("FuncCallParams") #MakeEmptyNode #AddChild EPSILON
 
 <addOp> ::= #MakeFamilyRootNode("Add") '+'
 <addOp> ::= #MakeFamilyRootNode("Sub") '-'
@@ -10,11 +10,11 @@
 <arraySize> ::= '[' <arraySizeAmb1>
 
 <arraySizeAmb1> ::= MakeTerminalNode 'intNum' ']'
-<arraySizeAmb1> ::= ']'
+<arraySizeAmb1> ::= MakeEmptyNode ']'
 
 <assignOp> ::= #MakeFamilyRootNode("Assignment") '='
 
-<classDecl> ::= #MakeFamilyRootNode("ClassDeclaration") 'class' #MakeTerminalNode 'id' #AddChild #MakeFamilyRootNode("InheritsList") <opt-classDecl> #AddChild '{' #MakeFamilyRootNode("MemberList") <rept-classDecl> '}' ';'
+<classDecl> ::= #MakeFamilyRootNode("ClassDeclaration") 'class' #MakeTerminalNode 'id' #AddChild #MakeFamilyRootNode("InheritsList") <opt-classDecl> #AddChild '{' #MakeFamilyRootNode("MemberList") <rept-classDecl> #AddChild '}' ';'
 
 <rept-classDecl> ::= #MakeFamilyRootNode("MemberDecl") <visibility> #AddChild <memberDecl> #AddChild #AddChild <rept-classDecl>
 <rept-classDecl> ::= EPSILON
@@ -26,17 +26,17 @@
 
 <varDecl> ::= #MakeFamilyRootNode("VarDecl") <type> #AddChild #MakeTerminalNode 'id' #AddChild #MakeFamilyRootNode("ArrayDimension") <rept-varDecl> #AddChild ';'
 
-<expr> ::= #MakeFamilyRootNode("Expr") <arithExpr> <exprAmb1> #AddChild
+<expr> ::= #MakeFamilyRootNode("Expr") <arithExpr> <exprAmb1>
 
-<exprAmb1> ::= <relOp> <arithExpr> #MakeRelativeOperation
-<exprAmb1> ::= EPSILON
+<exprAmb1> ::= <relOp> <arithExpr> #MakeRelativeOperation #AddChild
+<exprAmb1> ::= EPSILON #AddChild
 
-<arithExpr> ::= #MakeFamilyRootNode("ArithExpr") <term> <rightrec-arithExpr> #AddChild
+<arithExpr> ::= #MakeFamilyRootNode("ArithExpr") <term> <rightrec-arithExpr>
 
 <relExpr> ::= #MakeFamilyRootNode("RelExpr") <arithExpr> <relOp> <arithExpr> #MakeRelativeOperation #AddChild
 
 <funcParams> ::= #MakeFamilyRootNode("FuncParams") #MakeFamilyRootNode("FuncParam") <type> #AddChild #MakeTerminalNode 'id' #AddChild #MakeFamilyRootNode("FuncParamDim") <rept-funcParams0> #AddChild #AddChild <rept-funcParams1>
-<funcParams> ::= EPSILON
+<funcParams> ::= #MakeFamilyRootNode("FuncParams") #MakeEmptyNode #AddChild EPSILON
 
 <factor> ::= #MakeTerminalNode 'intLit'
 <factor> ::= #MakeTerminalNode 'floatLit'
@@ -47,7 +47,7 @@
 <factor> ::= #MakeFamilyRootNode("TernaryOperation") 'qm' '[' <expr> #AddChild ':' <expr> #AddChild ':' <expr> #AddChild ']'
 
 <factor> ::= #MakeFamilyRootNode("Factor") #MakeTerminalNode 'id' <factorAmb1> #AddChild
-<factorAmb1> ::= <rept-variable> #AddChild <factorAmb2>
+<factorAmb1> ::= <rept-variable> <factorAmb2>
 <factorAmb1> ::= '(' <params> ')' #AddChild <factorAmb2>
 <factorAmb2> ::= #MakeTerminalNode '.' #MakeTerminalNode 'id' #MakeRelativeOperation <factorAmb1>
 <factorAmb2> ::= EPSILON
@@ -62,7 +62,7 @@
 <funcHead> ::= 'func' #MakeTerminalNode 'id' #AddChild <funcHeadAmb1>
 
 <funcHeadAmb1> ::= #MakeEmptyNode #AddChild '(' <funcParams> #AddChild ')' ':' <funcHeadAmb2> #AddChild
-<funcHeadAmb1> ::= 'sr' #MakeTerminalNode 'id' #AddChild '(' <funcParams> ')' ':' <funcHeadAmb2> #AddChild
+<funcHeadAmb1> ::= 'sr' #MakeTerminalNode 'id' #AddChild '(' <funcParams> #AddChild ')' ':' <funcHeadAmb2> #AddChild
 
 <funcHeadAmb2> ::= #MakeTerminalNode 'void'
 <funcHeadAmb2> ::= <type>
@@ -77,9 +77,9 @@
 <opt-classDecl> ::= EPSILON
 
 <opt-funcBody> ::= #MakeFamilyRootNode("VarBlock") 'var' '{' <rept-opt-funcBody> '}'
-<opt-funcBody> ::= EPSILON
+<opt-funcBody> ::= #MakeFamilyRootNode("VarBlock") #MakeEmptyNode #AddChild EPSILON
 
-<prog> ::= #MakeFamilyRootNode("ClassDeclarations") <rept-prog0> #AddChild #MakeFamilyRootNode("FunctionDefinitions") <rept-prog1> #AddChild 'main' #MakeFamilyRootNode("Main") <funcBody> #AddChild
+<prog> ::= #MakeFamilyRootNode("ClassDeclarations") <rept-prog0> #AddChild #MakeFamilyRootNode("FunctionDefinitions") <rept-prog1> #AddChild 'main' #MakeFamilyRootNode("Main") <funcBody> #AddChild #AddChild
 
 <relOp> ::= #MakeFamilyRootNode("Equal") 'eq'
 <relOp> ::= #MakeFamilyRootNode("NotEqual") 'neq'
@@ -115,6 +115,7 @@
 <rept-prog1> ::= <funcDef> #AddChild <rept-prog1>
 <rept-prog1> ::= EPSILON
 
+//TODO
 <rept-statBlock> ::= <statement> <rept-statBlock>
 <rept-statBlock> ::= EPSILON
 
@@ -130,9 +131,11 @@
 <rightrec-term> ::= <multOp> <factor> #MakeRelativeOperation <rightrec-term>
 <rightrec-term> ::= EPSILON
 
+//TODO
 <sign> ::= #MakeTerminalNode '+'
 <sign> ::= #MakeTerminalNode '-'
 
+//TODO
 <statBlock> ::= '{' <rept-statBlock> '}'
 <statBlock> ::= <statement>
 <statBlock> ::= EPSILON

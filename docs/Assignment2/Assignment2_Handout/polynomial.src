@@ -21,7 +21,7 @@ class QUADRATIC inherits POLYNOMIAL {
 };
 
 // ====== Function Definitions ====== //
-func POLYNOMIAL::evaluate(float x) : float
+/*func POLYNOMIAL::evaluate(float x) : float
 {
   return (0);
 }
@@ -71,7 +71,7 @@ func QUADRATIC::build(float A, float B, float C) : QUADRATIC
   new_function.b = B;
   new_function.c = C;
   return (new_function);
-}
+}*/
   
 
 // ====== main ====== //

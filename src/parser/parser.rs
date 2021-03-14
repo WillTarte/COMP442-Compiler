@@ -64,7 +64,7 @@ where
             }
             NonTerminal(named_symbol) => {
                 if next_token.is_none() {
-                    continue;
+                    break;
                 } else {
                     match PARSING_TABLE.get(&(
                         NonTerminal(named_symbol),
@@ -91,6 +91,7 @@ where
                                         next_token.as_ref().unwrap().token_type(),
                                     )) {
                                         next_token = token_stream.next();
+                                        if next_token.is_none() { break; }
                                     }
                                 } else {
                                     warn!("~ Scanning First set");
@@ -98,6 +99,7 @@ where
                                         next_token.as_ref().unwrap().token_type(),
                                     )) {
                                         next_token = token_stream.next();
+                                        if next_token.is_none() { break; }
                                     }
                                 }
                             }
@@ -132,6 +134,7 @@ where
                 panic!()
             }
             SemanticActionType(sa) => {
+                parsing_stack.pop();
                 match sa
                 {
                     SemanticAction::MakeFamilyRootNode(ty) => {
