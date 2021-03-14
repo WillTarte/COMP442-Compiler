@@ -1,97 +1,178 @@
-use crate::lexer::token::{Token, TokenType};
-use crate::parser::grammar::{NamedSymbol};
-//https://cs.nyu.edu/courses/spring01/G22.2130-001/parsing-slides/ppframe.htm
+use log::{warn, debug};
+use crate::lexer::token::{Token};
 
 #[derive(Clone, Debug)]
-pub struct Node {
-    pub(crate) val: Option<NodeVal>,
-    pub(crate) children: Vec<Node>,
+pub struct Node
+{
+    val: Option<NodeVal>,
+    children: Vec<Node>
 }
 
-impl Node {
-    pub fn new_empty() -> Self {
-        Self {
-            children: Vec::new(),
-            val: None,
-        }
-    }
-
-    pub fn new_with_val(val: NodeVal) -> Self {
-        Self {
-            children: Vec::new(),
+impl Node
+{
+    pub fn new_with_val(val: NodeVal) -> Self
+    {
+        Self
+        {
             val: Some(val),
+            children: Vec::new()
         }
     }
 
-    pub fn add_child(&mut self, child: Node) {
+    pub fn new_empty() -> Self
+    {
+        Self
+        {
+            val: None,
+            children: Vec::new()
+        }
+    }
+
+    pub fn add_child(&mut self, child: Node)
+    {
         self.children.push(child);
     }
-
-    pub fn add_children(&mut self, children: &mut Vec<Node>)
-    {
-        self.children.append(children);
-    }
 }
 
-impl ToString for Node
+pub struct SemanticStack(Vec<Node>);
+
+impl SemanticStack
 {
-    fn to_string(&self) -> String {
-        match &self.val
-        {
-            None => { String::from("None") }
-            Some(node_val) => {
-                match node_val
-                {
-                    NodeVal::NonParsed(t_type) => { format!("{:?}", t_type) }
-                    NodeVal::Leaf(t) => { format!("\"{}\"", t.lexeme()) }
-                    NodeVal::Internal(s) => { format!("{:?}", s) }
-                }
-            }
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum NodeVal {
-    NonParsed(TokenType),
-    Leaf(Token),
-    Internal(NamedSymbol),
-}
-
-#[derive(Debug)]
-pub struct SemanticStack(pub(crate) Vec<Node>);
-
-impl SemanticStack {
-    pub fn new() -> Self {
+    pub fn new() -> Self
+    {
         Self(Vec::new())
     }
 
-    pub fn add_node(&mut self, node: Node) {
-        self.0.push(node);
+    pub fn make_family_root(&mut self, node_t: InternalNodeType)
+    {
+        debug!("Making family with {:?}", node_t);
+        self.0.push(Node::new_with_val(NodeVal::Internal(node_t)));
     }
 
-    pub fn replace_last(&mut self, node: Node) {
-        self.0.pop();
-        self.0.push(node);
+    pub fn make_terminal_node(&mut self, token: &Token)
+    {
+        debug!("Making terminal node with: {:?}", token);
+        self.0.push(Node::new_with_val(NodeVal::Leaf(token.clone())));
     }
 
-    pub fn make_family(&mut self, n: usize) {
-        if n >= self.0.len() {
-            panic!(
-                "Tried to make family with {} + 1 nodes, but only had {} nodes",
-                n,
-                self.0.len()
-            );
-        }
-        else if n == 0
+    pub fn make_relative_operation(&mut self)
+    {
+        let rhs = self.0.pop();
+        let op = self.0.pop();
+        let lhs = self.0.pop();
+
+        if rhs.is_none() || op.is_none() || lhs.is_none()
         {
+            warn!("Failed to make relative operation node: {:?} {:?} {:?}", lhs, op, rhs);
             return;
         }
 
-        let mut temp = self.0.drain(self.0.len() - n .. self.0.len()).rev().collect();
-        self.0.last_mut().unwrap().add_children(&mut temp);
+        let lhs = lhs.unwrap();
+        let mut op = op.unwrap();
+        let rhs = rhs.unwrap();
+
+        debug!("Making relative operation node: {:?} {:?} {:?}", lhs.val, op.val, rhs.val);
+
+        op.add_child(lhs);
+        op.add_child(rhs);
+        self.0.push(op);
+    }
+
+    pub fn make_empty_node(&mut self)
+    {
+        self.0.push(Node::new_empty());
+        debug!("Added empty node")
+    }
+
+    pub fn add_child(&mut self)
+    {
+        let child = self.0.pop();
+        let top = self.0.last_mut();
+
+        if child.is_none() || top.is_none()
+        {
+            warn!("Failed to add child {:?} to {:?}", child, top);
+            return;
+        }
+
+        let child = child.unwrap();
+        let mut top = top.unwrap();
+
+        debug!("Adding {:?} as a child of {:?}", child.val, top.val);
+        top.children.push(child);
+
     }
 }
 
-#[cfg(test)]
-mod test {}
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum SemanticAction
+{
+    MakeFamilyRootNode(InternalNodeType),
+    MakeTerminalNode,
+    MakeRelativeOperation,
+    MakeEmptyNode,
+    AddChild
+}
+
+#[derive(Clone, Debug)]
+pub enum NodeVal
+{
+    Leaf(Token),
+    Internal(InternalNodeType)
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+pub enum InternalNodeType
+{
+    Root,
+    FuncCallParams,
+    Add,
+    Sub,
+    Or,
+    Assignment,
+    ClassDeclaration,
+    MemberDeclaration,
+    MemberFuncDeclaration,
+    MemberVarDeclaration,
+    FuncDeclaration,
+    VarDeclaration,
+    Expr,
+    ArithExpr,
+    RelExpr,
+    FuncParams,
+    FuncParam,
+    FuncParamDim,
+    InheritList,
+    MemberList,
+    ArrayDim,
+    Negation,
+    SignedFactor,
+    TernaryOperation,
+    Factor,
+    FuncBody,
+    StatementList,
+    FuncDef,
+    Indice,
+    Mult,
+    Div,
+    And,
+    VarBlock,
+    ClassDeclarations,
+    FunctionDefinitions,
+    Main,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterEqualThan,
+    LessEqualThan,
+    IfStatement,
+    WhileStatement,
+    ReadStatement,
+    WriteStatement,
+    ReturnStatement,
+    BreakStatement,
+    ContinueStatement,
+    GenericStatement,
+    Variable
+}

@@ -1,10 +1,11 @@
-use std::borrow::Borrow;
-use std::hash::{Hash, Hasher};
+use crate::parser::ast::{Node, NodeVal, SemanticStack};
 use crate::parser::grammar::{DerivationTable, GrammarSymbol};
-use std::io;
+use std::borrow::Borrow;
+use std::collections::HashMap;
 use std::fs::OpenOptions;
+use std::hash::{Hash, Hasher};
+use std::io;
 use std::io::{BufWriter, Write};
-use crate::parser::ast::{SemanticStack, Node, NodeVal};
 
 //https://stackoverflow.com/questions/45786717/how-to-implement-hashmap-with-two-keys
 pub trait KeyPair<A, B> {
@@ -54,17 +55,31 @@ impl<A, B> KeyPair<A, B> for (&A, &B) {
     }
 }
 
-pub fn serialize_parsing_table_to_file(table: DerivationTable, file_name: &str) -> io::Result<()>
-{
-    let table_file = OpenOptions::new().write(true).create(true).truncate(true).open(format!("{}.derivation.md", file_name))?;
+pub fn serialize_parsing_table_to_file(table: DerivationTable, file_name: &str) -> io::Result<()> {
+    let table_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(format!("{}.derivation.md", file_name))?;
     let mut buf_writer = BufWriter::new(table_file);
 
     buf_writer.write("| Stack | Lookahead | Rule |\n| --- | --- | --- |\n".as_bytes());
 
-    for record in table.0
-    {
+    for record in table.0 {
         buf_writer.write("|".as_bytes());
-        buf_writer.write(format!("{:?}", record.stack_state.iter().rev().take(5).rev().collect::<Vec<&GrammarSymbol>>()).as_bytes());
+        buf_writer.write(
+            format!(
+                "{:?}",
+                record
+                    .stack_state
+                    .iter()
+                    .rev()
+                    .take(5)
+                    .rev()
+                    .collect::<Vec<&GrammarSymbol>>()
+            )
+            .as_bytes(),
+        );
         buf_writer.write("|".as_bytes());
         buf_writer.write(format!("{:?}", record.lookahead_token).as_bytes());
         buf_writer.write("|".as_bytes());
@@ -76,9 +91,14 @@ pub fn serialize_parsing_table_to_file(table: DerivationTable, file_name: &str) 
     Ok(())
 }
 
-pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::Result<()>
-{
-    let tree_file = OpenOptions::new().write(true).create(true).truncate(true).open(format!("{}.ast.gv", file_name))?;
+/*pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::Result<()> {
+    let mut _node_labels_count: HashMap<String, usize> = HashMap::new();
+
+    let tree_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(format!("{}.ast.gv", file_name))?;
     let mut buf_writer = BufWriter::new(tree_file);
 
     buf_writer.write("digraph AST {\n".as_bytes());
@@ -88,17 +108,16 @@ pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::R
     root_stack.append(&mut tree.0);
 
     while !root_stack.is_empty() {
-        let mut current_root = root_stack.remove(0);
-        let root_name: String = current_root.to_string();
-        buf_writer.write(format!("{};\n", root_name).as_bytes());
+        let mut current_root: Node = root_stack.remove(0);
+        buf_writer.write(format!("{};\n", current_root.label()).as_bytes());
+        let root_label = current_root.label().to_string();
 
-        for child in current_root.children.drain(..)
-        {
-            buf_writer.write(format!("{} -> {};\n", root_name, child.to_string()).as_bytes());
-            root_stack.push(child)
+        for child in current_root.children.drain(..) {
+            buf_writer.write(format!("{} -> {};\n", root_label, child.label()).as_bytes());
+            root_stack.push(child);
         }
     }
     buf_writer.write("}".as_bytes());
     buf_writer.flush()?;
     Ok(())
-}
+}*/

@@ -2,12 +2,13 @@ use crate::lexer::token::{Token, TokenType};
 use crate::parser::data::*;
 use crate::parser::grammar::GrammarSymbol::*;
 use crate::parser::grammar::NamedSymbol::*;
+use crate::parser::ast::SemanticAction;
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone, Debug)]
 pub enum GrammarSymbol {
     Terminal(TokenType),
     NonTerminal(NamedSymbol),
-    MakeFamilyAttribute(usize),
+    SemanticActionType(SemanticAction),
     EPSILON,
     STOP,
 }
@@ -188,7 +189,7 @@ impl GrammarSymbol {
                     return VISIBILITY_FIRST;
                 }
             },
-            EPSILON | STOP | MakeFamilyAttribute(_) => {
+           _ => {
                 panic!()
             }
         }
@@ -369,7 +370,7 @@ impl GrammarSymbol {
                     return VISIBILITY_FOLLOW;
                 }
             },
-            EPSILON | STOP | MakeFamilyAttribute(_) => {
+            _ => {
                 panic!()
             }
         }
