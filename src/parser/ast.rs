@@ -72,14 +72,14 @@ impl SemanticStack
     {
         debug!("Making family with {:?}", node_t);
         self.0.push(Node::new_with_val(NodeVal::Internal(node_t)));
-        debug!("{:?}", self);
+        debug!("{}", self);
     }
 
     pub fn make_terminal_node(&mut self, token: &Token)
     {
         debug!("Making terminal node with: {:?}", token);
         self.0.push(Node::new_with_val(NodeVal::Leaf(token.clone())));
-        debug!("{:?}", self);
+        debug!("{}", self);
     }
 
     pub fn make_relative_operation(&mut self)
@@ -115,7 +115,7 @@ impl SemanticStack
         op.add_child(lhs);
         op.add_child(rhs);
         self.0.push(op);
-        debug!("{:?}", self);
+        debug!("{}", self);
     }
 
     pub fn make_empty_node(&mut self)
@@ -144,7 +144,19 @@ impl SemanticStack
 
         debug!("Adding {:?} as a child of {:?}", child.val, top.val);
         top.children.push(child);
-        debug!("{:?}", self);
+        debug!("{}", self);
+    }
+}
+
+impl Display for SemanticStack
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "Semantic Stack -> ")?;
+        for node in self.0.iter()
+        {
+            write!(f, "{} ", node)?;
+        };
+        fmt::Result::Ok(())
     }
 }
 
@@ -225,7 +237,9 @@ pub enum InternalNodeType
     BreakStatement,
     ContinueStatement,
     GenericStatement,
-    Variable
+    Variable,
+    Term,
+    StatBlock
 }
 
 impl Display for InternalNodeType

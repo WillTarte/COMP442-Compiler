@@ -1,6 +1,6 @@
 use crate::parser::ast::{Node, NodeVal, SemanticStack};
 use crate::parser::grammar::{DerivationTable, GrammarSymbol};
-use log::warn;
+use log::{warn, debug};
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
@@ -92,9 +92,26 @@ pub fn serialize_parsing_table_to_file(table: DerivationTable, file_name: &str) 
     Ok(())
 }
 
+pub struct LabeledNode
+{
+    node: Node,
+    label: String
+}
+
+impl LabeledNode
+{
+    pub fn new(label: String, node: Node) -> Self
+    {
+        Self
+        {
+            node,
+            label
+        }
+    }
+}
+
 pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::Result<()> {
 
-    warn!("{:?}", tree);
     let tree_file = OpenOptions::new()
         .write(true)
         .create(true)
@@ -104,20 +121,28 @@ pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::R
     buf_writer.write("digraph AST {\n".as_bytes());
 
     let mut node_label_count: HashMap<String, usize> = HashMap::new();
+    let mut to_write: Vec<String> = Vec::new();
 
-    let mut root_stack: Vec<Node> = Vec::new();
-    root_stack.append(&mut tree.0);
+    let mut root_stack: Vec<LabeledNode> = Vec::new();
+    let mut root = tree.0.remove(0);
+    let root_suffix = node_label_count.entry(root.to_string()).or_insert(0);
+    let root_label = format!("{}_{}", root.to_string(), *root_suffix);
+    *root_suffix += 1;
+    let root_labeled = LabeledNode::new(root_label, root);
+    root_stack.push(root_labeled);
 
     while !root_stack.is_empty() {
-        let mut root = root_stack.remove(0);
-        let root_label = format!("{}{}", root.to_string(), node_label_count.entry(root.to_string()).or_insert(0));
+        let mut current_root = root_stack.remove(0);
+        buf_writer.write(format!("\"{}\" [label=\"{}\"];", current_root.label, current_root.node.to_string()).as_bytes());
 
-        buf_writer.write(format!("{} [label=\"{}\"];", root_label, root.to_string()).as_bytes());
-        for child in root.children.drain(..)
+        for unlabelled_child in current_root.node.children.drain(..)
         {
-            let child_label = format!("{}{}", child.to_string(), node_label_count.entry(child.to_string()).or_insert(0));
-            buf_writer.write(format!("{} -> {};", root_label, child_label).as_bytes());
-            root_stack.push(child);
+            let mut child_suffix = node_label_count.entry(unlabelled_child.to_string()).or_insert(0);
+            let labelled_child = LabeledNode::new(format!("{}_{}", unlabelled_child.to_string(), child_suffix), unlabelled_child);
+            *child_suffix += 1;
+
+            buf_writer.write(format!("\"{}\" -> \"{}\";\n", current_root.label, labelled_child.label).as_bytes());
+            root_stack.push(labelled_child);
         }
     }
 

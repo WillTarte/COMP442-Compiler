@@ -31,7 +31,7 @@
 <exprAmb1> ::= <relOp> <arithExpr> #MakeRelativeOperation #AddChild
 <exprAmb1> ::= EPSILON #AddChild
 
-<arithExpr> ::= #MakeFamilyRootNode("ArithExpr") <term> <rightrec-arithExpr>
+<arithExpr> ::= #MakeFamilyRootNode("ArithExpr") <term> <rightrec-arithExpr> #AddChild
 
 <relExpr> ::= #MakeFamilyRootNode("RelExpr") <arithExpr> <relOp> <arithExpr> #MakeRelativeOperation #AddChild
 
@@ -41,7 +41,7 @@
 <factor> ::= #MakeTerminalNode 'intLit'
 <factor> ::= #MakeTerminalNode 'floatLit'
 <factor> ::= #MakeTerminalNode 'stringLit'
-<factor> ::= '(' <arithExpr> ')' TODO
+<factor> ::= '(' <arithExpr> ')'
 <factor> ::= #MakeFamilyRootNode("Negation") 'not' <factor> #AddChild
 <factor> ::= #MakeFamilyRootNode("SignedFactor") <sign> #AddChild <factor> #AddChild
 <factor> ::= #MakeFamilyRootNode("TernaryOperation") 'qm' '[' <expr> #AddChild ':' <expr> #AddChild ':' <expr> #AddChild ']'
@@ -115,8 +115,7 @@
 <rept-prog1> ::= <funcDef> #AddChild <rept-prog1>
 <rept-prog1> ::= EPSILON
 
-//TODO
-<rept-statBlock> ::= <statement> <rept-statBlock>
+<rept-statBlock> ::= <statement> #AddChild <rept-statBlock>
 <rept-statBlock> ::= EPSILON
 
 <rept-varDecl> ::= <arraySize> #AddChild <rept-varDecl>
@@ -131,14 +130,12 @@
 <rightrec-term> ::= <multOp> <factor> #MakeRelativeOperation <rightrec-term>
 <rightrec-term> ::= EPSILON
 
-//TODO
 <sign> ::= #MakeTerminalNode '+'
 <sign> ::= #MakeTerminalNode '-'
 
-//TODO
-<statBlock> ::= '{' <rept-statBlock> '}'
-<statBlock> ::= <statement>
-<statBlock> ::= EPSILON
+<statBlock> ::= #MakeFamilyRootNode("StatBlock") '{' <rept-statBlock> '}'
+<statBlock> ::= #MakeFamilyRootNode("StatBlock") <statement> #AddChild
+<statBlock> ::= #MakeFamilyRootNode("StatBlock") #MakeEmptyNode #AddChild EPSILON
 
 <statement> ::= #MakeFamilyRootNode("IfStatement") 'if' '(' <relExpr> #AddChild ')' 'then' <statBlock> #AddChild 'else' <statBlock> #AddChild ';'
 <statement> ::= #MakeFamilyRootNode("WhileStatement") 'while' '(' <relExpr> #AddChild ')' <statBlock> #AddChild ';'
@@ -163,7 +160,7 @@
 <variableAmb1> ::= '(' <params> #AddChild ')' #MakeTerminalNode '.' #MakeTerminalNode 'id'  #MakeRelativeOperation <variableAmb1>
 <variableAmb1> ::= EPSILON
 
-<term> ::= <factor> <rightrec-term>
+<term> ::= #MakeFamilyRootNode("Term") <factor> <rightrec-term> #AddChild
 
 <type> ::= #MakeTerminalNode 'integer'
 <type> ::= #MakeTerminalNode 'float'
