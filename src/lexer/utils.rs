@@ -40,7 +40,6 @@ pub mod lexer {
     /// # Outputs
     /// * A `TokenFragment`
     pub(crate) fn parse_kw_or_id(input_fragment: &str) -> TokenFragment {
-        //FIXME: leading underscore for ID
         let word = input_fragment
             .chars()
             .take_while(|c: &char| c.is_ascii_alphanumeric() || *c == '_')
@@ -54,7 +53,7 @@ pub mod lexer {
         return if TokenType::Id.str_repr().is_match(&word) {
             TokenFragment::new(TokenType::Id, &word)
         } else {
-            TokenFragment::new(TokenType::Error(InvalidIdentifier), input_fragment)
+            TokenFragment::new(TokenType::Error(InvalidIdentifier), &word)
         };
     }
 

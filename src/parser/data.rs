@@ -945,7 +945,7 @@ lazy_static! {
                 rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Factor)), SemanticActionType(MakeTerminalNode), Terminal(Id), NonTerminal(FactorAmb1), SemanticActionType(AddChild)],
             },
         );
-        table.insert( //TODO
+        table.insert(
             (NonTerminal(Factor), Terminal(OpenParen)),
             GrammarRule {
                 lhs: NonTerminal(Factor),
