@@ -19,7 +19,7 @@ pub mod lexer {
     use crate::lexer::token::InvalidTokenType::{
         InvalidCharacter, InvalidIdentifier, InvalidMultilineComment, InvalidNumber, InvalidString,
     };
-    use crate::lexer::token::{TokenFragment, TokenType};
+    use crate::lexer::token::{Token, TokenFragment, TokenType};
 
     const VALID_CHARS: &str = "=<>+-*/|&!?(){}[];,.:";
 
@@ -227,6 +227,14 @@ pub mod lexer {
                 }
                 Some(m) => TokenFragment::new(TokenType::StringLit, m.as_str()),
             }
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn is_error_token(token: Token) -> bool {
+        match token.token_type() {
+            TokenType::Error(_) => true,
+            _ => false,
         }
     }
 }

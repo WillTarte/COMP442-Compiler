@@ -1,0 +1,86 @@
+func Member::f1(integer x) : void {}
+func Member::f2() : integer {}
+
+func f3(integer x, float y, string z, SomeType a) : float {}
+func f4(integer x[], integer y[][], integer z[5][5]) : string {}
+func f5() : SomeReturnType {}
+
+
+main {
+    someFunction();
+    c1.someFunction();
+    someFunction(1);
+    someFunction(x);
+    someFunction(y[5]);
+    someFunction(y[1][2][3]);
+
+    x = someFunction(x);
+
+    someFunction(x > y);
+
+    someFunction(?[x : y : z]);
+
+}
+/*
+    functions: definitions
+    --------------------------------------
+| | no main function definition (not allowed)
+|X| main function definition
+| | multiple main function definitions (not allowed)
+| | no free function definition
+|X| free function definition
+|X| multiple free function definitions
+| | no member function definition
+|x| member function definition
+|X| multiple member function definitions
+|x| return type: void
+|x| return type: integer
+|X| return type: float
+|x| return type: string
+|X| return type: id
+| | return type: array (not allowed)
+
+    functions: definitions
+    --------------------------------------
+| | no main function definition (not allowed)
+|X| main function definition
+| | multiple main function definitions (not allowed)
+|X| no free function definition
+| | free function definition
+| | multiple free function definitions
+| | no member function definition
+|X| member function definition
+|X| multiple member function definitions
+| | return type: void
+| | return type: integer
+|X| return type: float
+| | return type: string
+|X| return type: id
+| | return type: array (not allowed)
+
+
+    functions: formal parameters
+    --------------------------------------
+|X| type: integer
+|X| type: float
+|X| type: string
+|X| type: id
+|X| type: 1-dim array
+|X| type: n-dim array
+|X| type: array (with size)
+|X| type: array (without size)
+
+    functions: calls
+    --------------------------------------
+|X| free function call
+|X| member function call
+|X| parameters:0
+|X| parameters:1
+|X| parameters:n
+|X| array parameter - 1-dim
+|X| array parameter - n-dim
+|X| array parameter - with size
+|X| function call as statement
+| | function call as expression factor
+|X| expression as parameter
+*/

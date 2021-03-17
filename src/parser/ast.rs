@@ -1,41 +1,50 @@
-use log::{warn, debug};
-use crate::lexer::token::{Token};
-use std::fmt::{Display, Formatter};
-use std::fmt;
+//! Elements related to an Abstract Syntax Tree
 
-#[derive(Clone, Debug)]
-pub struct Node
-{
+use crate::lexer::token::Token;
+use log::{debug, warn};
+use std::fmt;
+use std::fmt::{Debug, Display, Formatter};
+
+/// A node in the abstact syntax tree.
+/// Contains an optional [NodeVal] and a list of children
+#[derive(Clone)]
+pub struct Node {
     val: Option<NodeVal>,
-    pub(crate) children: Vec<Node>
+    pub(crate) children: Vec<Node>,
 }
 
-impl Node
-{
-    pub fn new_with_val(val: NodeVal) -> Self
-    {
-        Self
-        {
+impl Node {
+    /// Creates a new node
+    /// # Arguments
+    /// * `val` - a [NodeVal]
+    pub fn new_with_val(val: NodeVal) -> Self {
+        Self {
             val: Some(val),
-            children: Vec::new()
+            children: Vec::new(),
         }
     }
 
-    pub fn new_empty() -> Self
-    {
-        Self
-        {
+    /// Creates an empty node
+    pub fn new_empty() -> Self {
+        Self {
             val: None,
-            children: Vec::new()
+            children: Vec::new(),
         }
     }
 
-    pub fn add_child(&mut self, child: Node)
-    {
+    /// Adds a childrent this this node
+    /// # Arguments
+    /// * `child` - a Node
+    pub fn add_child(&mut self, child: Node) {
         self.children.push(child);
     }
 }
 
+impl Debug for Node {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
 
 impl Display for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -43,66 +52,56 @@ impl Display for Node {
             None => {
                 write!(f, "None")
             }
-            Some(node_val) => {
-                match node_val
-                {
-                    NodeVal::Leaf(token) => {
-                        write!(f, "{}", token.lexeme())
-                    }
-                    NodeVal::Internal(internal) => {
-                        write!(f, "{}", internal.to_string().as_str())
-                    }
+            Some(node_val) => match node_val {
+                NodeVal::Leaf(token) => {
+                    write!(f, "{}", token)
                 }
-            }
+                NodeVal::Internal(internal) => {
+                    write!(f, "{}", internal)
+                }
+            },
         }
     }
 }
 
+/// The sementic stack is used to proccess semantic actions into an Abstract Syntax Tree composed of [Node]s
 #[derive(Debug)]
 pub struct SemanticStack(pub(crate) Vec<Node>);
 
-impl SemanticStack
-{
-    pub fn new() -> Self
-    {
+impl SemanticStack {
+    /// Creates a new empty semantic stack
+    pub fn new() -> Self {
         Self(Vec::new())
     }
 
-    pub fn make_family_root(&mut self, node_t: InternalNodeType)
-    {
+    /// Creates & pushes a new internal [Node] on the semantic stack
+    /// # Arguments
+    /// * `node_t` - the [InternalNodeType] to create a node with
+    pub fn make_family_root(&mut self, node_t: InternalNodeType) {
         debug!("Making family with {:?}", node_t);
         self.0.push(Node::new_with_val(NodeVal::Internal(node_t)));
-        debug!("{}", self);
     }
 
-    pub fn make_terminal_node(&mut self, token: &Token)
-    {
+    /// Creates & pushes a new leaf [Node] on the semantic stack.
+    /// # Arguments
+    /// * `token` - the [Token] to create a node with
+    pub fn make_terminal_node(&mut self, token: &Token) {
         debug!("Making terminal node with: {:?}", token);
-        self.0.push(Node::new_with_val(NodeVal::Leaf(token.clone())));
-        debug!("{}", self);
+        self.0
+            .push(Node::new_with_val(NodeVal::Leaf(token.clone())));
     }
 
-    pub fn make_relative_operation(&mut self)
-    {
+    /// Consumes the top 3 nodes, if possible, to create a new relative operation (lhs - rhs children of middle).
+    pub fn make_relative_operation(&mut self) {
         let rhs = self.0.pop();
         let op = self.0.pop();
         let lhs = self.0.pop();
 
-        if rhs.is_none() || op.is_none() || lhs.is_none()
-        {
-            warn!("Failed to make relative operation node: {:?} {:?} {:?}", lhs, op, rhs);
-            /*if lhs.is_some()
-            {
-                self.0.push(lhs.unwrap());
-            }
-            if op.is_some()
-            {
-                self.0.push(op.unwrap());
-            }
-            if rhs.is_some()
-            {
-                self.0.push(rhs.unwrap());
-            }*/
+        if rhs.is_none() || op.is_none() || lhs.is_none() {
+            warn!(
+                "Failed to make relative operation node: {:?} {:?} {:?}",
+                lhs, op, rhs
+            );
             return;
         }
 
@@ -110,83 +109,76 @@ impl SemanticStack
         let mut op = op.unwrap();
         let rhs = rhs.unwrap();
 
-        debug!("Making relative operation node: {:?} {:?} {:?}", lhs.val, op.val, rhs.val);
+        debug!(
+            "Making relative operation node: {:?} {:?} {:?}",
+            lhs.val, op.val, rhs.val
+        );
 
         op.add_child(lhs);
         op.add_child(rhs);
         self.0.push(op);
-        debug!("{}", self);
     }
 
-    pub fn make_empty_node(&mut self)
-    {
+    /// Creates & pushes a new empty [Node].
+    pub fn make_empty_node(&mut self) {
         self.0.push(Node::new_empty());
         debug!("Added empty node")
     }
 
-    pub fn add_child(&mut self)
-    {
+    /// Pops the top [Node] and adds it as a child of the next top [Node].
+    pub fn add_child(&mut self) {
         let child = self.0.pop();
         let top = self.0.last_mut();
 
-        if child.is_none() || top.is_none()
-        {
+        if child.is_none() || top.is_none() {
             warn!("Failed to add child {:?} to {:?}", child, top);
-            /*if child.is_some()
-            {
-                self.0.push(child.unwrap());
-            }*/
             return;
         }
 
         let child = child.unwrap();
-        let mut top = top.unwrap();
+        let top = top.unwrap();
 
         debug!("Adding {:?} as a child of {:?}", child.val, top.val);
         top.children.push(child);
-        debug!("{}", self);
     }
 }
 
-impl Display for SemanticStack
-{
+impl Display for SemanticStack {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "Semantic Stack -> ")?;
-        for node in self.0.iter()
-        {
+        for node in self.0.iter() {
             write!(f, "{} ", node)?;
-        };
+        }
         fmt::Result::Ok(())
     }
 }
 
+/// Represents the different semantic actions of the grammar. Maps to functions of [SemanticStack]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-pub enum SemanticAction
-{
+pub enum SemanticAction {
     MakeFamilyRootNode(InternalNodeType),
     MakeTerminalNode,
     MakeRelativeOperation,
     MakeEmptyNode,
-    AddChild
+    AddChild,
 }
 
-impl Display for SemanticAction
-{
+impl Display for SemanticAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
+/// Represents possible values held by [Node]s
 #[derive(Clone, Debug)]
-pub enum NodeVal
-{
+pub enum NodeVal {
     Leaf(Token),
-    Internal(InternalNodeType)
+    Internal(InternalNodeType),
 }
 
+/// Represents different semantic concepts in our grammar
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-pub enum InternalNodeType
-{
+pub enum InternalNodeType {
     Root,
     FuncCallParams,
     Add,
@@ -239,11 +231,10 @@ pub enum InternalNodeType
     GenericStatement,
     Variable,
     Term,
-    StatBlock
+    StatBlock,
 }
 
-impl Display for InternalNodeType
-{
+impl Display for InternalNodeType {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }

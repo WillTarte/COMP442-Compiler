@@ -1,0 +1,22 @@
+main {}
+
+/*
+    classes
+    --------------------------------------
+|X| no class declaration
+| | class declaration
+| | multiple class declarations
+| | no data member declaration
+| | data member declaration
+| | multiple data member declaration
+| | no member function declaration
+| | member function declaration
+| | multiple member function declaration
+| | no member
+| | no inherited class
+| | one inherited class
+| | multiple inherited classes
+| | private member specifier
+| | public member specifier
+| | absence of member specifier
+*/

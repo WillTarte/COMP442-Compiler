@@ -6,6 +6,7 @@ use crate::lexer::utils::lexer::{
     is_valid_character, parse_kw_or_id, parse_number, parse_op_or_punct, parse_string,
 };
 use crate::lexer::utils::LINE_ENDINGS_RE;
+use log::{info, trace};
 use std::path::Path;
 
 /// Interface for a Lexer Analyzer
@@ -41,7 +42,7 @@ pub trait LexerAnalyzer {
 }
 
 /// My Implementation of a Lexer Analyzer
-pub(crate) struct MyLexerAnalyzer {
+pub struct MyLexerAnalyzer {
     input: LexerInput,
     idx: usize,
     line_num: usize,
@@ -50,7 +51,8 @@ pub(crate) struct MyLexerAnalyzer {
 impl MyLexerAnalyzer {
     #[allow(dead_code)]
     // Builds a LexerInput from a String
-    fn from_str(s: &str) -> Self {
+    pub fn from_str(s: &str) -> Self {
+        info!("Lexing string {}", s);
         Self {
             input: LexerInput::from_str(s),
             idx: 0,
@@ -61,7 +63,9 @@ impl MyLexerAnalyzer {
     /// Reads the content of a given file to build the `LexerInput`
     /// # Arguments
     /// * `filename` - the file path to read from
-    pub(crate) fn from_file<P: AsRef<Path>>(filename: P) -> Self {
+    #[allow(dead_code)]
+    pub fn from_file<P: AsRef<Path>>(filename: P) -> Self {
+        info!("Lexing file {:?}", filename.as_ref());
         Self {
             input: LexerInput::from_file(filename),
             idx: 0,
@@ -132,7 +136,7 @@ impl LexerAnalyzer for MyLexerAnalyzer {
             Some(s) => s,
         };
 
-        return if first_char.is_ascii_alphabetic() || first_char == '_' {
+        let next_token = if first_char.is_ascii_alphabetic() || first_char == '_' {
             // Probably a keyword or an identifier
             let token_fragment = parse_kw_or_id(input_fragment);
             self.forward_n(token_fragment.lexeme.len());
@@ -164,6 +168,8 @@ impl LexerAnalyzer for MyLexerAnalyzer {
                 self.line_num,
             ))
         };
+        trace!("Found: {:?}", next_token);
+        return next_token;
     }
 
     fn skip_whitespace(&mut self) {
@@ -227,6 +233,7 @@ impl LexerInput {
     /// Reads the content of a given file to build the `LexerInput`
     /// # Arguments
     /// * `filename` - the file path to read from
+    #[allow(dead_code)]
     fn from_file<P: AsRef<Path>>(filename: P) -> Self {
         let content: String =
             std::fs::read_to_string(&filename).expect("Failed to read file content");
@@ -281,8 +288,9 @@ mod tests {
 
     #[test]
     fn my_lexer_next_token() {
-        let mut my_lexer =
-            MyLexerAnalyzer::from_file(Path::new("assignment1/lexpositivegrading.src"));
+        let mut my_lexer = MyLexerAnalyzer::from_file(Path::new(
+            "docs/Assignment1/Assignment1_Handout/lexpositivegrading.src",
+        ));
 
         assert_eq!(
             my_lexer.next_token(),

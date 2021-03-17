@@ -5,6 +5,8 @@ use regex::Regex;
 
 use crate::lexer::token::InvalidTokenType::InvalidCharacter;
 use crate::lexer::token_regex::*;
+use std::fmt;
+use std::fmt::{Debug, Display, Formatter};
 
 lazy_static! {
     #[doc(hidden)]
@@ -266,6 +268,12 @@ impl TokenType {
     }
 }
 
+impl Display for TokenType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "Token Type: {:?}", self)
+    }
+}
+
 /// Reprensents the different types of invalid tokens
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum InvalidTokenType {
@@ -315,8 +323,8 @@ impl TokenFragment {
     }
 }
 
-/// Reprensents a full token, which includes a [TokenFragment] and a line number from the input.
-#[derive(Clone, Debug, Eq, PartialEq)]
+/// Represents a full token, which includes a [TokenFragment] and a line number from the input.
+#[derive(Clone, Eq, Debug, PartialEq)]
 pub struct Token {
     pub token_fragment: TokenFragment,
     pub line_num: usize,
@@ -346,5 +354,11 @@ impl Token {
     /// Returns this token's lexeme
     pub(crate) fn lexeme(&self) -> &str {
         return self.token_fragment.lexeme.as_ref();
+    }
+}
+
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "Token: {}", self.lexeme())
     }
 }

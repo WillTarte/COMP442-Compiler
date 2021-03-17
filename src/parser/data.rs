@@ -1,10 +1,12 @@
+//! First & Follow sets + Parsing table
+
 use crate::lexer::token::TokenType::*;
+use crate::parser::ast::InternalNodeType;
+use crate::parser::ast::SemanticAction::*;
 use crate::parser::grammar::GrammarRule;
 use crate::parser::grammar::GrammarSymbol;
 use crate::parser::grammar::GrammarSymbol::*;
 use crate::parser::grammar::NamedSymbol::*;
-use crate::parser::ast::InternalNodeType;
-use crate::parser::ast::SemanticAction::*;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 

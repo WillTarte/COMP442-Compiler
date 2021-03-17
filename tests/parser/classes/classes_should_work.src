@@ -1,0 +1,52 @@
+class NoMembers {};
+
+class VarMembers {
+    int x[][1];
+    public int y;
+    private int z;
+};
+
+class FuncMembers {
+    func f1() : void;
+    public func f2(integer x1, float x2[]) : float;
+    private func f3() : integer;
+};
+
+class FuncAndVarMembers {
+    int x[][1];
+    public int y;
+    private int z;
+
+    func f1() : void;
+    public func f2(integer x1, float x2[]) : float;
+    private func f3() : integer;
+};
+
+class Base1 {};
+
+class Base2 {};
+
+class Derived inherits Base1, Base2 {};
+
+main {}
+
+/*
+    classes
+    --------------------------------------
+| | no class declaration
+|X| class declaration
+|X| multiple class declarations
+|X| no data member declaration
+|X| data member declaration
+|X| multiple data member declaration
+|X| no member function declaration
+|X| member function declaration
+|X| multiple member function declaration
+|X| no member
+|X| no inherited class
+|X| one inherited class
+|X| multiple inherited classes
+|X| private member specifier
+|X| public member specifier
+|X| absence of member specifier
+*/

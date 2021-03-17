@@ -1,0 +1,22 @@
+func f1() : integer[] {}
+
+main {}
+/*
+    functions: definitions
+    --------------------------------------
+| | no main function definition (not allowed)
+|x| main function definition
+| | multiple main function definitions (not allowed)
+| | no free function definition
+|x| free function definition
+| | multiple free function definitions
+| | no member function definition
+| | member function definition
+| | multiple member function definitions
+| | return type: void
+| | return type: integer
+| | return type: float
+| | return type: string
+| | return type: id
+|x| return type: array (not allowed)
+*/

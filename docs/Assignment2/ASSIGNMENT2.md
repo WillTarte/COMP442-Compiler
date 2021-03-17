@@ -1,21 +1,21 @@
 # Assignment 2 Document
 ## Work to submit
-    - Report
-        - [ ] LL(1) transformed gramnmar
-            - [ ] Remove all EBNF repetition and optionality constructs (grammar tool)
-            - [ ] Replace all left recursion by right recursion (grammar tool)
-            - [ ] Remove all ambiguities (ucalgary tool + by hand)
-        - [ ] First & Follow sets (grammar tool)
-        - [ ] Design
-        - [ ] Use of tools
-    - Implementation
-        - [ ] Parser (recursive descent or table driven)
-        - [ ] Derivation output
-        - [ ] AST output
-        - [ ] Error reporting
-        - [ ] Error recovery
-        - [ ] Test cases
-        - [ ] Driver
+- Report
+  - [X] LL(1) transformed grammar
+  - [X] Remove all EBNF repetition and optionality constructs (grammar tool)
+  - [X] Replace all left recursion by right recursion (grammar tool)
+  - [X] Remove all ambiguities (ucalgary tool + by hand)
+  - [X] First & Follow sets (grammar tool)
+  - [X] Design
+  - [X] Use of tools
+- Implementation
+  - [X] Parser (recursive descent or table driven)
+  - [X] Derivation output
+  - [X] AST output
+  - [X] Error reporting
+  - [X] Error recovery
+  - [X] Test cases
+  - [X] Driver
 
 ## Steps to transform grammar to LL(1)
     - Run it through the grammar tool to:
@@ -25,8 +25,6 @@
         - Generate UCalgary version for further processing
     - Remove ambiguities:
         - First set clashes & Factorizations
-
-https://www.cs.bgu.ac.il/~comp171/wiki.files/ps5.pdf
 
 ## Parsing Table (generated using the ucalgary website)
 |                    |                       plus                       |                      minus                       |                        or                        |                       lsqbr                       |            intnum            |                rsqbr                 |               equal                |                               class                                |                          id                          |                      lcurbr                       |       rcurbr        |                 semi                 |               intlit                |              floatlit               |              stringlit              |                          lpar                          |                 rpar                 |                 not                 |                         qm                         |                colon                 |                       dot                       |                            func                            |           void           |                              sr                              |                   mult                    |                    div                    |                    and                    |                  inherits                   |                       var                       |                   main                   |                  eq                  |                 neq                  |                  lt                  |                  gt                  |                 leq                  |                 geq                  |                               comma                                |                                 if                                  | then |     else      |                       while                        |                   read                   |                  write                  |                 return                  |                  break                  |                continue                 |                       integer                        |                        float                         |                        string                        |                       public                        |                       private                       | $ |
@@ -147,3 +145,49 @@ https://www.cs.bgu.ac.il/~comp171/wiki.files/ps5.pdf
 |      VARIABLE      |           |          |                             id                              |                                                      rpar                                                      |
 |    VARIABLEAMB1    | Nullable  |          |                      lsqbr, lpar, dot                       |                                                      rpar                                                      |
 |     VISIBILITY     | Nullable  |          |                       public, private                       |                                        id, func, integer, float, string                                        |
+
+## Design
+For the parsing algorithm, I have implemented the Table-Driven parser.
+### Grammar
+In the `grammar.rs` file, I defined grammar concepts to represent the grammar we are trying to parsed. The grammar is composed of `NonTerminal`, `Terminal` and `SemanticAction` symbols.
+A `TerminalSymbol` can be/holds any of the `TokenTypes` (defined in assignment 1 in `token.rs`).
+A `NonTerminal` can be any of the `NamedSymbols` (for example: `<prog>` -> `Prog`) found in the grammar.
+I have a `GrammarRule` struct that represents a rule defined in our grammar. It simply holds the left hand side `GrammarSymbol` and a list of `GrammarSymbols` for the right hand side of the rule.
+I also have defined `DerivationTable` which holds a list of `DerivationRecords` to keep track of the progress of the parsing derivation. Each `DerivationRecord` holds the current state of the parsing stack, the current lookahead token and the derived rule.
+
+In the `data.rs` file, I have defined the first & follow sets for all the `NonTerminal NamedSymbols`. I have also defined a `HashMap` that represents the parsing table for the grammar.
+Given a `NonTerminal` and a `Token`, the HashMap can return a `GrammarRule` or nothing based on the parsing table. I could have written the algorithms to generate the first, follow and parsing table on the fly, but I decided that my energy was well spent elsewhere.
+
+### Parsing & AST Generation
+In the `parse.rs` file is contained the table driven parsing algorithm implemented by the `parse` function. It takes in a `LexerAnalyzer` and parses the token stream. If the parsing is successful, it returns a `DerivationTable` and a `SemanticStack`. Otherwise, it returns an error.
+
+In the `ast.rs` file contains the code to handle semantic actions and the generation of an AST.
+A `Node` is composed of a optional `NodeVal` and a list of children `Nodes`.
+A `NodeVal` can either be a `Lead` that holds a `Token` or an `Internal` that holds one of many `InternalNodeTypes`.
+An `InternalNodeType` represents one of the many semantic concepts / node families that are represented by our grammar.
+
+I also defined the `SemanticStack` struct that acts as a stack of `Nodes`. It defines different operations on the stack, which map 1-1 to the `SemanticAction` enum.
+
+The `SemanticAction` enum defines the different semantic actions I have inserted into my grammar. 
+
+Due to Rust's borrowing and ownership model, I have decided to stray away from the proposed design in the lecture slides. I was still able to successfully model the attribute grammar in a way that is correct.
+
+### Utils
+In the `utils.rs` file, I have written a function to write the `DerivationTable` into a Markdown file. I also have written a function to write the `SemanticStack` to a GraphViz file.
+
+## Use of Tools
+- The Rust programming language: I chose to implement the compiler in Rust. Rust is a multi-paradigm programming language that guarantees memory safety, is relatively fast (similar to C/C++) and provides powerful tools to build a compiler (pattern matching, algebreic data types, etc...). I also had a bit of familiarity with the language and wanted to further my own proficiency in it.
+
+- Crates (Rust equivalent of libraries):
+    - [Regex](https://github.com/rust-lang/regex): This crate provides a library for parsing, compiling, and executing regular expressions, which is useful when testing a lexeme for a token.
+    - [Lazy Static](https://github.com/rust-lang-nursery/lazy-static.rs): Since you cannot declare/initialize static file variables (like C++), this crate provides a macro that enables you to do so. I use this to mostly in conjuction with the `Regex` crate so that my regular expressions are precompiled and available to any file in my project.
+    - [StructOpt](https://github.com/TeXitoi/structopt): This crate allows me to easily create a CLI for my compiler by simply defining a struct of possible command line arguments.
+    - [DotEnv](https://github.com/motdotla/dotenv): This crate allows the injection of environment variables by writing them in a .env file in the project root.
+    - [Env Logger](https://github.com/env-logger-rs/env_logger): This crate allows for ergonomic logging with customization done through environment variables.
+- Other tools:
+    - CLion: My IDE of choice for writing Rust code.
+    - Git/Github: VCS
+    - VSCode: Mostly for text editing and visualizing non-text files.
+    - [Regex 101](https://regex101.com/): To test my regexes.
+    - GraphViz: For creating the Finite Automatons required for the assignment & generate a visual representation of ASTs.
+    - [UCalgary Grammar Tool](http://mdaines.github.io/grammophone/): For help in transforming the grammar into LL(1).
