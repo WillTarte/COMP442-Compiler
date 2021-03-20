@@ -1,0 +1,20 @@
+main {}
+/*
+    functions: definitions
+    --------------------------------------
+| | no main function definition (not allowed)
+|X| main function definition
+| | multiple main function definitions (not allowed)
+|X| no free function definition
+| | free function definition
+| | multiple free function definitions
+|X| no member function definition
+| | member function definition
+| | multiple member function definitions
+| | return type: void
+| | return type: integer
+| | return type: float
+| | return type: string
+| | return type: id
+| | return type: array (not allowed)
+*/

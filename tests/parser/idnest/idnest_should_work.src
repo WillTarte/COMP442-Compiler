@@ -1,0 +1,34 @@
+
+main {
+    x = id.id;
+    x = id.id(id);
+    x = id(id).id;
+    x = id(id).id();
+    x = id.id[id];
+    x = id[id].id;
+    x = id[id].id[id];
+    x = id.id[id][id];
+    x = id[id][id].id;
+    x = id[id][id].id[id][id];
+    x = id(id).id[id];
+    x = id(id).id[id][id];
+    x = id[?[x : y : x + y * z]];
+}
+/*
+    variable + idnest
+    --------------------------------------
+|X| id
+|X| id.id
+|X| id.id(id)
+|X| id(id).id
+|X| id(id).id()
+|X| id.id[id]
+|X| id[id].id
+|X| id[id].id[id]
+|X| id.id[id][id]
+|X| id[id][id].id
+|X| id[id][id].id[id][id]
+|X| id(id).id[id]
+|X| id(id).id[id][id]
+|X| expression as array index
+*/

@@ -1,0 +1,173 @@
+<START> ::= <prog> 
+
+<params> ::= <expr> <rept-params> 
+<params> ::= EPSILON
+
+<addOp> ::= '+' 
+<addOp> ::= '-' 
+<addOp> ::= 'or' 
+
+<arraySize> ::= '[' <arraySizeAmb1>
+
+<arraySizeAmb1> ::= 'intNum' ']'
+<arraySizeAmb1> ::= ']'
+
+<assignOp> ::= '='
+
+<classDecl> ::= 'class' 'id' <opt-classDecl> '{' <rept-classDecl> '}' ';'
+
+<expr> ::= <arithExpr> <exprAmb1>
+
+<exprAmb1> ::= <relOp> <arithExpr>
+<exprAmb1> ::= EPSILON
+
+<arithExpr> ::= <term> <rightrec-arithExpr>
+<relExpr> ::= <arithExpr> <relOp> <arithExpr>
+
+<funcParams> ::= <type> 'id' <rept-funcParams0> <rept-funcParams1>
+<funcParams> ::= EPSILON
+
+<factor> ::= 'intLit'
+<factor> ::= 'floatLit'
+<factor> ::= 'stringLit'
+<factor> ::= '(' <arithExpr> ')'
+<factor> ::= 'not' <factor>
+<factor> ::= <sign> <factor>
+<factor> ::= 'qm' '[' <expr> ':' <expr> ':' <expr> ']'
+
+<factor> ::= 'id' <factorAmb1>
+<factorAmb1> ::= <rept-variable> <factorAmb2>
+<factorAmb1> ::= '(' <params> ')' <factorAmb2>
+<factorAmb2> ::= '.' 'id' <factorAmb1>
+<factorAmb2> ::= EPSILON
+
+<funcBody> ::= '{' <opt-funcBody> <rept-funcBody> '}'
+
+<funcDecl> ::= 'func' 'id' '(' <funcParams> ')' ':' <funcDeclAmb1>
+
+<funcDeclAmb1> ::= <type> ';'
+<funcDeclAmb1> ::= 'void' ';'
+
+<funcDef> ::= <funcHead> <funcBody>
+
+<funcHead> ::= 'func' 'id' <funcHeadAmb1>
+
+<funcHeadAmb1> ::= '(' <funcParams> ')' ':' <funcHeadAmb2>
+<funcHeadAmb1> ::= 'sr' 'id' '(' <funcParams> ')' ':' <funcHeadAmb2>
+
+<funcHeadAmb2> ::= 'void'
+<funcHeadAmb2> ::= <type>
+
+<indice> ::= '[' <arithExpr> ']'
+
+<memberDecl> ::= <funcDecl>
+<memberDecl> ::= <varDecl>
+
+<multOp> ::= '*'
+<multOp> ::= '/'
+<multOp> ::= 'and'
+
+<opt-classDecl> ::= 'inherits' 'id' <rept-opt-classDecl>
+<opt-classDecl> ::= EPSILON
+
+<opt-funcBody> ::= 'var' '{' <rept-opt-funcBody> '}'
+<opt-funcBody> ::= EPSILON
+
+<prog> ::= <rept-prog0> <rept-prog1> 'main' <funcBody>
+
+<relOp> ::= 'eq'
+<relOp> ::= 'neq'
+<relOp> ::= 'lt'
+<relOp> ::= 'gt'
+<relOp> ::= 'leq'
+<relOp> ::= 'geq'
+
+<rept-params> ::= ',' <expr> <rept-params>
+<rept-params> ::= EPSILON
+
+<rept-classDecl> ::= <visibility> <memberDecl> <rept-classDecl>
+<rept-classDecl> ::= EPSILON
+
+<rept-funcParams0> ::= <arraySize> <rept-funcParams0>
+<rept-funcParams0> ::= EPSILON
+
+<rept-funcParams1> ::= ',' <type> 'id' <rept-funcParamsTail> <rept-funcParams1>
+<rept-funcParams1> ::= EPSILON
+
+<rept-funcParamsTail> ::= <arraySize> <rept-funcParamsTail>
+<rept-funcParamsTail> ::= EPSILON
+
+<rept-funcBody> ::= <statement> <rept-funcBody>
+<rept-funcBody> ::= EPSILON
+
+<rept-opt-classDecl> ::= ',' 'id' <rept-opt-classDecl>
+<rept-opt-classDecl> ::= EPSILON
+
+<rept-opt-funcBody> ::= <varDecl> <rept-opt-funcBody>
+<rept-opt-funcBody> ::= EPSILON
+
+<rept-prog0> ::= <classDecl> <rept-prog0>
+<rept-prog0> ::= EPSILON
+
+<rept-prog1> ::= <funcDef> <rept-prog1>
+<rept-prog1> ::= EPSILON
+
+<rept-statBlock> ::= <statement> <rept-statBlock>
+<rept-statBlock> ::= EPSILON
+
+<rept-varDecl> ::= <arraySize> <rept-varDecl>
+<rept-varDecl> ::= EPSILON
+
+<rept-variable> ::= <indice> <rept-variable>
+<rept-variable> ::= EPSILON
+
+<rightrec-arithExpr> ::= <addOp> <term> <rightrec-arithExpr>
+<rightrec-arithExpr> ::= EPSILON
+
+<rightrec-term> ::= <multOp> <factor> <rightrec-term>
+<rightrec-term> ::= EPSILON
+
+<sign> ::= '+'
+<sign> ::= '-'
+
+<statBlock> ::= '{' <rept-statBlock> '}'
+<statBlock> ::= <statement>
+<statBlock> ::= EPSILON
+
+<statement> ::= 'if' '(' <relExpr> ')' 'then' <statBlock> 'else' <statBlock> ';'
+<statement> ::= 'while' '(' <relExpr> ')' <statBlock> ';'
+<statement> ::= 'read' '(' <variable> ')' ';'
+<statement> ::= 'write' '(' <expr> ')' ';'
+<statement> ::= 'return' '(' <expr> ')' ';'
+<statement> ::= 'break' ';'
+<statement> ::= 'continue' ';'
+
+<statement> ::= 'id' <statementAmb1>
+<statementAmb1> ::= <indice> <rept-variable> <statementAmb2>
+<statementAmb1> ::= '(' <params> ')' <statementAmb3>
+<statementAmb1> ::= <assignOp> <expr> ';'
+<statementAmb1> ::= '.' 'id' <statementAmb1>
+<statementAmb2> ::= '.' 'id' <statementAmb1>
+<statementAmb2> ::= <assignOp> <expr> ';'
+<statementAmb3> ::= '.' <statementAmb1>
+<statementAmb3> ::= ';'
+
+<variable> ::= 'id' <variableAmb1>
+<variableAmb1> ::= <rept-variable> '.' 'id' <variableAmb1>
+<variableAmb1> ::= '(' <params> ')' '.' 'id' <variableAmb1>
+<variableAmb1> ::= EPSILON
+
+<term> ::= <factor> <rightrec-term>
+
+<type> ::= 'integer'
+<type> ::= 'float'
+<type> ::= 'string'
+<type> ::= 'id'
+
+<varDecl> ::= <type> 'id' <rept-varDecl> ';'
+
+<visibility> ::= 'public' 
+<visibility> ::= 'private' 
+<visibility> ::= EPSILON 
+
+

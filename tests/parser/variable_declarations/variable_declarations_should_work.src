@@ -1,0 +1,52 @@
+func f1() : void
+{
+    var
+    {
+        integer x;
+        integer y;
+        integer z;
+    }
+}
+
+func f2() : void {}
+
+func f3() : void
+{
+    var{}
+}
+
+main {
+    var
+    {
+        integer x;
+        float y;
+        string z;
+        Type a;
+        integer b[];
+        integer c[5];
+        integer d[5][5];
+    }
+}
+
+
+/*
+    variable declaration
+    --------------------------------------
+|X| type: integer
+|X| type: float
+|X| type: string
+|X| type: id
+|X| type: 1-dim array
+|X| type: n-dim array
+|X| type: array (with size)
+|X| type: array (without size)
+
+    function body: local variable declaration block
+    --------------------------------------
+|X| no local variable declarations block
+|X| local variable declaration block
+| | multiple local variable declarations block (not allowed)
+|X| no variables in block
+|X| 1 variable declared in block
+|X| multiple variables declared in block
+*/

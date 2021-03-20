@@ -38,3 +38,5 @@ block comment
 // this is an inline comment
 
 "this is a string literal"
+
+/* this is a /* nested comment */ more comment */

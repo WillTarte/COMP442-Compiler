@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["comp442_compiler"] = [{"text":"impl Copy for TokenType","synthetic":false,"types":[]},{"text":"impl Copy for InvalidTokenType","synthetic":false,"types":[]}];
+implementors["comp442_compiler"] = [{"text":"impl Copy for TokenType","synthetic":false,"types":[]},{"text":"impl Copy for InvalidTokenType","synthetic":false,"types":[]},{"text":"impl Copy for SemanticAction","synthetic":false,"types":[]},{"text":"impl Copy for InternalNodeType","synthetic":false,"types":[]},{"text":"impl Copy for GrammarSymbol","synthetic":false,"types":[]},{"text":"impl Copy for NamedSymbol","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
