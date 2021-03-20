@@ -9,7 +9,7 @@ use std::fmt::{Debug, Display, Formatter};
 /// Contains an optional [NodeVal] and a list of children
 #[derive(Clone)]
 pub struct Node {
-    val: Option<NodeVal>,
+    pub(crate) val: Option<NodeVal>,
     pub(crate) children: Vec<Node>,
 }
 
@@ -64,7 +64,7 @@ impl Display for Node {
     }
 }
 
-/// The sementic stack is used to proccess semantic actions into an Abstract Syntax Tree composed of [Node]s
+/// The semantic stack is used to proccess semantic actions into an Abstract Syntax Tree composed of [Node]s
 #[derive(Debug)]
 pub struct SemanticStack(pub(crate) Vec<Node>);
 

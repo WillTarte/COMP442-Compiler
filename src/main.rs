@@ -10,6 +10,7 @@ use structopt::StructOpt;
 
 mod lexer;
 mod parser;
+mod semantics;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Compiler Driver")]

@@ -10,7 +10,7 @@ use crate::parser::grammar::DerivationTable;
 use crate::parser::grammar::GrammarSymbol::*;
 use crate::parser::grammar::NamedSymbol::Start;
 use crate::parser::grammar::{DerivationRecord, GrammarSymbol};
-use log::{debug, trace, warn};
+use log::{trace, warn};
 
 /// Parses a token stream and produces either a DerivationTable and an AST or an error
 pub fn parse<T>(lexer: T) -> Result<(DerivationTable, SemanticStack), ()>
