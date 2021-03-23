@@ -170,7 +170,7 @@ impl Display for SemanticAction {
 }
 
 /// Represents possible values held by [Node]s
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum NodeVal {
     Leaf(Token),
     Internal(InternalNodeType),
@@ -196,7 +196,6 @@ pub enum InternalNodeType {
     RelExpr,
     FuncParams,
     FuncParam,
-    FuncParamDim,
     InheritList,
     MemberList,
     ArrayDim,

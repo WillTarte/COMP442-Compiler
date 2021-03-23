@@ -38,7 +38,9 @@ where
 
     while *parsing_stack.last().unwrap() != STOP {
         let top_symbol = parsing_stack.last().unwrap().clone();
-        if next_token.is_some() && (next_token.as_ref().unwrap().token_type() == LineComment || next_token.as_ref().unwrap().token_type() == MultilineComment)
+        if next_token.is_some()
+            && (next_token.as_ref().unwrap().token_type() == LineComment
+                || next_token.as_ref().unwrap().token_type() == MultilineComment)
         {
             next_token = token_stream.next();
         }
@@ -55,7 +57,10 @@ where
                         None,
                     ))
                 } else {
-                    warn!("~ Mistmatch! Expected token of type {:?}, but got {:?} instead.", token_t, next_token);
+                    warn!(
+                        "~ Mistmatch! Expected token of type {:?}, but got {:?} instead.",
+                        token_t, next_token
+                    );
                     error = true;
                     while next_token.is_some()
                         && next_token.as_ref().unwrap().token_type() != token_t
