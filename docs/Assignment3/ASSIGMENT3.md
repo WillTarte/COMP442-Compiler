@@ -9,10 +9,10 @@
     
 ## Semantic Phases
 ### Symbol table creation phase
-    1. A new table is created at the beginning of the program for the global scope.
-    2. A new entry is created in the global table for each class declared in the program. These entries should contain links to local tables for these classes.
-    3. An entry in the appropriate table is created for each variable defined in the program, i.e. a class’ data members or a function’s local variables.
-    4. An entry in the appropriate table is created for each function definition (free functions and member functions). These entries should be links to local tables for these functions.
+    1. [X] A new table is created at the beginning of the program for the global scope.
+    2. [X] A new entry is created in the global table for each class declared in the program. These entries should contain links to local tables for these classes.
+    3. [X] An entry in the appropriate table is created for each variable defined in the program, i.e. a class’ data members or a function’s local variables.
+    4. [~] An entry in the appropriate table is created for each function definition (free functions and member functions). These entries should be links to local tables for these functions.
     5. During symbol table creation, there are some semantic errors that are detected and reported, such as multiply declared identifiers in the same scope, as well warnings such as for shadowed inherited members.
     6. All declared member functions should have a corresponding function definition, and inversely. A member function that is declared but not defined constitutes an “no definition for declared member function” semantic error. If a member function is defined but not declared, it constitutes an “definition provided for undeclared member function” semantic error.
     7. The content of the symbol tables should be output into a file in order to demonstrate their correctness/completeness.

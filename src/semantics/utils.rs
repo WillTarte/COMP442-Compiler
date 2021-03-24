@@ -1,7 +1,7 @@
 use crate::lexer::token::TokenType;
+use crate::lexer::token::TokenType::Func;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table;
-use crate::semantics::symbol_table::Scope::FunctionParameter;
 use crate::semantics::symbol_table::Type::{CustomArray, IntegerArray};
 use crate::semantics::symbol_table::{
     ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry,
@@ -35,11 +35,21 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                             let inherits: Vec<Type> =
                                 node.children[1].children.iter().map(map_to_type).collect();
 
-                            let members: Vec<Scope> = node.children[2]
+                            let mut members: Vec<Scope> = node.children[2]
                                 .children
                                 .iter()
                                 .map(map_member_to_scope)
                                 .collect();
+                            for scope in members.iter_mut()
+                            //todo a bit janky
+                            {
+                                match scope {
+                                    Scope::Function(entry) => {
+                                        entry.as_member_of(ident);
+                                    }
+                                    _ => {}
+                                }
+                            }
                             ClassEntry::new(ident, inherits, SymbolTable::new_from_scopes(members))
                         }
                         _ => {
@@ -90,7 +100,10 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
                     return_ty,
                 );
                 let symbol_table = SymbolTable::new_from_scopes(
-                    params.into_iter().map(|p| FunctionParameter(p)).collect(),
+                    params
+                        .into_iter()
+                        .map(|p| Scope::FunctionParameter(p))
+                        .collect(),
                 );
                 FunctionEntry::new(ident, ty_signature, symbol_table)
             }
@@ -99,6 +112,73 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
             }
         },
     }
+}
+
+/// FuncDef node
+pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
+    assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::FuncDef)));
+    assert_eq!(node.children.len(), 5);
+
+    let (ident1, ident2) = match (&node.children[0].val, &node.children[1].val) {
+        (Some(val1), Some(val2)) => match (val1, val2) {
+            (NodeVal::Leaf(t1), NodeVal::Leaf(t2)) => (t1.lexeme(), Some(t2.lexeme())),
+            (_, _) => {
+                panic!()
+            }
+        },
+        (Some(val1), None) => match val1 {
+            NodeVal::Leaf(t) => (t.lexeme(), None),
+            NodeVal::Internal(_) => {
+                panic!()
+            }
+        },
+        (_, _) => {
+            panic!()
+        }
+    };
+    let params: Vec<ParameterEntry> = node.children[2]
+        .children
+        .iter()
+        .map(map_func_param_to_entry)
+        .collect();
+    let return_ty = map_to_type(&node.children[3]);
+    let ty_signature: (Vec<Type>, Type) = (
+        params.iter().map(|p| p.parameter_type.clone()).collect(),
+        return_ty,
+    );
+    let mut symbol_table = SymbolTable::new_from_scopes(
+        params
+            .into_iter()
+            .map(|p| Scope::FunctionParameter(p))
+            .collect(),
+    );
+    let body_vars: Vec<VariableEntry> = node.children[4]
+        .children
+        .iter()
+        .map(map_var_decl_to_entry)
+        .collect();
+    symbol_table.add_scopes(body_vars.into_iter().map(Scope::Variable).collect());
+    match ident2 {
+        None => FunctionEntry::new(ident1, ty_signature, symbol_table),
+        Some(ident) => FunctionEntry::new_as_member(ident, ident1, ty_signature, symbol_table),
+    }
+}
+
+/// Main node
+pub(crate) fn map_main_to_scope(node: &Node) -> FunctionEntry {
+    assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::Main)));
+    assert_eq!(node.children.len(), 1);
+    assert_eq!(node.children[0].children.len(), 1);
+    let var_scopes: Vec<Scope> = node.children[0].children[0]
+        .children
+        .iter()
+        .map(|n| Scope::Variable(map_var_decl_to_entry(n)))
+        .collect();
+    FunctionEntry::new(
+        "main",
+        (Vec::new(), Type::Void),
+        SymbolTable::new_from_scopes(var_scopes),
+    )
 }
 
 /// VarDeclaration node
