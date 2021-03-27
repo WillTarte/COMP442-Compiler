@@ -1,9 +1,7 @@
 use crate::parser::ast::InternalNodeType::ClassDeclaration;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table::Type::{CustomArray, FloatArray, IntegerArray, StringArray};
-use crate::semantics::utils::{
-    map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_scope,
-};
+use crate::semantics::utils::{map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_scope, report_errors};
 use std::collections::HashMap;
 use std::ops::Deref;
 
@@ -13,6 +11,19 @@ pub enum Scope {
     Function(FunctionEntry),
     Variable(VariableEntry),
     FunctionParameter(ParameterEntry),
+}
+
+impl Scope {
+    pub fn ident(&self) -> &str
+    {
+        match self
+        {
+            Scope::Class(e) => { &e.identifier }
+            Scope::Function(e) => { &e.identifier }
+            Scope::Variable(e) => { &e.identifier }
+            Scope::FunctionParameter(e) => { &e.identifier }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -76,6 +87,11 @@ impl SymbolTable {
             //todo
         }
         None
+    }
+
+    pub fn scopes(&self) -> &Vec<Scope>
+    {
+        &self.0
     }
 }
 
@@ -141,6 +157,31 @@ impl FunctionEntry {
     pub fn as_member_of(&mut self, member: &str) {
         self.member_of = Some(member.to_string());
     }
+
+    pub fn ident(&self) -> &str
+    {
+        &self.identifier
+    }
+
+    pub fn member_of(&self) -> Option<&str>
+    {
+        match &self.member_of
+        {
+            None => { None }
+            Some(s) => { Some(s.as_str()) }
+        }
+
+    }
+
+    pub fn type_sig(&self) -> &(Vec<Type>, Type)
+    {
+        &self.type_signature
+    }
+
+    pub fn table(&self) -> &SymbolTable
+    {
+        &self.table
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -158,6 +199,21 @@ impl ClassEntry {
             table,
         }
     }
+
+    pub fn ident(&self) -> &str
+    {
+        &self.identifier
+    }
+
+    pub fn inherits(&self) -> &Vec<Type>
+    {
+        &self.inherits
+    }
+
+    pub fn table(&self) -> &SymbolTable
+    {
+        &self.table
+    }
 }
 //todo visibility
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -173,12 +229,22 @@ impl VariableEntry {
             variable_type: ty,
         }
     }
+
+    pub fn ident(&self) -> &str
+    {
+        &self.identifier
+    }
+
+    pub fn var_type(&self) -> &Type
+    {
+        &self.variable_type
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ParameterEntry {
     identifier: String,
-    pub(crate) parameter_type: Type,
+    parameter_type: Type,
 }
 
 impl ParameterEntry {
@@ -188,9 +254,37 @@ impl ParameterEntry {
             parameter_type: ty,
         }
     }
+
+    pub fn ident(&self) -> &str
+    {
+        &self.identifier
+    }
+
+    pub fn param_type(&self) -> &Type
+    {
+        &self.parameter_type
+    }
 }
 
-pub fn generate_symbol_table(root: &Node) -> SymbolTable {
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum SemanticError {
+    Warning(WarningType),
+    NoMemberFuncDefinition(String),
+    NoMemberFuncDeclaration(String),
+    MultipleDeclIdent(String),
+    MultiplyDeclVariable(String),
+    MultiplyDeclMember(String),
+    MultiplyDeclClass(String),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum WarningType
+{
+    OverloadWarning(String),
+    ShadowedMemberWarning(String)
+}
+
+pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
     assert_eq!(root.val, Some(NodeVal::Internal(InternalNodeType::Root)));
     assert_eq!(root.children.len(), 3); // class declarations, func definitions, main
 
@@ -238,5 +332,19 @@ pub fn generate_symbol_table(root: &Node) -> SymbolTable {
         }
     }
     global.add_scope(main_scope);
-    global
+
+    let errors: Vec<SemanticError> = report_errors(&global);
+
+    (global, errors)
+}
+
+pub fn check_semantics(root: &node, global: &SymbolTable)
+{
+    // Type check expressions (member access, arith expr, rel expr, assign, statements)
+    // Check visibility when accessing class members
+    // Check func calls, array indexing
+    // Check referenced ID for existence
+    //
+
+    todo!()
 }

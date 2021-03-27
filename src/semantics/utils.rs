@@ -3,11 +3,10 @@ use crate::lexer::token::TokenType::Func;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table;
 use crate::semantics::symbol_table::Type::{CustomArray, IntegerArray};
-use crate::semantics::symbol_table::{
-    ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry,
-};
+use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry, SemanticError, WarningType};
+use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
 
-/// ClassDeclaration node
+/// Maps a ClassDeclaration node to a ClassEntry
 pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
     assert_eq!(
         node.val,
@@ -41,7 +40,6 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                                 .map(map_member_to_scope)
                                 .collect();
                             for scope in members.iter_mut()
-                            //todo a bit janky
                             {
                                 match scope {
                                     Scope::Function(entry) => {
@@ -62,7 +60,7 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
     }
 }
 
-/// FuncDeclaration node
+/// Maps a FuncDeclaration node to a FunctionEntry
 pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
     assert_eq!(
         node.val,
@@ -96,16 +94,16 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
                     .collect();
                 let return_ty = map_to_type(&node.children[2]);
                 let ty_signature: (Vec<Type>, Type) = (
-                    params.iter().map(|p| p.parameter_type.clone()).collect(),
+                    params.iter().map(|p| p.param_type().clone()).collect(),
                     return_ty,
                 );
-                let symbol_table = SymbolTable::new_from_scopes(
+                /*let symbol_table = SymbolTable::new_from_scopes(
                     params
                         .into_iter()
                         .map(|p| Scope::FunctionParameter(p))
                         .collect(),
-                );
-                FunctionEntry::new(ident, ty_signature, symbol_table)
+                );*/
+                FunctionEntry::new(ident, ty_signature, SymbolTable::new())
             }
             _ => {
                 panic!()
@@ -114,7 +112,7 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
     }
 }
 
-/// FuncDef node
+/// Maps a FuncDef node to a FunctionEntry
 pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
     assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::FuncDef)));
     assert_eq!(node.children.len(), 5);
@@ -143,7 +141,7 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
         .collect();
     let return_ty = map_to_type(&node.children[3]);
     let ty_signature: (Vec<Type>, Type) = (
-        params.iter().map(|p| p.parameter_type.clone()).collect(),
+        params.iter().map(|p| p.param_type().clone()).collect(),
         return_ty,
     );
     let mut symbol_table = SymbolTable::new_from_scopes(
@@ -164,7 +162,7 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
     }
 }
 
-/// Main node
+/// Maps Main node to a FunctionEntry
 pub(crate) fn map_main_to_scope(node: &Node) -> FunctionEntry {
     assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::Main)));
     assert_eq!(node.children.len(), 1);
@@ -181,7 +179,7 @@ pub(crate) fn map_main_to_scope(node: &Node) -> FunctionEntry {
     )
 }
 
-/// VarDeclaration node
+/// Maps a VarDeclaration node to a Variable Entry
 pub(crate) fn map_var_decl_to_entry(node: &Node) -> VariableEntry {
     assert_eq!(
         node.val,
@@ -203,7 +201,7 @@ pub(crate) fn map_var_decl_to_entry(node: &Node) -> VariableEntry {
     VariableEntry::new(ident, ty)
 }
 
-/// FuncParam node
+/// Maps a FuncParam node to a ParameterEntry
 pub(crate) fn map_func_param_to_entry(node: &Node) -> ParameterEntry {
     assert_eq!(
         node.val,
@@ -305,6 +303,7 @@ pub(crate) fn map_to_usize(node: &Node) -> Option<usize> // e.g. ArrayDim childr
     }
 }
 
+/// Maps a class member to a Variable or Function Scope
 pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
     assert_eq!(
         node.val,
@@ -342,4 +341,140 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
             }
         },
     }
+}
+
+pub(crate) fn report_errors(table: &SymbolTable) -> Vec<SemanticError>
+{
+    let mut errors: Vec<SemanticError> = Vec::new();
+
+    // Multiply declared identifiers (class, functions (not overload) and local params/variables)-> Semantic Error
+    errors.append(&mut check_multiply_decl_id(table));
+    // Shadowed members -> Warning
+    errors.append(&mut check_shadowed_members(table));
+    // Member functions -> Declaration + Definition or Semantic Error
+    errors.append(&mut check_member_func(table));
+    // Multiple class and/or variable declarations in the same scope -> Semantic Error
+    todo!();
+    // Function (member/free) Overload -> Warning
+    errors.append(&mut check_func_overload(table));
+    // Check circular inheritance
+    todo!();
+
+    errors
+}
+
+pub(crate) fn check_multiply_decl_id(table: &SymbolTable) -> Vec<SemanticError>
+{
+    let mut errors: Vec<SemanticError> = Vec::new();
+
+    for idx in 0..table.scopes().len() - 1
+    {
+        for idy in (idx + 1)..table.scopes().len()
+        {
+            match (&table.scopes()[idx], &table.scopes()[idy])
+            {
+                (Class(e1), Class(e2)) => {}
+                (Function(e1), Function(e2)) => {
+                    if e1.ident() == e2.ident() && e1.type_sig() == e2.type_sig()
+                    {
+                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared function: {}", e1.ident())));
+                    }
+                },
+                (FunctionParameter(e1), FunctionParameter(e2)) => {
+                    if e1.ident() == e2.ident()
+                    {
+                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared parameter: {}", e1.ident())));
+                    }
+                },
+                (Variable(e1), Variable(e2)) => {
+                    if e1.ident() == e2.ident()
+                    {
+                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared variable: {}", e1.ident())));
+                    }
+
+                }
+                (FunctionParameter(e1), Variable(e2)) => {
+                    if e1.ident() == e2.ident()
+                    {
+                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared param/variable: {}", e1.ident())));
+                    }
+                }
+                (Variable(e1), FunctionParameter(e2)) => {
+                    if e1.ident() == e2.ident()
+                    {
+                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared param/variable: {}", e1.ident())));
+                    }
+                }
+                (_,_) => {},
+            }
+        }
+    }
+
+    for scope in table.scopes().iter()
+    {
+        match scope
+        {
+            Class(e) => {
+                errors.append(&mut check_multiply_decl_id(&e.table()));
+            }
+            Function(e) => {}
+            _ => {}
+        }
+    }
+
+    errors
+}
+
+pub(crate) fn check_shadowed_members(table: &SymbolTable) -> Vec<SemanticError>
+{
+    let mut warnings: Vec<SemanticError> = Vec::new();
+    for scope in table.scopes()
+    {
+        match scope
+        {
+            Class(e) => {
+                for parent_t in e.inherits()
+                {
+                    let parent_table: &SymbolTable = match parent_t
+                    {
+                        Type::Custom(id) => {
+                            match table.find_scope_by_ident(id)
+                            {
+                                None => { panic!() }
+                                Some(parent_scope) => {
+                                    match parent_scope
+                                    {
+                                        Class(parent) => { parent.table() }
+                                        _ => { panic!() }
+                                    }
+                                }
+                            }
+                        },
+                        _ => { panic!() }
+                    }; //todo
+
+                    for local_scope in e.table().scopes()
+                    {
+                        if parent_table.scopes().contains(local_scope)
+                        {
+                            warnings.push(SemanticError::Warning(WarningType::ShadowedMemberWarning(format!("Member {} of class {} is shadowing member in parent", local_scope.ident(), e.ident()))))
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    warnings
+}
+
+pub(crate) fn check_member_func(table: &SymbolTable) -> Vec<SemanticError>
+{
+    todo!()
+}
+
+pub(crate) fn check_func_overload(table: &SymbolTable) -> Vec<SemanticError>
+{
+    todo!()
 }
