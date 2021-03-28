@@ -1,9 +1,15 @@
-use crate::parser::ast::InternalNodeType::ClassDeclaration;
+use crate::parser::ast::InternalNodeType::{ClassDeclaration, ClassDeclarations, FunctionDefinitions};
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table::Type::{CustomArray, FloatArray, IntegerArray, StringArray};
-use crate::semantics::utils::{map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_scope, report_errors};
+use crate::semantics::utils::{map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_func_entry};
 use std::collections::HashMap;
 use std::ops::Deref;
+use crate::semantics::checking::{check_class_symbol_errors, SemanticError, report_symbol_errors, report_semantic_errors};
+use log::{warn};
+use std::{io, fmt};
+use std::fs::OpenOptions;
+use std::io::{BufWriter, Write};
+use std::fmt::{Debug, Formatter};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Scope {
@@ -24,6 +30,17 @@ impl Scope {
             Scope::FunctionParameter(e) => { &e.identifier }
         }
     }
+
+    pub fn line_num(&self) -> usize
+    {
+        match self
+        {
+            Scope::Class(e) => { e.line_num() }
+            Scope::Function(e) => { e.line_num() }
+            Scope::Variable(e) => { e.line_num() }
+            Scope::FunctionParameter(e) => { e.line_num() }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -35,6 +52,7 @@ impl SymbolTable {
     }
 
     pub fn new_from_scopes(scopes: Vec<Scope>) -> Self {
+
         Self(scopes)
     }
 
@@ -47,44 +65,61 @@ impl SymbolTable {
     }
 
     pub fn merge(&mut self, mut other: SymbolTable) {
-        self.0.append(&mut other.0);
+        self.0.append(other.scopes_mut());
+        /*let mut errors: Vec<SemanticError> = Vec::new();
+        for other_scope in other.scopes_mut().drain(..)
+        {
+            for scope in self.scopes().iter()
+            {
+                if scope.ident() == other_scope.ident()
+                {
+                    errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared ident {}", other_scope.ident())));
+                }
+            }
+            self.scopes_mut().push(other_scope);
+        }
+        errors*/
     }
 
     pub fn find_scope_by_ident(&self, ident: &str) -> Option<&Scope> {
-        for scope in self.0.iter() {
-            match scope {
-                Scope::Class(entry) => {
-                    return if entry.identifier == ident {
-                        Some(scope)
-                    } else {
-                        entry.table.find_scope_by_ident(ident)
-                    }
-                }
-                Scope::Function(entry) => {
-                    return if entry.identifier == ident {
-                        Some(scope)
-                    } else {
-                        entry.table.find_scope_by_ident(ident)
-                    }
-                }
-                Scope::Variable(entry) => {
-                    if entry.identifier == ident {
-                        return Some(scope);
-                    }
-                }
-                Scope::FunctionParameter(entry) => {
-                    if entry.identifier == ident {
-                        return Some(scope);
-                    }
-                }
+        for scope in self.scopes().iter() {
+            if scope.ident() == ident
+            {
+                return Some(scope);
             }
         }
         None
     }
 
     pub fn find_scope_by_ident_mut(&mut self, ident: &str) -> Option<&mut Scope> {
-        for scope in self.0.iter_mut() {
-            //todo
+        for scope in self.scopes_mut().iter_mut() {
+            if scope.ident() == ident
+            {
+                return Some(scope);
+            }
+        }
+        None
+    }
+
+    pub fn find_scope_by_scope(&self, other_scope: &Scope) -> Option<&Scope>
+    {
+        for scope in self.scopes()
+        {
+            if scope == other_scope
+            {
+                return Some(scope);
+            }
+        }
+        None
+    }
+    pub fn find_scope_by_scope_mut(&mut self, other_scope: &Scope) -> Option<&mut Scope>
+    {
+        for scope in self.scopes_mut()
+        {
+            if scope == other_scope
+            {
+                return Some(scope);
+            }
         }
         None
     }
@@ -93,9 +128,14 @@ impl SymbolTable {
     {
         &self.0
     }
+
+    pub fn scopes_mut(&mut self) -> &mut Vec<Scope>
+    {
+        &mut self.0
+    }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum Type {
     Integer,
     IntegerArray(Vec<usize>),
@@ -121,22 +161,74 @@ impl Type {
         }
     }
 }
+
+impl Debug for Type
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self
+        {
+            Type::Integer => { write!(f, "integer") }
+            Type::Float => { write!(f, "float") }
+            Type::String => { write!(f, "string") }
+            Type::Void => { write!(f, "void") }
+            Type::IntegerArray(dim) => {
+                write!(f, "integer")?;
+                for u in dim
+                {
+                    write!(f, "[{}]", u)?;
+                }
+                Ok(())
+            }
+            Type::FloatArray(dim) => {
+                write!(f, "float")?;
+                for u in dim
+                {
+                    write!(f, "[{}]", u)?;
+                }
+                Ok(())
+            }
+            Type::StringArray(dim) =>
+            {
+                write!(f, "string")?;
+                for u in dim
+                {
+                    write!(f, "[{}]", u)?;
+                }
+                Ok(())
+            }
+            Type::Custom(id) => { write!(f, "{}", id) }
+            CustomArray(id, dim) => {
+                write!(f, "{}", id)?;
+                for u in dim
+                {
+                    write!(f, "[{}]", u)?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
 //todo visibility
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct FunctionEntry {
     identifier: String,
     member_of: Option<String>,
     type_signature: (Vec<Type>, Type), // param types -> return type
     table: SymbolTable,
+    line_num: usize,
+    defined: bool
 }
 
 impl FunctionEntry {
-    pub fn new(ident: &str, ty_sig: (Vec<Type>, Type), table: SymbolTable) -> Self {
+    pub fn new(ident: &str, ty_sig: (Vec<Type>, Type), table: SymbolTable, line_num: usize, defined: bool) -> Self {
         Self {
             identifier: ident.to_string(),
             member_of: None,
             type_signature: ty_sig,
             table,
+            line_num,
+            defined
         }
     }
 
@@ -145,12 +237,16 @@ impl FunctionEntry {
         class_ident: &str,
         ty_sig: (Vec<Type>, Type),
         table: SymbolTable,
+        line_num: usize,
+        defined: bool
     ) -> Self {
         Self {
             identifier: ident.to_string(),
             member_of: Some(class_ident.to_string()),
             type_signature: ty_sig,
             table,
+            line_num,
+            defined
         }
     }
 
@@ -170,7 +266,6 @@ impl FunctionEntry {
             None => { None }
             Some(s) => { Some(s.as_str()) }
         }
-
     }
 
     pub fn type_sig(&self) -> &(Vec<Type>, Type)
@@ -182,21 +277,52 @@ impl FunctionEntry {
     {
         &self.table
     }
+
+    pub fn table_mut(&mut self) -> &mut SymbolTable
+    {
+        &mut self.table
+    }
+
+    pub fn line_num(&self) -> usize
+    {
+        self.line_num
+    }
+
+    pub fn is_defined(&self) -> bool
+    {
+        self.defined
+    }
+
+    pub fn define(&mut self)
+    {
+        self.defined = true;
+    }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+impl PartialEq for FunctionEntry
+{
+    fn eq(&self, other: &Self) -> bool {
+        return self.ident() == other.ident() && self.type_sig() == other.type_sig() && self.member_of() == other.member_of();
+    }
+}
+
+impl Eq for FunctionEntry {}
+
+#[derive(Debug, Clone)]
 pub struct ClassEntry {
     identifier: String,
     inherits: Vec<Type>,
     table: SymbolTable,
+    line_num: usize,
 }
 
 impl ClassEntry {
-    pub fn new(ident: &str, inherits: Vec<Type>, table: SymbolTable) -> Self {
+    pub fn new(ident: &str, inherits: Vec<Type>, table: SymbolTable, line_num: usize) -> Self {
         Self {
             identifier: ident.to_string(),
             inherits,
             table,
+            line_num
         }
     }
 
@@ -214,19 +340,41 @@ impl ClassEntry {
     {
         &self.table
     }
+
+    pub fn table_mut(&mut self) -> &mut SymbolTable
+    {
+        &mut self.table
+    }
+
+    pub fn line_num(&self) -> usize
+    {
+        self.line_num
+    }
 }
+
+impl PartialEq for ClassEntry
+{
+    fn eq(&self, other: &Self) -> bool {
+        return self.ident() == other.ident();
+    }
+}
+
+impl Eq for ClassEntry {}
+
 //todo visibility
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct VariableEntry {
     identifier: String,
     variable_type: Type,
+    line_num: usize,
 }
 
 impl VariableEntry {
-    pub fn new(ident: &str, ty: Type) -> Self {
+    pub fn new(ident: &str, ty: Type, line_num: usize) -> Self {
         Self {
             identifier: ident.to_string(),
             variable_type: ty,
+            line_num
         }
     }
 
@@ -239,19 +387,26 @@ impl VariableEntry {
     {
         &self.variable_type
     }
+
+    pub fn line_num(&self) -> usize
+    {
+        self.line_num
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ParameterEntry {
     identifier: String,
     parameter_type: Type,
+    line_num: usize,
 }
 
 impl ParameterEntry {
-    pub fn new(ident: &str, ty: Type) -> Self {
+    pub fn new(ident: &str, ty: Type, line_num: usize) -> Self {
         Self {
             identifier: ident.to_string(),
             parameter_type: ty,
+            line_num
         }
     }
 
@@ -264,63 +419,71 @@ impl ParameterEntry {
     {
         &self.parameter_type
     }
+
+    pub fn line_num(&self) -> usize
+    {
+        self.line_num
+    }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum SemanticError {
-    Warning(WarningType),
-    NoMemberFuncDefinition(String),
-    NoMemberFuncDeclaration(String),
-    MultipleDeclIdent(String),
-    MultiplyDeclVariable(String),
-    MultiplyDeclMember(String),
-    MultiplyDeclClass(String),
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum WarningType
+pub fn generate_class_entries(node: &Node) -> Vec<ClassEntry>
 {
-    OverloadWarning(String),
-    ShadowedMemberWarning(String)
+    assert_eq!(node.val, Some(NodeVal::Internal(ClassDeclarations)));
+
+    let entries: Vec<ClassEntry> = node.children.iter().map(map_class_decl_to_entry).collect();
+
+    entries
 }
 
-pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
+pub fn generate_function_entries(node: &Node) -> (Vec<FunctionEntry>, Vec<FunctionEntry>)
+{
+    assert_eq!(node.val, Some(NodeVal::Internal(FunctionDefinitions)));
+
+    let entries: (Vec<FunctionEntry>, Vec<FunctionEntry>) = node.children.iter().map(map_func_def_to_entry).partition(|entry| entry.member_of.is_none());
+
+    entries
+}
+
+pub fn generate_symbol_table(root: &Node) -> SymbolTable {
     assert_eq!(root.val, Some(NodeVal::Internal(InternalNodeType::Root)));
     assert_eq!(root.children.len(), 3); // class declarations, func definitions, main
 
-    let mut global = SymbolTable::new();
+    let mut global_table = SymbolTable::new();
 
-    let class_scopes: Vec<Scope> = root.children[0]
-        .children
-        .iter()
-        .map(|n| Scope::Class(map_class_decl_to_entry(n)))
-        .collect();
-    let (free_function_scopes, member_function_scopes): (Vec<FunctionEntry>, Vec<FunctionEntry>) = root.children[1]
-        .children
-        .iter()
-        .map(map_func_def_to_entry)
-        .partition(|entry| entry.member_of.is_none());
+    let class_entries: Vec<ClassEntry> = generate_class_entries(&root.children[0]);
 
-    let main_scope: Scope = Scope::Function(map_main_to_scope(&root.children[2]));
+    let (free_function_entries, mut member_function_entries) = generate_function_entries(&root.children[1]);
 
-    global.add_scopes(class_scopes);
-    global.add_scopes(free_function_scopes.into_iter().map(Scope::Function).collect()); //todo member function defs should go in the appropriate class symbol table
-    for member_func in member_function_scopes
+    let main_entry: FunctionEntry = map_main_to_func_entry(&root.children[2]);
+
+    global_table.add_scopes(class_entries.into_iter().map(Scope::Class).collect());
+    global_table.add_scopes(free_function_entries.into_iter().map(Scope::Function).collect());
+    global_table.add_scope(Scope::Function(main_entry));
+
+    for member_func in member_function_entries.drain(..)
     {
-        match global.find_scope_by_ident_mut(&member_func.member_of.unwrap())
+        match global_table.find_scope_by_ident_mut(member_func.member_of().unwrap())
         {
-            None => { todo!("Semantic Error")}
+            None => { todo!("Semantic Error") }
             Some(scope) => {
                 match scope
                 {
                     Scope::Class(entry) => {
-                        match entry.table.find_scope_by_ident_mut(&member_func.identifier)
+                        let member_func_scope = Scope::Function(member_func);
+                        match entry.table_mut().find_scope_by_scope_mut(&member_func_scope)
                         {
                             None => { todo!("Semantic Error") }
                             Some(fscope) => {
                                 match fscope
                                 {
-                                    Scope::Function(fentry) => { fentry.table.merge(member_func.table); }
+                                    Scope::Function(fentry) => {
+                                        let member_func = match member_func_scope
+                                        {
+                                            Scope::Function(e) => { e },
+                                            _ => { panic!("wtf") }
+                                        };
+                                        fentry.table_mut().merge(member_func.table);
+                                    }
                                     _ => { panic!() }
                                 }
                             }
@@ -331,20 +494,17 @@ pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
             }
         }
     }
-    global.add_scope(main_scope);
 
-    let errors: Vec<SemanticError> = report_errors(&global);
-
-    (global, errors)
+    global_table
 }
 
-pub fn check_semantics(root: &node, global: &SymbolTable)
+pub fn check_semantics(root: &Node, global: &SymbolTable) -> Vec<SemanticError>
 {
-    // Type check expressions (member access, arith expr, rel expr, assign, statements)
-    // Check visibility when accessing class members
-    // Check func calls, array indexing
-    // Check referenced ID for existence
-    //
+    let mut errors: Vec<SemanticError> = Vec::new();
 
-    todo!()
+    errors.append(&mut report_symbol_errors(global));
+
+    errors.append(&mut report_semantic_errors(root, global));
+
+    errors
 }

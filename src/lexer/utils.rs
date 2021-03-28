@@ -270,18 +270,18 @@ pub mod lexer_serialize {
         let mut line: String = String::new();
 
         while let Some(token) = lexer.next_token() {
-            if current_line_num != token.line_num {
+            if current_line_num != token.line_num() {
                 buf_token_write.write(line.as_bytes())?;
                 line.clear();
                 buf_token_write.write(LINE_ENDINGS.as_bytes())?;
-                current_line_num = token.line_num;
+                current_line_num = token.line_num();
             }
 
             line.push_str(&format!(
                 r"[{:?}, {}, {}] ",
                 token.token_type(),
                 token.lexeme(),
-                token.line_num
+                token.line_num()
             ));
 
             if token.is_err() {
@@ -304,7 +304,7 @@ pub mod lexer_serialize {
                                 "Lexical error: {}: {}: line {}.{}",
                                 err.to_string(),
                                 token.lexeme(),
-                                token.line_num,
+                                token.line_num(),
                                 LINE_ENDINGS
                             )
                             .as_bytes(),

@@ -2,6 +2,8 @@ use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
+use crate::semantics::symbol_table::{generate_symbol_table};
+use crate::semantics::utils::{serialize_symbol_table_to_file};
 use dotenv::dotenv;
 use env_logger;
 use log::{error, info};
@@ -22,6 +24,8 @@ struct Opt {
     lexer: bool,
     #[structopt(short, long)]
     parser: bool,
+    #[structopt(short, long)]
+    symbols: bool,
 }
 
 fn main() {
@@ -58,6 +62,29 @@ fn main() {
                 serialize_derivation_table_to_file(table, file_name)
                     .expect("Failed to serialize derivation table");
                 serialize_tree_to_file(ast, file_name).expect("Failed to serialize AST to file");
+            }
+            Err(_) => {
+                error!("Failed to parse token stream for {}", file_name);
+            }
+        }
+    }
+
+    if opt.symbols {
+        let my_lexer = MyLexerAnalyzer::from_file(&opt.file);
+
+        let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
+
+        match parse(my_lexer) {
+            Ok((_, mut ast)) => {
+                info!(
+                    "Successfully parsed token stream for {}",
+                    &opt.file.file_name().unwrap().to_str().unwrap()
+                );
+                assert_eq!(ast.0.len(), 1);
+                let root = ast.0.pop().unwrap();
+                let symbol_table = generate_symbol_table(&root);
+
+                serialize_symbol_table_to_file(&symbol_table, file_name).expect("Failed to serialize symbol table to file");
             }
             Err(_) => {
                 error!("Failed to parse token stream for {}", file_name);

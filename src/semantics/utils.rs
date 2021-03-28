@@ -3,8 +3,11 @@ use crate::lexer::token::TokenType::Func;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table;
 use crate::semantics::symbol_table::Type::{CustomArray, IntegerArray};
-use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry, SemanticError, WarningType};
+use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry};
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
+use std::io::{BufWriter, Write};
+use std::fs::OpenOptions;
+use std::io;
 
 /// Maps a ClassDeclaration node to a ClassEntry
 pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
@@ -25,15 +28,14 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                     match ty {
                         InternalNodeType::ClassDeclaration => {
                             assert_eq!(node.children.len(), 3); // class name, inherit list, member list
-                            let ident = match node.children[0].val.as_ref().unwrap() {
-                                NodeVal::Leaf(t) => t.lexeme(),
+                            let (ident, line_num) = match node.children[0].val.as_ref().unwrap() {
+                                NodeVal::Leaf(t) => (t.lexeme(), t.line_num()),
                                 NodeVal::Internal(_) => {
                                     panic!()
                                 }
                             };
                             let inherits: Vec<Type> =
                                 node.children[1].children.iter().map(map_to_type).collect();
-
                             let mut members: Vec<Scope> = node.children[2]
                                 .children
                                 .iter()
@@ -48,7 +50,7 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                                     _ => {}
                                 }
                             }
-                            ClassEntry::new(ident, inherits, SymbolTable::new_from_scopes(members))
+                            ClassEntry::new(ident, inherits, SymbolTable::new_from_scopes(members), line_num)
                         }
                         _ => {
                             panic!();
@@ -76,12 +78,12 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
                 panic!()
             }
             NodeVal::Internal(InternalNodeType::FuncDeclaration) => {
-                let ident = match &node.children[0].val {
+                let (ident, line_num) = match &node.children[0].val {
                     None => {
                         panic!()
                     }
                     Some(v) => match v {
-                        NodeVal::Leaf(t) => t.lexeme(),
+                        NodeVal::Leaf(t) => (t.lexeme(), t.line_num()),
                         NodeVal::Internal(_) => {
                             panic!()
                         }
@@ -103,7 +105,7 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
                         .map(|p| Scope::FunctionParameter(p))
                         .collect(),
                 );*/
-                FunctionEntry::new(ident, ty_signature, SymbolTable::new())
+                FunctionEntry::new(ident, ty_signature, SymbolTable::new(), line_num, false)
             }
             _ => {
                 panic!()
@@ -117,15 +119,15 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
     assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::FuncDef)));
     assert_eq!(node.children.len(), 5);
 
-    let (ident1, ident2) = match (&node.children[0].val, &node.children[1].val) {
+    let (ident1, ident2, line_num) = match (&node.children[0].val, &node.children[1].val) {
         (Some(val1), Some(val2)) => match (val1, val2) {
-            (NodeVal::Leaf(t1), NodeVal::Leaf(t2)) => (t1.lexeme(), Some(t2.lexeme())),
+            (NodeVal::Leaf(t1), NodeVal::Leaf(t2)) => (t1.lexeme(), Some(t2.lexeme()), t2.line_num()),
             (_, _) => {
                 panic!()
             }
         },
         (Some(val1), None) => match val1 {
-            NodeVal::Leaf(t) => (t.lexeme(), None),
+            NodeVal::Leaf(t) => (t.lexeme(), None, t.line_num()),
             NodeVal::Internal(_) => {
                 panic!()
             }
@@ -150,23 +152,24 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
             .map(|p| Scope::FunctionParameter(p))
             .collect(),
     );
-    let body_vars: Vec<VariableEntry> = node.children[4]
-        .children
+    let body_vars: Vec<VariableEntry> = node.children[4] //funcbody
+        .children[0].children //vars in var block
         .iter()
+        .filter(|n| n.val.is_some())
         .map(map_var_decl_to_entry)
         .collect();
     symbol_table.add_scopes(body_vars.into_iter().map(Scope::Variable).collect());
     match ident2 {
-        None => FunctionEntry::new(ident1, ty_signature, symbol_table),
-        Some(ident) => FunctionEntry::new_as_member(ident, ident1, ty_signature, symbol_table),
+        None => FunctionEntry::new(ident1, ty_signature, symbol_table, line_num, true),
+        Some(ident) => FunctionEntry::new_as_member(ident, ident1, ty_signature, symbol_table, line_num, true),
     }
 }
 
 /// Maps Main node to a FunctionEntry
-pub(crate) fn map_main_to_scope(node: &Node) -> FunctionEntry {
+pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
     assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::Main)));
     assert_eq!(node.children.len(), 1);
-    assert_eq!(node.children[0].children.len(), 1);
+    assert_eq!(node.children[0].children.len(), 2);
     let var_scopes: Vec<Scope> = node.children[0].children[0]
         .children
         .iter()
@@ -176,6 +179,8 @@ pub(crate) fn map_main_to_scope(node: &Node) -> FunctionEntry {
         "main",
         (Vec::new(), Type::Void),
         SymbolTable::new_from_scopes(var_scopes),
+        999,
+        true
     )
 }
 
@@ -187,18 +192,18 @@ pub(crate) fn map_var_decl_to_entry(node: &Node) -> VariableEntry {
     );
     assert_eq!(node.children.len(), 3);
     let ty = map_to_type(&node);
-    let ident = match &node.children[1].val {
+    let (ident, line_num) = match &node.children[1].val {
         None => {
             panic!()
         }
         Some(node_val) => match node_val {
-            NodeVal::Leaf(t) => t.lexeme(),
+            NodeVal::Leaf(t) => (t.lexeme(), t.line_num()),
             NodeVal::Internal(_) => {
                 panic!()
             }
         },
     };
-    VariableEntry::new(ident, ty)
+    VariableEntry::new(ident, ty, line_num)
 }
 
 /// Maps a FuncParam node to a ParameterEntry
@@ -209,18 +214,18 @@ pub(crate) fn map_func_param_to_entry(node: &Node) -> ParameterEntry {
     );
     assert_eq!(node.children.len(), 3);
     let ty = map_to_type(&node);
-    let ident = match &node.children[1].val {
+    let (ident, line_num) = match &node.children[1].val {
         None => {
             panic!()
         }
         Some(node_val) => match node_val {
-            NodeVal::Leaf(t) => t.lexeme(),
+            NodeVal::Leaf(t) => (t.lexeme(), t.line_num()),
             NodeVal::Internal(_) => {
                 panic!()
             }
         },
     };
-    ParameterEntry::new(ident, ty)
+    ParameterEntry::new(ident, ty, line_num)
 }
 
 /// Extracts type information from a token, or from VarDeclaration/FuncParam
@@ -317,7 +322,7 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
             NodeVal::Leaf(_) => {
                 panic!()
             }
-            NodeVal::Internal(InternalNodeType::MemberDeclaration) => match &node.children[0].val {
+            NodeVal::Internal(InternalNodeType::MemberDeclaration) => { match &node.children[1].val { //todo idx 0 is visibility
                 None => {
                     panic!()
                 }
@@ -326,16 +331,16 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
                         panic!()
                     }
                     NodeVal::Internal(InternalNodeType::MemberVarDeclaration) => {
-                        Scope::Variable(map_var_decl_to_entry(&node.children[0].children[0]))
+                        Scope::Variable(map_var_decl_to_entry(&node.children[1].children[0]))
                     }
                     NodeVal::Internal(InternalNodeType::MemberFuncDeclaration) => {
-                        Scope::Function(map_func_decl_to_entry(&node.children[0].children[0]))
+                        Scope::Function(map_func_decl_to_entry(&node.children[1].children[0]))
                     }
                     _ => {
                         panic!()
                     }
                 },
-            },
+            }},
             _ => {
                 panic!()
             }
@@ -343,138 +348,90 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
     }
 }
 
-pub(crate) fn report_errors(table: &SymbolTable) -> Vec<SemanticError>
+trait IntoMarkDownTable
 {
-    let mut errors: Vec<SemanticError> = Vec::new();
-
-    // Multiply declared identifiers (class, functions (not overload) and local params/variables)-> Semantic Error
-    errors.append(&mut check_multiply_decl_id(table));
-    // Shadowed members -> Warning
-    errors.append(&mut check_shadowed_members(table));
-    // Member functions -> Declaration + Definition or Semantic Error
-    errors.append(&mut check_member_func(table));
-    // Multiple class and/or variable declarations in the same scope -> Semantic Error
-    todo!();
-    // Function (member/free) Overload -> Warning
-    errors.append(&mut check_func_overload(table));
-    // Check circular inheritance
-    todo!();
-
-    errors
+    fn md_table(&self) -> Vec<String>;
 }
 
-pub(crate) fn check_multiply_decl_id(table: &SymbolTable) -> Vec<SemanticError>
+impl IntoMarkDownTable for ClassEntry
 {
-    let mut errors: Vec<SemanticError> = Vec::new();
+    fn md_table(&self) -> Vec<String> {
+        let mut rows: Vec<String> = Vec::new();
 
-    for idx in 0..table.scopes().len() - 1
-    {
-        for idy in (idx + 1)..table.scopes().len()
+        //todo inherits
+        rows.push(format!("Table: {}<a name=\"{}\"></a>", self.ident(), self.ident()));
+        rows.push(String::from("|\tname\t|\tkind\t|\ttype\t|\tlink\t|"));
+        rows.push(String::from("| --- | --- | --- | --- |"));
+        for scope in self.table().scopes().iter()
         {
-            match (&table.scopes()[idx], &table.scopes()[idy])
+            match scope {
+                Function(e) => {
+                    rows.push(format!("|\t{}\t|\tfunction\t|\t{:?}->{:?}\t|\t[table](#{})\t|", e.ident(), e.type_sig().0, e.type_sig().1,e.ident()));
+                }
+                Variable(e) => {
+                    rows.push(format!("|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|", e.ident(), e.var_type()));
+                }
+                _ => {todo!()}
+            }
+        }
+
+        rows
+    }
+}
+
+impl IntoMarkDownTable for FunctionEntry {
+    fn md_table(&self) -> Vec<String> {
+        let mut rows: Vec<String> = Vec::new();
+
+        rows.push(format!("Table: {}<a name=\"{}\"></a>", self.ident(), self.ident()));
+        rows.push(String::from("|\tname\t|\tkind\t|\ttype\t|\tlink\t|"));
+        rows.push(String::from("| --- | --- | --- | --- |"));
+
+        for scope in self.table().scopes().iter()
+        {
+            match scope
             {
-                (Class(e1), Class(e2)) => {}
-                (Function(e1), Function(e2)) => {
-                    if e1.ident() == e2.ident() && e1.type_sig() == e2.type_sig()
-                    {
-                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared function: {}", e1.ident())));
-                    }
-                },
-                (FunctionParameter(e1), FunctionParameter(e2)) => {
-                    if e1.ident() == e2.ident()
-                    {
-                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared parameter: {}", e1.ident())));
-                    }
-                },
-                (Variable(e1), Variable(e2)) => {
-                    if e1.ident() == e2.ident()
-                    {
-                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared variable: {}", e1.ident())));
-                    }
-
+                Variable(e) => {
+                    rows.push(format!("|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|", e.ident(), e.var_type()));
                 }
-                (FunctionParameter(e1), Variable(e2)) => {
-                    if e1.ident() == e2.ident()
-                    {
-                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared param/variable: {}", e1.ident())));
-                    }
+                FunctionParameter(e) => {
+                    rows.push(format!("|\t{}\t|\tparameter\t|\t{:?}\t|\tX\t|", e.ident(), e.param_type()));
                 }
-                (Variable(e1), FunctionParameter(e2)) => {
-                    if e1.ident() == e2.ident()
-                    {
-                        errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared param/variable: {}", e1.ident())));
-                    }
-                }
-                (_,_) => {},
+                _ => {todo!()}
             }
         }
-    }
 
-    for scope in table.scopes().iter()
-    {
-        match scope
-        {
-            Class(e) => {
-                errors.append(&mut check_multiply_decl_id(&e.table()));
-            }
-            Function(e) => {}
-            _ => {}
-        }
+        rows
     }
-
-    errors
 }
 
-pub(crate) fn check_shadowed_members(table: &SymbolTable) -> Vec<SemanticError>
+pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> io::Result<()>
 {
-    let mut warnings: Vec<SemanticError> = Vec::new();
-    for scope in table.scopes()
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(format!("{}.outsymboltables.md", file_name))?;
+    let mut buf_writer = BufWriter::new(file);
+
+    for top_scope in global.scopes()
     {
-        match scope
-        {
+        match top_scope {
             Class(e) => {
-                for parent_t in e.inherits()
+                for row in e.md_table()
                 {
-                    let parent_table: &SymbolTable = match parent_t
-                    {
-                        Type::Custom(id) => {
-                            match table.find_scope_by_ident(id)
-                            {
-                                None => { panic!() }
-                                Some(parent_scope) => {
-                                    match parent_scope
-                                    {
-                                        Class(parent) => { parent.table() }
-                                        _ => { panic!() }
-                                    }
-                                }
-                            }
-                        },
-                        _ => { panic!() }
-                    }; //todo
-
-                    for local_scope in e.table().scopes()
-                    {
-                        if parent_table.scopes().contains(local_scope)
-                        {
-                            warnings.push(SemanticError::Warning(WarningType::ShadowedMemberWarning(format!("Member {} of class {} is shadowing member in parent", local_scope.ident(), e.ident()))))
-                        }
-                    }
+                    buf_writer.write(format!("{}\n", row).as_bytes());
+                }
+            }
+            Function(e) => {
+                for row in e.md_table()
+                {
+                    buf_writer.write(format!("{}\n", row).as_bytes());
                 }
             }
             _ => {}
         }
     }
 
-    warnings
-}
-
-pub(crate) fn check_member_func(table: &SymbolTable) -> Vec<SemanticError>
-{
-    todo!()
-}
-
-pub(crate) fn check_func_overload(table: &SymbolTable) -> Vec<SemanticError>
-{
-    todo!()
+    Ok(())
 }
