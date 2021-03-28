@@ -433,6 +433,7 @@ pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> 
 
                 for member_fun in e.table().scopes()
                 {
+                    buf_writer.write("\n____\n".as_bytes())?;
                     match member_fun
                     {
                         Function(f_e) => {
