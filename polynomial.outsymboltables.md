@@ -1,7 +1,11 @@
 Table: POLYNOMIAL<a name="POLYNOMIAL"></a>
 |	name	|	kind	|	type	|	link	|
 | --- | --- | --- | --- |
-|	evaluate	|	function	|	[float]->float	|	[table](#evaluate)	|
+|	evaluate	|	function	|	[float]->float	|	[table](#POLYNOMIAL::evaluate)	|
+Table: evaluate<a name="POLYNOMIAL::evaluate"></a>
+|	name	|	kind	|	type	|	link	|
+| --- | --- | --- | --- |
+|	x	|	parameter	|	float	|	X	|
 
 ____
 Table: LINEAR<a name="LINEAR"></a>
@@ -9,8 +13,19 @@ Table: LINEAR<a name="LINEAR"></a>
 | --- | --- | --- | --- |
 |	a	|	variable	|	float	|	X	|
 |	b	|	variable	|	float	|	X	|
-|	build	|	function	|	[float, float]->LINEAR	|	[table](#build)	|
-|	evaluate	|	function	|	[float]->float	|	[table](#evaluate)	|
+|	build	|	function	|	[float, float]->LINEAR	|	[table](#LINEAR::build)	|
+|	evaluate	|	function	|	[float]->float	|	[table](#LINEAR::evaluate)	|
+Table: build<a name="LINEAR::build"></a>
+|	name	|	kind	|	type	|	link	|
+| --- | --- | --- | --- |
+|	A	|	parameter	|	float	|	X	|
+|	B	|	parameter	|	float	|	X	|
+|	new_function	|	variable	|	LINEAR	|	X	|
+Table: evaluate<a name="LINEAR::evaluate"></a>
+|	name	|	kind	|	type	|	link	|
+| --- | --- | --- | --- |
+|	x	|	parameter	|	float	|	X	|
+|	result	|	variable	|	float	|	X	|
 
 ____
 Table: QUADRATIC<a name="QUADRATIC"></a>
@@ -19,8 +34,20 @@ Table: QUADRATIC<a name="QUADRATIC"></a>
 |	a	|	variable	|	float	|	X	|
 |	b	|	variable	|	float	|	X	|
 |	c	|	variable	|	float	|	X	|
-|	build	|	function	|	[float, float, float]->QUADRATIC	|	[table](#build)	|
-|	evaluate	|	function	|	[float]->float	|	[table](#evaluate)	|
+|	build	|	function	|	[float, float, float]->QUADRATIC	|	[table](#QUADRATIC::build)	|
+|	evaluate	|	function	|	[float]->float	|	[table](#QUADRATIC::evaluate)	|
+Table: build<a name="QUADRATIC::build"></a>
+|	name	|	kind	|	type	|	link	|
+| --- | --- | --- | --- |
+|	A	|	parameter	|	float	|	X	|
+|	B	|	parameter	|	float	|	X	|
+|	C	|	parameter	|	float	|	X	|
+|	new_function	|	variable	|	QUADRATIC	|	X	|
+Table: evaluate<a name="QUADRATIC::evaluate"></a>
+|	name	|	kind	|	type	|	link	|
+| --- | --- | --- | --- |
+|	x	|	parameter	|	float	|	X	|
+|	result	|	variable	|	float	|	X	|
 
 ____
 Table: main<a name="main"></a>

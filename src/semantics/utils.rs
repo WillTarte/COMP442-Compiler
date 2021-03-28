@@ -366,7 +366,7 @@ impl IntoMarkDownTable for ClassEntry
         {
             match scope {
                 Function(e) => {
-                    rows.push(format!("|\t{}\t|\tfunction\t|\t{:?}->{:?}\t|\t[table](#{})\t|", e.ident(), e.type_sig().0, e.type_sig().1,e.ident()));
+                    rows.push(format!("|\t{}\t|\tfunction\t|\t{:?}->{:?}\t|\t[table](#{}::{})\t|", e.ident(), e.type_sig().0, e.type_sig().1, e.member_of().unwrap(), e.ident()));
                 }
                 Variable(e) => {
                     rows.push(format!("|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|", e.ident(), e.var_type()));
@@ -383,7 +383,15 @@ impl IntoMarkDownTable for FunctionEntry {
     fn md_table(&self) -> Vec<String> {
         let mut rows: Vec<String> = Vec::new();
 
-        rows.push(format!("Table: {}<a name=\"{}\"></a>", self.ident(), self.ident()));
+        match self.member_of()
+        {
+            None => {
+                rows.push(format!("Table: {}<a name=\"{}\"></a>", self.ident(), self.ident()));
+            }
+            Some(class) => {
+                rows.push(format!("Table: {}<a name=\"{}::{}\"></a>", self.ident(), class, self.ident()));
+            }
+        }
         rows.push(String::from("|\tname\t|\tkind\t|\ttype\t|\tlink\t|"));
         rows.push(String::from("| --- | --- | --- | --- |"));
 
@@ -421,6 +429,20 @@ pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> 
                 for row in e.md_table()
                 {
                     buf_writer.write(format!("{}\n", row).as_bytes())?;
+                }
+
+                for member_fun in e.table().scopes()
+                {
+                    match member_fun
+                    {
+                        Function(f_e) => {
+                            for row in f_e.md_table()
+                            {
+                                buf_writer.write(format!("{}\n", row).as_bytes())?;
+                            }
+                        },
+                        _ => {}
+                    }
                 }
             }
             Function(e) => {
