@@ -420,17 +420,20 @@ pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> 
             Class(e) => {
                 for row in e.md_table()
                 {
-                    buf_writer.write(format!("{}\n", row).as_bytes());
+                    buf_writer.write(format!("{}\n", row).as_bytes())?;
                 }
             }
             Function(e) => {
                 for row in e.md_table()
                 {
-                    buf_writer.write(format!("{}\n", row).as_bytes());
+                    buf_writer.write(format!("{}\n", row).as_bytes())?;
                 }
             }
             _ => {}
         }
+
+        buf_writer.write("\n____\n".as_bytes())?;
+        buf_writer.flush()?;
     }
 
     Ok(())
