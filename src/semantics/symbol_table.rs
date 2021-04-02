@@ -209,12 +209,26 @@ impl Debug for Type
     }
 }
 
-//todo visibility
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum Visibility
+{
+    Private,
+    Public,
+    Default,
+}
+
+impl Default for Visibility {
+    fn default() -> Self {
+        Self::Default
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct FunctionEntry {
     identifier: String,
     member_of: Option<String>,
     type_signature: (Vec<Type>, Type), // param types -> return type
+    visibility: Visibility,
     table: SymbolTable,
     line_num: usize,
     defined: bool
@@ -226,6 +240,7 @@ impl FunctionEntry {
             identifier: ident.to_string(),
             member_of: None,
             type_signature: ty_sig,
+            visibility: Visibility::default(),
             table,
             line_num,
             defined
@@ -244,6 +259,7 @@ impl FunctionEntry {
             identifier: ident.to_string(),
             member_of: Some(class_ident.to_string()),
             type_signature: ty_sig,
+            visibility: Visibility::default(),
             table,
             line_num,
             defined
@@ -281,6 +297,16 @@ impl FunctionEntry {
     pub fn table_mut(&mut self) -> &mut SymbolTable
     {
         &mut self.table
+    }
+
+    pub fn visibility(&self) -> Visibility
+    {
+        self.visibility
+    }
+
+    pub fn set_visibility(&mut self, vis: Visibility)
+    {
+        self.visibility = vis;
     }
 
     pub fn line_num(&self) -> usize
@@ -361,11 +387,11 @@ impl PartialEq for ClassEntry
 
 impl Eq for ClassEntry {}
 
-//todo visibility
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct VariableEntry {
     identifier: String,
     variable_type: Type,
+    visibility: Visibility,
     line_num: usize,
 }
 
@@ -374,6 +400,7 @@ impl VariableEntry {
         Self {
             identifier: ident.to_string(),
             variable_type: ty,
+            visibility: Visibility::default(),
             line_num
         }
     }
@@ -386,6 +413,16 @@ impl VariableEntry {
     pub fn var_type(&self) -> &Type
     {
         &self.variable_type
+    }
+
+    pub fn visibility(&self) -> Visibility
+    {
+        self.visibility
+    }
+
+    pub fn set_visibility(&mut self, vis: Visibility)
+    {
+        self.visibility = vis;
     }
 
     pub fn line_num(&self) -> usize

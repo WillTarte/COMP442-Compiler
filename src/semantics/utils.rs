@@ -2,8 +2,7 @@ use crate::lexer::token::TokenType;
 use crate::lexer::token::TokenType::Func;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table;
-use crate::semantics::symbol_table::Type::{CustomArray, IntegerArray};
-use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry};
+use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry, Visibility};
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
 use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
@@ -308,6 +307,35 @@ pub(crate) fn map_to_usize(node: &Node) -> Option<usize> // e.g. ArrayDim childr
     }
 }
 
+pub(crate) fn map_to_visibility(node: &Node) -> Visibility
+{
+    assert_eq!(node.children.len(), 0);
+    match &node.val
+    {
+        None => {
+            Visibility::Default
+        }
+        Some(node_val) => {
+            match node_val
+            {
+                NodeVal::Leaf(t) => {
+                    match t.token_type()
+                    {
+                        TokenType::Private => {
+                            Visibility::Private
+                        },
+                        TokenType::Public => {
+                            Visibility::Public
+                        },
+                        _ => { panic!() }
+                    }
+                }
+                NodeVal::Internal(_) => { panic!() }
+            }
+        }
+    }
+}
+
 /// Maps a class member to a Variable or Function Scope
 pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
     assert_eq!(
@@ -322,25 +350,33 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
             NodeVal::Leaf(_) => {
                 panic!()
             }
-            NodeVal::Internal(InternalNodeType::MemberDeclaration) => { match &node.children[1].val { //todo idx 0 is visibility
-                None => {
-                    panic!()
-                }
-                Some(v) => match v {
-                    NodeVal::Leaf(_) => {
+            NodeVal::Internal(InternalNodeType::MemberDeclaration) => {
+                let visibility: Visibility = map_to_visibility(&node.children[0]);
+                let member: Scope = match &node.children[1].val {
+                    None => {
                         panic!()
                     }
-                    NodeVal::Internal(InternalNodeType::MemberVarDeclaration) => {
-                        Scope::Variable(map_var_decl_to_entry(&node.children[1].children[0]))
-                    }
-                    NodeVal::Internal(InternalNodeType::MemberFuncDeclaration) => {
-                        Scope::Function(map_func_decl_to_entry(&node.children[1].children[0]))
-                    }
-                    _ => {
-                        panic!()
-                    }
-                },
-            }},
+                    Some(v) => match v {
+                        NodeVal::Leaf(_) => {
+                            panic!()
+                        }
+                        NodeVal::Internal(InternalNodeType::MemberVarDeclaration) => {
+                            let mut var = map_var_decl_to_entry(&node.children[1].children[0]);
+                            var.set_visibility(visibility);
+                            Scope::Variable(var)
+                        }
+                        NodeVal::Internal(InternalNodeType::MemberFuncDeclaration) => {
+                            let mut func = map_func_decl_to_entry(&node.children[1].children[0]);
+                            func.set_visibility(visibility);
+                            Scope::Function(map_func_decl_to_entry(&node.children[1].children[0]))
+                        }
+                        _ => {
+                            panic!()
+                        }
+                    },
+                };
+                member
+            },
             _ => {
                 panic!()
             }
