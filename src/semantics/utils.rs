@@ -1,14 +1,16 @@
 use crate::lexer::token::TokenType;
 use crate::lexer::token::TokenType::Func;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
+use crate::semantics::checking::SemanticError;
 use crate::semantics::symbol_table;
-use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry, Visibility};
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
-use std::io::{BufWriter, Write};
+use crate::semantics::symbol_table::{
+    ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry, Visibility,
+};
+use regex::Error;
 use std::fs::OpenOptions;
 use std::io;
-use crate::semantics::checking::SemanticError;
-use regex::Error;
+use std::io::{BufWriter, Write};
 
 /// Maps a ClassDeclaration node to a ClassEntry
 pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
@@ -42,8 +44,7 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                                 .iter()
                                 .map(map_member_to_scope)
                                 .collect();
-                            for scope in members.iter_mut()
-                            {
+                            for scope in members.iter_mut() {
                                 match scope {
                                     Scope::Function(entry) => {
                                         entry.as_member_of(ident);
@@ -51,7 +52,12 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                                     _ => {}
                                 }
                             }
-                            ClassEntry::new(ident, inherits, SymbolTable::new_from_scopes(members), line_num)
+                            ClassEntry::new(
+                                ident,
+                                inherits,
+                                SymbolTable::new_from_scopes(members),
+                                line_num,
+                            )
                         }
                         _ => {
                             panic!();
@@ -122,7 +128,9 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
 
     let (ident1, ident2, line_num) = match (&node.children[0].val, &node.children[1].val) {
         (Some(val1), Some(val2)) => match (val1, val2) {
-            (NodeVal::Leaf(t1), NodeVal::Leaf(t2)) => (t1.lexeme(), Some(t2.lexeme()), t2.line_num()),
+            (NodeVal::Leaf(t1), NodeVal::Leaf(t2)) => {
+                (t1.lexeme(), Some(t2.lexeme()), t2.line_num())
+            }
             (_, _) => {
                 panic!()
             }
@@ -154,7 +162,8 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
             .collect(),
     );
     let body_vars: Vec<VariableEntry> = node.children[4] //funcbody
-        .children[0].children //vars in var block
+        .children[0]
+        .children //vars in var block
         .iter()
         .filter(|n| n.val.is_some())
         .map(map_var_decl_to_entry)
@@ -162,7 +171,9 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
     symbol_table.add_scopes(body_vars.into_iter().map(Scope::Variable).collect());
     match ident2 {
         None => FunctionEntry::new(ident1, ty_signature, symbol_table, line_num, true),
-        Some(ident) => FunctionEntry::new_as_member(ident, ident1, ty_signature, symbol_table, line_num, true),
+        Some(ident) => {
+            FunctionEntry::new_as_member(ident, ident1, ty_signature, symbol_table, line_num, true)
+        }
     }
 }
 
@@ -181,7 +192,7 @@ pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
         (Vec::new(), Type::Void),
         SymbolTable::new_from_scopes(var_scopes),
         999,
-        true
+        true,
     )
 }
 
@@ -309,32 +320,22 @@ pub(crate) fn map_to_usize(node: &Node) -> Option<usize> // e.g. ArrayDim childr
     }
 }
 
-pub(crate) fn map_to_visibility(node: &Node) -> Visibility
-{
+pub(crate) fn map_to_visibility(node: &Node) -> Visibility {
     assert_eq!(node.children.len(), 0);
-    match &node.val
-    {
-        None => {
-            Visibility::Default
-        }
-        Some(node_val) => {
-            match node_val
-            {
-                NodeVal::Leaf(t) => {
-                    match t.token_type()
-                    {
-                        TokenType::Private => {
-                            Visibility::Private
-                        },
-                        TokenType::Public => {
-                            Visibility::Public
-                        },
-                        _ => { panic!() }
-                    }
+    match &node.val {
+        None => Visibility::Default,
+        Some(node_val) => match node_val {
+            NodeVal::Leaf(t) => match t.token_type() {
+                TokenType::Private => Visibility::Private,
+                TokenType::Public => Visibility::Public,
+                _ => {
+                    panic!()
                 }
-                NodeVal::Internal(_) => { panic!() }
+            },
+            NodeVal::Internal(_) => {
+                panic!()
             }
-        }
+        },
     }
 }
 
@@ -378,7 +379,7 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
                     },
                 };
                 member
-            },
+            }
             _ => {
                 panic!()
             }
@@ -386,71 +387,93 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
     }
 }
 
-pub(crate) fn merge_member_function_tables(global_table: &mut SymbolTable, member_funcs: &mut Vec<FunctionEntry>) -> Vec<SemanticError>
-{
+pub(crate) fn merge_member_function_tables(
+    global_table: &mut SymbolTable,
+    member_funcs: &mut Vec<FunctionEntry>,
+) -> Vec<SemanticError> {
     let mut errors: Vec<SemanticError> = Vec::new();
 
-    for member_func in member_funcs.drain(..)
-    {
-        match global_table.find_scope_by_ident_mut(member_func.member_of().unwrap())
-        {
-            None => { panic!() }
-            Some(scope) => {
-                match scope
-                {
-                    Scope::Class(entry) => {
-                        let member_func_scope = Scope::Function(member_func);
-                        match entry.table_mut().find_scope_by_scope_mut(&member_func_scope)
-                        {
-                            None => { errors.push(SemanticError::NoMemberFuncDeclaration(format!("No member func declaration found for {}", scope.ident()))); }
-                            Some(fscope) => {
-                                match fscope
-                                {
-                                    Scope::Function(fentry) => {
-                                        let member_func = match member_func_scope
-                                        {
-                                            Scope::Function(e) => { e },
-                                            _ => { panic!("wtf") }
-                                        };
-                                        fentry.merge(member_func);
-                                    }
-                                    _ => { panic!() }
-                                }
-                            }
-                        }
-                    }
-                    _ => { panic!() }
-                }
+    for member_func in member_funcs.drain(..) {
+        match global_table.find_scope_by_ident_mut(member_func.member_of().unwrap()) {
+            None => {
+                panic!()
             }
+            Some(scope) => match scope {
+                Scope::Class(entry) => {
+                    let member_func_scope = Scope::Function(member_func);
+                    match entry
+                        .table_mut()
+                        .find_scope_by_scope_mut(&member_func_scope)
+                    {
+                        None => {
+                            errors.push(SemanticError::NoMemberFuncDeclaration(format!(
+                                "No member func declaration found for {}",
+                                scope.ident()
+                            )));
+                        }
+                        Some(fscope) => match fscope {
+                            Scope::Function(fentry) => {
+                                let member_func = match member_func_scope {
+                                    Scope::Function(e) => e,
+                                    _ => {
+                                        panic!("wtf")
+                                    }
+                                };
+                                fentry.merge(member_func);
+                            }
+                            _ => {
+                                panic!()
+                            }
+                        },
+                    }
+                }
+                _ => {
+                    panic!()
+                }
+            },
         }
     }
     todo!()
 }
 
-trait IntoMarkDownTable
-{
+trait IntoMarkDownTable {
     fn md_table(&self) -> Vec<String>;
 }
 
-impl IntoMarkDownTable for ClassEntry
-{
+impl IntoMarkDownTable for ClassEntry {
     fn md_table(&self) -> Vec<String> {
         let mut rows: Vec<String> = Vec::new();
 
         //todo inherits
-        rows.push(format!("Table: {}<a name=\"{}\"></a>", self.ident(), self.ident()));
+        rows.push(format!(
+            "Table: {}<a name=\"{}\"></a>",
+            self.ident(),
+            self.ident()
+        ));
         rows.push(String::from("|\tname\t|\tkind\t|\ttype\t|\tlink\t|"));
         rows.push(String::from("| --- | --- | --- | --- |"));
-        for scope in self.table().scopes().iter()
-        {
+        for scope in self.table().scopes().iter() {
             match scope {
                 Function(e) => {
-                    rows.push(format!("|\t{}\t|\tfunction\t|\t{:?}->{:?}\t|\t[table](#{}::{})\t|", e.ident(), e.type_sig().0, e.type_sig().1, e.member_of().unwrap(), e.ident()));
+                    rows.push(format!(
+                        "|\t{}\t|\tfunction\t|\t{:?}->{:?}\t|\t[table](#{}::{})\t|",
+                        e.ident(),
+                        e.type_sig().0,
+                        e.type_sig().1,
+                        e.member_of().unwrap(),
+                        e.ident()
+                    ));
                 }
                 Variable(e) => {
-                    rows.push(format!("|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|", e.ident(), e.var_type()));
+                    rows.push(format!(
+                        "|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|",
+                        e.ident(),
+                        e.var_type()
+                    ));
                 }
-                _ => {todo!()}
+                _ => {
+                    todo!()
+                }
             }
         }
 
@@ -462,29 +485,45 @@ impl IntoMarkDownTable for FunctionEntry {
     fn md_table(&self) -> Vec<String> {
         let mut rows: Vec<String> = Vec::new();
 
-        match self.member_of()
-        {
+        match self.member_of() {
             None => {
-                rows.push(format!("Table: {}<a name=\"{}\"></a>", self.ident(), self.ident()));
+                rows.push(format!(
+                    "Table: {}<a name=\"{}\"></a>",
+                    self.ident(),
+                    self.ident()
+                ));
             }
             Some(class) => {
-                rows.push(format!("Table: {}<a name=\"{}::{}\"></a>", self.ident(), class, self.ident()));
+                rows.push(format!(
+                    "Table: {}<a name=\"{}::{}\"></a>",
+                    self.ident(),
+                    class,
+                    self.ident()
+                ));
             }
         }
         rows.push(String::from("|\tname\t|\tkind\t|\ttype\t|\tlink\t|"));
         rows.push(String::from("| --- | --- | --- | --- |"));
 
-        for scope in self.table().scopes().iter()
-        {
-            match scope
-            {
+        for scope in self.table().scopes().iter() {
+            match scope {
                 Variable(e) => {
-                    rows.push(format!("|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|", e.ident(), e.var_type()));
+                    rows.push(format!(
+                        "|\t{}\t|\tvariable\t|\t{:?}\t|\tX\t|",
+                        e.ident(),
+                        e.var_type()
+                    ));
                 }
                 FunctionParameter(e) => {
-                    rows.push(format!("|\t{}\t|\tparameter\t|\t{:?}\t|\tX\t|", e.ident(), e.param_type()));
+                    rows.push(format!(
+                        "|\t{}\t|\tparameter\t|\t{:?}\t|\tX\t|",
+                        e.ident(),
+                        e.param_type()
+                    ));
                 }
-                _ => {todo!()}
+                _ => {
+                    todo!()
+                }
             }
         }
 
@@ -492,8 +531,7 @@ impl IntoMarkDownTable for FunctionEntry {
     }
 }
 
-pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> io::Result<()>
-{
+pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> io::Result<()> {
     let file = OpenOptions::new()
         .write(true)
         .create(true)
@@ -501,33 +539,27 @@ pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> 
         .open(format!("{}.outsymboltables.md", file_name))?;
     let mut buf_writer = BufWriter::new(file);
 
-    for top_scope in global.scopes()
-    {
+    for top_scope in global.scopes() {
         match top_scope {
             Class(e) => {
-                for row in e.md_table()
-                {
+                for row in e.md_table() {
                     buf_writer.write(format!("{}\n", row).as_bytes())?;
                 }
 
-                for member_fun in e.table().scopes()
-                {
+                for member_fun in e.table().scopes() {
                     buf_writer.write("\n____\n".as_bytes())?;
-                    match member_fun
-                    {
+                    match member_fun {
                         Function(f_e) => {
-                            for row in f_e.md_table()
-                            {
+                            for row in f_e.md_table() {
                                 buf_writer.write(format!("{}\n", row).as_bytes())?;
                             }
-                        },
+                        }
                         _ => {}
                     }
                 }
             }
             Function(e) => {
-                for row in e.md_table()
-                {
+                for row in e.md_table() {
                     buf_writer.write(format!("{}\n", row).as_bytes())?;
                 }
             }

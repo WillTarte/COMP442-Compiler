@@ -356,8 +356,7 @@ impl Token {
         return self.token_fragment.lexeme.as_ref();
     }
 
-    pub fn line_num(&self) -> usize
-    {
+    pub fn line_num(&self) -> usize {
         self.line_num
     }
 }

@@ -2,8 +2,8 @@ use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
-use crate::semantics::symbol_table::{generate_symbol_table};
-use crate::semantics::utils::{serialize_symbol_table_to_file};
+use crate::semantics::symbol_table::generate_symbol_table;
+use crate::semantics::utils::serialize_symbol_table_to_file;
 use dotenv::dotenv;
 use env_logger;
 use log::{error, info};
@@ -84,7 +84,8 @@ fn main() {
                 let root = ast.0.pop().unwrap();
                 let (symbol_table, errors) = generate_symbol_table(&root);
 
-                serialize_symbol_table_to_file(&symbol_table, file_name).expect("Failed to serialize symbol table to file");
+                serialize_symbol_table_to_file(&symbol_table, file_name)
+                    .expect("Failed to serialize symbol table to file");
             }
             Err(_) => {
                 error!("Failed to parse token stream for {}", file_name);
