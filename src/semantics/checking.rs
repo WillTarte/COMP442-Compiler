@@ -1,6 +1,7 @@
 use crate::semantics::symbol_table::{ClassEntry, SymbolTable, Type, FunctionEntry, Scope};
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
 use crate::parser::ast::Node;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum SemanticError {
@@ -8,9 +9,10 @@ pub enum SemanticError {
     NoMemberFuncDefinition(String),
     NoMemberFuncDeclaration(String),
     MultipleDeclIdent(String),
-    MultiplyDeclVariable(String),
-    MultiplyDeclMember(String),
-    MultiplyDeclClass(String),
+    InheritanceCycle(String),
+    //MultiplyDeclVariable(String),
+    //MultiplyDeclMember(String),
+    //MultiplyDeclClass(String),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -40,7 +42,7 @@ pub(crate) fn report_symbol_errors(global: &SymbolTable) -> Vec<SemanticError>
             _ => {}
         }
     }
-
+//todo check if any member functions don't have a definition
     errors
 }
 
@@ -124,14 +126,150 @@ pub(crate) fn check_multiply_decl_id(table: &SymbolTable) -> Vec<SemanticError>
 
 pub fn check_circular_inheritance(inherits: &Vec<Type>, global: &SymbolTable) -> Vec<SemanticError>
 {
-    let errors: Vec<SemanticError> = Vec::new();
-    todo!();
+    let mut errors: Vec<SemanticError> = Vec::new();
+
+    for scope in global.scopes()
+    {
+        match scope
+        {
+            Class(e) => {
+                let mut inheritance_list: HashSet<&str> = HashSet::new();
+                inheritance_list.insert(e.ident());
+                for parent in e.inherits()
+                {
+                    match parent
+                    {
+                        Type::Custom(ident) => {
+                            if inheritance_list.contains(ident.as_str())
+                            {
+                                errors.push(SemanticError::InheritanceCycle(format!("Inheritance cycle detected for {} starting from {}.", ident, e.ident())));
+                            }
+                        },
+                        _ => panic!()
+                    }
+                }
+            }
+            _ => {}
+        }
+    };
+
+    todo!("through data members?");
+
+    errors
+}
+
+pub(crate) fn check_member_func_defined(global: &SymbolTable) -> Vec<SemanticError>
+{
+    let mut errors: Vec<SemanticError> = Vec::new();
+    for scope in global.scopes()
+    {
+        match scope
+        {
+            Class(e) => {
+                for member in e.table().scopes()
+                {
+                    match member
+                    {
+                        Function(mfunc) => {
+                            if !mfunc.is_defined()
+                            {
+                                errors.push(SemanticError::NoMemberFuncDefinition(format!("Member function {}::{} has no valid definition.", e.ident(), mfunc.ident())));
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            },
+            _ => {}
+        }
+    };
+
     errors
 }
 
 pub(crate) fn check_shadowed_members(class: &ClassEntry, global: &SymbolTable) -> Vec<SemanticError>
 {
     let mut warnings: Vec<SemanticError> = Vec::new();
-    todo!();
+
+    let mut parents: Vec<&ClassEntry> = Vec::new();
+
+    let mut parent_idents: Vec<&str> = Vec::new();
+    for parent_ty in class.inherits()
+    {
+        match parent_ty
+        {
+            Type::Custom(ident) => { parent_idents.push(ident); },
+            _ => { panic!() }
+        }
+    }
+    while !parent_idents.is_empty()
+    {
+        match global.find_scope_by_ident(parent_idents.pop().unwrap())
+        {
+            None => { panic!("oh fuck") }
+            Some(scope) => {
+                match scope
+                {
+                    Class(e) => {
+                        if !parents.contains(&e)
+                        {
+                            parents.push(e);
+                            for parent_id in e.inherits()
+                            {
+                                match parent_id
+                                {
+                                    Type::Custom(id) => {
+                                        parent_idents.push(id);
+                                    },
+                                    _ => panic!()
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    for parent in parents
+    {
+        for member in class.table().scopes()
+        {
+            match member
+            {
+                Function(e) => {
+                    for parent_member in parent.table().scopes()
+                    {
+                        match parent_member {
+                            Function(pe) => {
+                                if e.ident() == pe.ident() && e.type_sig() == pe.type_sig() && e.visibility() == pe.visibility()
+                                {
+                                    warnings.push(SemanticError::Warning(WarningType::ShadowedMemberWarning(format!("Member function {} of {} is shadowing member function {} of {}", e.ident(), class.ident(), pe.ident(), parent.ident()))))
+                                }
+                            },
+                            _ => {}
+                        }
+                    }
+                },
+                Variable(e) => {
+                    for parent_member in parent.table().scopes()
+                    {
+                        match parent_member {
+                            Variable(pe) => {
+                                if e.ident() == pe.ident() && e.var_type() == pe.var_type()
+                                {
+                                    warnings.push(SemanticError::Warning(WarningType::ShadowedMemberWarning(format!("Member variable {} of {} is shadowing member variable {} of {}", e.ident(), class.ident(), pe.ident(), parent.ident()))))
+                                }
+                            },
+                            _ => {}
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+
     warnings
 }

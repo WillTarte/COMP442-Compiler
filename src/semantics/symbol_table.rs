@@ -1,10 +1,10 @@
 use crate::parser::ast::InternalNodeType::{ClassDeclaration, ClassDeclarations, FunctionDefinitions};
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::symbol_table::Type::{CustomArray, FloatArray, IntegerArray, StringArray};
-use crate::semantics::utils::{map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_func_entry};
+use crate::semantics::utils::{map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_func_entry, merge_member_function_tables};
 use std::collections::HashMap;
 use std::ops::Deref;
-use crate::semantics::checking::{check_class_symbol_errors, SemanticError, report_symbol_errors, report_semantic_errors};
+use crate::semantics::checking::{check_class_symbol_errors, SemanticError, report_symbol_errors, report_semantic_errors, check_member_func_defined};
 use log::{warn};
 use std::{io, fmt};
 use std::fs::OpenOptions;
@@ -149,7 +149,7 @@ pub enum Type {
 }
 
 impl Type {
-    pub fn as_array_type(self, array_dim: Vec<usize>) -> Self {
+    pub fn into_array_type(self, array_dim: Vec<usize>) -> Self {
         match self {
             Type::Integer => IntegerArray(array_dim),
             Type::Float => FloatArray(array_dim),
@@ -323,6 +323,15 @@ impl FunctionEntry {
     {
         self.defined = true;
     }
+
+    pub fn merge(&mut self, other: FunctionEntry)
+    {
+        assert_eq!(self.member_of, other.member_of);
+        assert_eq!(self.identifier, other.identifier);
+        assert_eq!(self.type_signature, other.type_signature);
+        self.define();
+        self.table_mut().merge(other.table);
+    }
 }
 
 impl PartialEq for FunctionEntry
@@ -481,7 +490,7 @@ pub fn generate_function_entries(node: &Node) -> (Vec<FunctionEntry>, Vec<Functi
     entries
 }
 
-pub fn generate_symbol_table(root: &Node) -> SymbolTable {
+pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
     assert_eq!(root.val, Some(NodeVal::Internal(InternalNodeType::Root)));
     assert_eq!(root.children.len(), 3); // class declarations, func definitions, main
 
@@ -497,42 +506,10 @@ pub fn generate_symbol_table(root: &Node) -> SymbolTable {
     global_table.add_scopes(free_function_entries.into_iter().map(Scope::Function).collect());
     global_table.add_scope(Scope::Function(main_entry));
 
-    for member_func in member_function_entries.drain(..)
-    {
-        match global_table.find_scope_by_ident_mut(member_func.member_of().unwrap())
-        {
-            None => { todo!("Semantic Error") }
-            Some(scope) => {
-                match scope
-                {
-                    Scope::Class(entry) => {
-                        let member_func_scope = Scope::Function(member_func);
-                        match entry.table_mut().find_scope_by_scope_mut(&member_func_scope)
-                        {
-                            None => { todo!("Semantic Error") }
-                            Some(fscope) => {
-                                match fscope
-                                {
-                                    Scope::Function(fentry) => {
-                                        let member_func = match member_func_scope
-                                        {
-                                            Scope::Function(e) => { e },
-                                            _ => { panic!("wtf") }
-                                        };
-                                        fentry.table_mut().merge(member_func.table);
-                                    }
-                                    _ => { panic!() }
-                                }
-                            }
-                        }
-                    }
-                    _ => { panic!() }
-                }
-            }
-        }
-    }
+    let mut errors: Vec<SemanticError> = merge_member_function_tables(&mut global_table, &mut member_function_entries);
+    errors.append(&mut check_member_func_defined(&global_table));
 
-    global_table
+    (global_table, errors)
 }
 
 pub fn check_semantics(root: &Node, global: &SymbolTable) -> Vec<SemanticError>

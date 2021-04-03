@@ -82,7 +82,7 @@ fn main() {
                 );
                 assert_eq!(ast.0.len(), 1);
                 let root = ast.0.pop().unwrap();
-                let symbol_table = generate_symbol_table(&root);
+                let (symbol_table, errors) = generate_symbol_table(&root);
 
                 serialize_symbol_table_to_file(&symbol_table, file_name).expect("Failed to serialize symbol table to file");
             }

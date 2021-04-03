@@ -7,6 +7,8 @@ use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, 
 use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
 use std::io;
+use crate::semantics::checking::SemanticError;
+use regex::Error;
 
 /// Maps a ClassDeclaration node to a ClassEntry
 pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
@@ -279,7 +281,7 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
                         .map(map_to_usize)
                         .filter_map(|o| o)
                         .collect();
-                    ty.as_array_type(array_dim)
+                    ty.into_array_type(array_dim)
                 };
             }
             _ => {
@@ -382,6 +384,47 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
             }
         },
     }
+}
+
+pub(crate) fn merge_member_function_tables(global_table: &mut SymbolTable, member_funcs: &mut Vec<FunctionEntry>) -> Vec<SemanticError>
+{
+    let mut errors: Vec<SemanticError> = Vec::new();
+
+    for member_func in member_funcs.drain(..)
+    {
+        match global_table.find_scope_by_ident_mut(member_func.member_of().unwrap())
+        {
+            None => { panic!() }
+            Some(scope) => {
+                match scope
+                {
+                    Scope::Class(entry) => {
+                        let member_func_scope = Scope::Function(member_func);
+                        match entry.table_mut().find_scope_by_scope_mut(&member_func_scope)
+                        {
+                            None => { errors.push(SemanticError::NoMemberFuncDeclaration(format!("No member func declaration found for {}", scope.ident()))); }
+                            Some(fscope) => {
+                                match fscope
+                                {
+                                    Scope::Function(fentry) => {
+                                        let member_func = match member_func_scope
+                                        {
+                                            Scope::Function(e) => { e },
+                                            _ => { panic!("wtf") }
+                                        };
+                                        fentry.merge(member_func);
+                                    }
+                                    _ => { panic!() }
+                                }
+                            }
+                        }
+                    }
+                    _ => { panic!() }
+                }
+            }
+        }
+    }
+    todo!()
 }
 
 trait IntoMarkDownTable
