@@ -142,7 +142,11 @@ impl Type {
             Type::Float => FloatArray(array_dim),
             Type::String => StringArray(array_dim),
             Type::Custom(id) => CustomArray(id.clone(), array_dim),
-            _ => self.clone(),
+            Type::IntegerArray(_) => IntegerArray(array_dim),
+            Type::FloatArray(_) => FloatArray(array_dim),
+            Type::StringArray(_) => StringArray(array_dim),
+            Type::CustomArray(s, _) => CustomArray(s.clone(), array_dim),
+            _ => { self.clone() }
         }
     }
 

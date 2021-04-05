@@ -102,7 +102,11 @@ fn main() {
                         | SemanticError::UndeclaredClass(msg)
                         | SemanticError::UndeclaredVariable(msg)
                         | SemanticError::NotIndexable(msg)
-                        | SemanticError::TooManyIndices(msg) => {
+                        | SemanticError::TooManyIndices(msg)
+                        | SemanticError::FunctionNotFound(msg)
+                        | SemanticError::InvalidParameters(msg)
+                        | SemanticError::TypeMistmatch(msg)
+                        | SemanticError::NotCallable(msg) => {
                             log::error!("{}", msg);
                         }
                     }

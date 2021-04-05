@@ -1,28 +1,28 @@
 // ====== Class declarations ====== //
 class POLYNOMIAL {
 	public func evaluate(float x) : float;
-	public func evaluate2(float x) : float;                       // 6.2
+	public func evaluate2(float x) : float;                       // 6.2 DONE
 };
-class POLYNOMIAL {                                                    // 8.1
+class POLYNOMIAL {                                                    // 8.1 DONE
 	public func evaluate(float x) : float;                        
-        public func evaluate(integer x) : integer;                    // 9.2
+        public func evaluate(integer x) : integer;                    // 9.2 & 6.2 DONE
 };
 class LINEAR inherits POLYNOMIAL {
 	private float a;
 	private float b;
-	private integer b;                                            // 8.3
+	private integer b;                                            // 8.3 DONE
 	
 	public func build(float A, float B) : LINEAR;
-	public func evaluate(float x) : float;                        // 9.3
+	public func evaluate(float x) : float;                        // 9.3 DONE
 };
 
 class QUADRATIC inherits POLYNOMIAL {
-	private float a;                                              // 8.5
-	private float b;                                              // 8.5
+	private float a;                                              // 8.5 ????
+	private float b;                                              // 8.5 ????
 	private float c;
 	
 	public func build(float A, float B, float C) : QUADRATIC;
-	public func evaluate(float x) : float;                        // 9.3
+	public func evaluate(float x) : float;                        // 9.3 DONE
 };
 
 class C inherits E {
@@ -30,13 +30,13 @@ class C inherits E {
 };
 
 class D inherits C {
+    private integer a;                                                  // 14.1
 	private integer b; 
 };
 
-class E inherits D {                                                   // 14.1
+class E inherits D {                                                   // 14.1 TODO + broken shadowing for variables
 	private integer c; 
 };
-
 
 // ====== Function Definitions ====== //
 func POLYNOMIAL::evaluate(float x) : float
@@ -91,7 +91,7 @@ func QUADRATIC::build(float A, float B, float C) : QUADRATIC
   return (1);                                                       // 10.3
 }
   
-func QUADRATIC::build2(float A, float B, float C) : QUADRATIC       // 6.1
+func QUADRATIC::build2(float A, float B, float C) : QUADRATIC       // 6.1 DONE
 {
   var
   {
@@ -104,8 +104,8 @@ func QUADRATIC::build2(float A, float B, float C) : QUADRATIC       // 6.1
 }
 
 func f(integer i) : void {}                                                    
-func f(integer i) : void {}                                         // 8.2
-func f(integer i, integer i) : integer {}                           // 9.1
+func f(integer i) : void {}                                         // 8.2 DONE
+func f(integer i, integer i) : integer {}                           // 9.1 DONE
 
 func f3(integer p1[2][3]) : integer {}
 
@@ -115,12 +115,12 @@ main
 {
   var
   {
-    A a;                                                            // 11.5
+    A a;                                                            // 11.5 DONE
     C c;
     linear f1;
     quadratic f2;
     integer counter;
-    float counter;                                                  // 8.4
+    float counter;                                                  // 8.4 DONE
     integer i[2][3];
     integer j[1][2][3];
   }

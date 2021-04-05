@@ -1227,8 +1227,8 @@ lazy_static! {
                 rhs: vec![
                     Terminal(OpenParen),
                     NonTerminal(Params),
-                    SemanticActionType(AddChild),
                     Terminal(CloseParen),
+                    SemanticActionType(AddChild),
                     NonTerminal(FactorAmb2),
                 ],
             },
