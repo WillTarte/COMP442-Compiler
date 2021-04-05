@@ -2,7 +2,8 @@ use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
-use crate::semantics::symbol_table::generate_symbol_table;
+use crate::semantics::checking::{SemanticError, WarningType};
+use crate::semantics::symbol_table::{check_semantics, generate_symbol_table};
 use crate::semantics::utils::serialize_symbol_table_to_file;
 use dotenv::dotenv;
 use env_logger;
@@ -82,8 +83,31 @@ fn main() {
                 );
                 assert_eq!(ast.0.len(), 1);
                 let root = ast.0.pop().unwrap();
-                let (symbol_table, errors) = generate_symbol_table(&root);
+                let (symbol_table, mut errors) = generate_symbol_table(&root);
 
+                errors.append(&mut check_semantics(&root, &symbol_table));
+
+                for err in errors.iter() {
+                    match err {
+                        SemanticError::Warning(warning) => match warning {
+                            WarningType::OverloadWarning(msg)
+                            | WarningType::ShadowedMemberWarning(msg) => {
+                                log::warn!("{}", msg);
+                            }
+                        },
+                        SemanticError::NoMemberFuncDefinition(msg)
+                        | SemanticError::NoMemberFuncDeclaration(msg)
+                        | SemanticError::MultipleDeclIdent(msg)
+                        | SemanticError::InheritanceCycle(msg)
+                        | SemanticError::UndeclaredClass(msg)
+                        | SemanticError::UndeclaredVariable(msg)
+                        | SemanticError::NotIndexable(msg)
+                        | SemanticError::TooManyIndices(msg) => {
+                            log::error!("{}", msg);
+                        }
+                    }
+                }
+                info!("Writing symbol tables to file");
                 serialize_symbol_table_to_file(&symbol_table, file_name)
                     .expect("Failed to serialize symbol table to file");
             }

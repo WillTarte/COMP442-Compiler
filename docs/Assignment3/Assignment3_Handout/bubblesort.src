@@ -17,7 +17,7 @@ func bubbleSort(integer arr[], integer size) : void
       if (arr[j] > arr[j+1]) 
         then {
           // swap temp and arr[i]
-          temp = arr[j];
+          temp = arr[j][j+1];
           arr[j] = arr[j+1];
           arr[j+1] = temp;
         } else ;

@@ -1,5 +1,5 @@
-use crate::lexer::token::TokenType;
-use crate::lexer::token::TokenType::Func;
+use crate::lexer::token::{Token, TokenType};
+use crate::parser::ast::InternalNodeType::{ClassDeclarations, FunctionDefinitions};
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::checking::SemanticError;
 use crate::semantics::symbol_table;
@@ -7,18 +7,42 @@ use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, 
 use crate::semantics::symbol_table::{
     ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry, Visibility,
 };
-use regex::Error;
 use std::fs::OpenOptions;
 use std::io;
 use std::io::{BufWriter, Write};
 
+#[allow(dead_code)]
+pub fn generate_class_entries(node: &Node) -> Vec<ClassEntry> {
+    assert_eq!(node.val(), Some(&NodeVal::Internal(ClassDeclarations)));
+    log::info!("Generating class symbol tables");
+
+    let entries: Vec<ClassEntry> = node.children.iter().map(map_class_decl_to_entry).collect();
+
+    entries
+}
+
+#[allow(dead_code)]
+pub fn generate_function_entries(node: &Node) -> (Vec<FunctionEntry>, Vec<FunctionEntry>) {
+    assert_eq!(node.val(), Some(&NodeVal::Internal(FunctionDefinitions)));
+    log::info!("Generating symbol tables for function declarations");
+
+    let entries: (Vec<FunctionEntry>, Vec<FunctionEntry>) = node
+        .children
+        .iter()
+        .map(map_func_def_to_entry)
+        .partition(|entry| entry.member_of().is_none());
+
+    entries
+}
+
+#[allow(dead_code)]
 /// Maps a ClassDeclaration node to a ClassEntry
 pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
     assert_eq!(
-        node.val,
-        Some(NodeVal::Internal(InternalNodeType::ClassDeclaration))
+        node.val(),
+        Some(&NodeVal::Internal(InternalNodeType::ClassDeclaration))
     );
-    match &node.val {
+    match node.val() {
         None => {
             panic!()
         }
@@ -31,12 +55,16 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
                     match ty {
                         InternalNodeType::ClassDeclaration => {
                             assert_eq!(node.children.len(), 3); // class name, inherit list, member list
-                            let (ident, line_num) = match node.children[0].val.as_ref().unwrap() {
+
+                            let (ident, line_num) = match node.children[0].val().unwrap() {
                                 NodeVal::Leaf(t) => (t.lexeme(), t.line_num()),
                                 NodeVal::Internal(_) => {
                                     panic!()
                                 }
                             };
+
+                            log::info!("Generating symbol table for class {}", ident);
+
                             let inherits: Vec<Type> =
                                 node.children[1].children.iter().map(map_to_type).collect();
                             let mut members: Vec<Scope> = node.children[2]
@@ -69,14 +97,15 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
     }
 }
 
+#[allow(dead_code)]
 /// Maps a FuncDeclaration node to a FunctionEntry
 pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
     assert_eq!(
-        node.val,
-        Some(NodeVal::Internal(InternalNodeType::FuncDeclaration))
+        node.val(),
+        Some(&NodeVal::Internal(InternalNodeType::FuncDeclaration))
     );
     assert_eq!(node.children.len(), 3);
-    match &node.val {
+    match node.val() {
         None => {
             panic!()
         }
@@ -85,7 +114,7 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
                 panic!()
             }
             NodeVal::Internal(InternalNodeType::FuncDeclaration) => {
-                let (ident, line_num) = match &node.children[0].val {
+                let (ident, line_num) = match node.children[0].val() {
                     None => {
                         panic!()
                     }
@@ -121,12 +150,16 @@ pub(crate) fn map_func_decl_to_entry(node: &Node) -> FunctionEntry {
     }
 }
 
+#[allow(dead_code)]
 /// Maps a FuncDef node to a FunctionEntry
 pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
-    assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::FuncDef)));
+    assert_eq!(
+        node.val(),
+        Some(&NodeVal::Internal(InternalNodeType::FuncDef))
+    );
     assert_eq!(node.children.len(), 5);
 
-    let (ident1, ident2, line_num) = match (&node.children[0].val, &node.children[1].val) {
+    let (ident1, ident2, line_num) = match (node.children[0].val(), node.children[1].val()) {
         (Some(val1), Some(val2)) => match (val1, val2) {
             (NodeVal::Leaf(t1), NodeVal::Leaf(t2)) => {
                 (t1.lexeme(), Some(t2.lexeme()), t2.line_num())
@@ -145,6 +178,16 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
             panic!()
         }
     };
+    if ident2.is_some() {
+        log::info!(
+            "Generating symbol table for function {}::{}",
+            ident1,
+            ident2.unwrap()
+        );
+    } else {
+        log::info!("Generating symbol table for function {}", ident1);
+    }
+
     let params: Vec<ParameterEntry> = node.children[2]
         .children
         .iter()
@@ -165,7 +208,7 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
         .children[0]
         .children //vars in var block
         .iter()
-        .filter(|n| n.val.is_some())
+        .filter(|n| n.val().is_some())
         .map(map_var_decl_to_entry)
         .collect();
     symbol_table.add_scopes(body_vars.into_iter().map(Scope::Variable).collect());
@@ -177,9 +220,10 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
     }
 }
 
+#[allow(dead_code)]
 /// Maps Main node to a FunctionEntry
 pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
-    assert_eq!(node.val, Some(NodeVal::Internal(InternalNodeType::Main)));
+    assert_eq!(node.val(), Some(&NodeVal::Internal(InternalNodeType::Main)));
     assert_eq!(node.children.len(), 1);
     assert_eq!(node.children[0].children.len(), 2);
     let var_scopes: Vec<Scope> = node.children[0].children[0]
@@ -196,15 +240,16 @@ pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
     )
 }
 
+#[allow(dead_code)]
 /// Maps a VarDeclaration node to a Variable Entry
 pub(crate) fn map_var_decl_to_entry(node: &Node) -> VariableEntry {
     assert_eq!(
-        node.val,
-        Some(NodeVal::Internal(InternalNodeType::VarDeclaration))
+        node.val(),
+        Some(&NodeVal::Internal(InternalNodeType::VarDeclaration))
     );
     assert_eq!(node.children.len(), 3);
     let ty = map_to_type(&node);
-    let (ident, line_num) = match &node.children[1].val {
+    let (ident, line_num) = match node.children[1].val() {
         None => {
             panic!()
         }
@@ -218,15 +263,16 @@ pub(crate) fn map_var_decl_to_entry(node: &Node) -> VariableEntry {
     VariableEntry::new(ident, ty, line_num)
 }
 
+#[allow(dead_code)]
 /// Maps a FuncParam node to a ParameterEntry
 pub(crate) fn map_func_param_to_entry(node: &Node) -> ParameterEntry {
     assert_eq!(
-        node.val,
-        Some(NodeVal::Internal(InternalNodeType::FuncParam))
+        node.val(),
+        Some(&NodeVal::Internal(InternalNodeType::FuncParam))
     );
     assert_eq!(node.children.len(), 3);
     let ty = map_to_type(&node);
-    let (ident, line_num) = match &node.children[1].val {
+    let (ident, line_num) = match node.children[1].val() {
         None => {
             panic!()
         }
@@ -240,9 +286,10 @@ pub(crate) fn map_func_param_to_entry(node: &Node) -> ParameterEntry {
     ParameterEntry::new(ident, ty, line_num)
 }
 
+#[allow(dead_code)]
 /// Extracts type information from a token, or from VarDeclaration/FuncParam
 pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
-    match &node.val {
+    match node.val() {
         None => {
             panic!()
         }
@@ -261,10 +308,10 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
             | NodeVal::Internal(InternalNodeType::VarDeclaration) => {
                 assert_eq!(node.children.len(), 3);
                 assert_eq!(
-                    node.children[2].val,
-                    Some(NodeVal::Internal(InternalNodeType::ArrayDim))
+                    node.children[2].val(),
+                    Some(&NodeVal::Internal(InternalNodeType::ArrayDim))
                 );
-                let ty: symbol_table::Type = match &node.children[0].val {
+                let ty: symbol_table::Type = match node.children[0].val() {
                     None => {
                         panic!()
                     }
@@ -292,7 +339,7 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
                         .map(map_to_usize)
                         .filter_map(|o| o)
                         .collect();
-                    ty.into_array_type(array_dim)
+                    ty.to_array_type(array_dim)
                 };
             }
             _ => {
@@ -302,10 +349,24 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
     }
 }
 
+#[allow(dead_code)]
+pub(crate) fn map_token_to_type(token: &Token) -> Type {
+    match token.token_type() {
+        TokenType::Id => Type::Custom(token.lexeme().to_string()),
+        TokenType::IntegerLit => Type::Integer,
+        TokenType::FloatLit => Type::Float,
+        TokenType::StringLit => Type::String,
+        _ => {
+            panic!()
+        }
+    }
+}
+
+#[allow(dead_code)]
 /// Extracts usize from tokens
 pub(crate) fn map_to_usize(node: &Node) -> Option<usize> // e.g. ArrayDim children are integer tokens
 {
-    match &node.val {
+    match node.val() {
         None => None,
         Some(v) => {
             match v {
@@ -320,9 +381,10 @@ pub(crate) fn map_to_usize(node: &Node) -> Option<usize> // e.g. ArrayDim childr
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn map_to_visibility(node: &Node) -> Visibility {
     assert_eq!(node.children.len(), 0);
-    match &node.val {
+    match node.val() {
         None => Visibility::Default,
         Some(node_val) => match node_val {
             NodeVal::Leaf(t) => match t.token_type() {
@@ -339,13 +401,14 @@ pub(crate) fn map_to_visibility(node: &Node) -> Visibility {
     }
 }
 
+#[allow(dead_code)]
 /// Maps a class member to a Variable or Function Scope
 pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
     assert_eq!(
-        node.val,
-        Some(NodeVal::Internal(InternalNodeType::MemberDeclaration))
+        node.val(),
+        Some(&NodeVal::Internal(InternalNodeType::MemberDeclaration))
     );
-    match &node.val {
+    match node.val() {
         None => {
             panic!()
         }
@@ -355,7 +418,7 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
             }
             NodeVal::Internal(InternalNodeType::MemberDeclaration) => {
                 let visibility: Visibility = map_to_visibility(&node.children[0]);
-                let member: Scope = match &node.children[1].val {
+                let member: Scope = match node.children[1].val() {
                     None => {
                         panic!()
                     }
@@ -387,6 +450,7 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn merge_member_function_tables(
     global_table: &mut SymbolTable,
     member_funcs: &mut Vec<FunctionEntry>,
@@ -407,9 +471,10 @@ pub(crate) fn merge_member_function_tables(
                     {
                         None => {
                             errors.push(SemanticError::NoMemberFuncDeclaration(format!(
-                                "No member func declaration found for {}",
-                                scope.ident()
-                            )));
+                                "No member func declaration found for {}::{}",
+                                entry.ident(),
+                                member_func_scope.ident()
+                            ))); //TODO what do we do with the function entry?
                         }
                         Some(fscope) => match fscope {
                             Scope::Function(fentry) => {
@@ -433,7 +498,61 @@ pub(crate) fn merge_member_function_tables(
             },
         }
     }
-    todo!()
+
+    errors
+}
+
+/// Returns the [ClassEntry]'s that are parents/ancestors of a given class. Can include itself if there is a circular inheritance chain.
+pub(crate) fn get_ancestors_for_class<'a>(
+    class: &ClassEntry,
+    global: &'a SymbolTable,
+) -> (Vec<&'a ClassEntry>, Vec<SemanticError>) {
+    let mut parents: Vec<&ClassEntry> = Vec::new();
+    let mut errors: Vec<SemanticError> = Vec::new();
+
+    let mut parent_idents: Vec<&str> = Vec::new();
+    for parent_ty in class.inherits() {
+        match parent_ty {
+            Type::Custom(ident) => {
+                parent_idents.push(ident);
+            }
+            _ => {
+                panic!()
+            }
+        }
+    }
+
+    while !parent_idents.is_empty() {
+        let ident = parent_idents.pop().unwrap();
+        match global.find_scope_by_ident(ident) {
+            None => {}
+            Some(scope) => match scope {
+                Class(pe) => {
+                    if !parents.contains(&pe) {
+                        parents.push(pe);
+                    }
+                    for parent_ty in pe.inherits() {
+                        match parent_ty {
+                            Type::Custom(parent_ident) => {
+                                if !parents.iter().any(|p| p.ident() == parent_ident) {
+                                    parent_idents.push(parent_ident)
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {
+                    errors.push(SemanticError::UndeclaredClass(format!(
+                        "No class found for identifier {}",
+                        ident
+                    )));
+                }
+            },
+        }
+    }
+
+    (parents, errors)
 }
 
 trait IntoMarkDownTable {
@@ -531,6 +650,7 @@ impl IntoMarkDownTable for FunctionEntry {
     }
 }
 
+#[allow(dead_code)]
 pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> io::Result<()> {
     let file = OpenOptions::new()
         .write(true)

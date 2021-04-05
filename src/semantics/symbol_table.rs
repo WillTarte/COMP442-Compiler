@@ -1,24 +1,16 @@
-use crate::parser::ast::InternalNodeType::{
-    ClassDeclaration, ClassDeclarations, FunctionDefinitions,
-};
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
-use crate::semantics::checking::{
-    check_class_symbol_errors, check_member_func_defined, report_semantic_errors,
-    report_symbol_errors, SemanticError,
+use crate::semantics::checking::{report_semantic_errors, report_symbol_errors, SemanticError};
+use crate::semantics::symbol_table::Type::{
+    CustomArray, FloatArray, Integer, IntegerArray, StringArray,
 };
-use crate::semantics::symbol_table::Type::{CustomArray, FloatArray, IntegerArray, StringArray};
 use crate::semantics::utils::{
-    map_class_decl_to_entry, map_func_decl_to_entry, map_func_def_to_entry, map_main_to_func_entry,
+    generate_class_entries, generate_function_entries, map_main_to_func_entry,
     merge_member_function_tables,
 };
-use log::warn;
-use std::collections::HashMap;
+use std::fmt;
 use std::fmt::{Debug, Formatter};
-use std::fs::OpenOptions;
-use std::io::{BufWriter, Write};
-use std::ops::Deref;
-use std::{fmt, io};
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Scope {
     Class(ClassEntry),
@@ -59,6 +51,7 @@ impl SymbolTable {
         Self(scopes)
     }
 
+    #[allow(dead_code)]
     pub fn add_scope(&mut self, scope: Scope) {
         self.0.push(scope);
     }
@@ -102,6 +95,7 @@ impl SymbolTable {
         None
     }
 
+    #[allow(dead_code)]
     pub fn find_scope_by_scope(&self, other_scope: &Scope) -> Option<&Scope> {
         for scope in self.scopes() {
             if scope == other_scope {
@@ -142,15 +136,23 @@ pub enum Type {
 }
 
 impl Type {
-    pub fn into_array_type(self, array_dim: Vec<usize>) -> Self {
+    pub fn to_array_type(&self, array_dim: Vec<usize>) -> Self {
         match self {
             Type::Integer => IntegerArray(array_dim),
             Type::Float => FloatArray(array_dim),
             Type::String => StringArray(array_dim),
             Type::Custom(id) => CustomArray(id.clone(), array_dim),
-            _ => {
-                panic!()
-            }
+            _ => self.clone(),
+        }
+    }
+
+    pub fn to_simple_type(&self) -> Type {
+        match self {
+            Type::IntegerArray(_) => Type::Integer,
+            Type::FloatArray(_) => Type::Float,
+            Type::StringArray(_) => Type::String,
+            Type::CustomArray(s, _) => Type::Custom(s.clone()),
+            _ => self.clone(),
         }
     }
 }
@@ -294,6 +296,7 @@ impl FunctionEntry {
         &mut self.table
     }
 
+    #[allow(dead_code)]
     pub fn visibility(&self) -> Visibility {
         self.visibility
     }
@@ -406,6 +409,7 @@ impl VariableEntry {
         &self.variable_type
     }
 
+    #[allow(dead_code)]
     pub fn visibility(&self) -> Visibility {
         self.visibility
     }
@@ -448,29 +452,12 @@ impl ParameterEntry {
     }
 }
 
-pub fn generate_class_entries(node: &Node) -> Vec<ClassEntry> {
-    assert_eq!(node.val, Some(NodeVal::Internal(ClassDeclarations)));
-
-    let entries: Vec<ClassEntry> = node.children.iter().map(map_class_decl_to_entry).collect();
-
-    entries
-}
-
-pub fn generate_function_entries(node: &Node) -> (Vec<FunctionEntry>, Vec<FunctionEntry>) {
-    assert_eq!(node.val, Some(NodeVal::Internal(FunctionDefinitions)));
-
-    let entries: (Vec<FunctionEntry>, Vec<FunctionEntry>) = node
-        .children
-        .iter()
-        .map(map_func_def_to_entry)
-        .partition(|entry| entry.member_of.is_none());
-
-    entries
-}
-
+#[allow(dead_code)]
 pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
-    assert_eq!(root.val, Some(NodeVal::Internal(InternalNodeType::Root)));
+    assert_eq!(root.val(), Some(&NodeVal::Internal(InternalNodeType::Root)));
     assert_eq!(root.children.len(), 3); // class declarations, func definitions, main
+
+    log::info!("Generating Global symbol table");
 
     let mut global_table = SymbolTable::new();
 
@@ -490,15 +477,17 @@ pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
     );
     global_table.add_scope(Scope::Function(main_entry));
 
-    let mut errors: Vec<SemanticError> =
+    let errors: Vec<SemanticError> =
         merge_member_function_tables(&mut global_table, &mut member_function_entries);
-    errors.append(&mut check_member_func_defined(&global_table));
 
     (global_table, errors)
 }
 
+#[allow(dead_code)]
 pub fn check_semantics(root: &Node, global: &SymbolTable) -> Vec<SemanticError> {
     let mut errors: Vec<SemanticError> = Vec::new();
+
+    log::info!("Checking program semantics");
 
     errors.append(&mut report_symbol_errors(global));
 
