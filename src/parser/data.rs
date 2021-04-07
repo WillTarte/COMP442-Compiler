@@ -638,21 +638,30 @@ lazy_static! {
             (NonTerminal(Start), Terminal(Main)),
             GrammarRule {
                 lhs: NonTerminal(Start),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Root)), NonTerminal(Prog)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Root)),
+                    NonTerminal(Prog),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Start), Terminal(Func)),
             GrammarRule {
                 lhs: NonTerminal(Start),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Root)), NonTerminal(Prog)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Root)),
+                    NonTerminal(Prog),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Start), Terminal(Class)),
             GrammarRule {
                 lhs: NonTerminal(Start),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Root)), NonTerminal(Prog)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Root)),
+                    NonTerminal(Prog),
+                ],
             },
         );
 
@@ -660,21 +669,30 @@ lazy_static! {
             (NonTerminal(AddOp), Terminal(Minus)),
             GrammarRule {
                 lhs: NonTerminal(AddOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Sub)), Terminal(Minus)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Sub)),
+                    Terminal(Minus),
+                ],
             },
         );
         table.insert(
             (NonTerminal(AddOp), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(AddOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Add)), Terminal(Plus)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Add)),
+                    Terminal(Plus),
+                ],
             },
         );
         table.insert(
             (NonTerminal(AddOp), Terminal(Or)),
             GrammarRule {
                 lhs: NonTerminal(AddOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Or)), Terminal(Or)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Or)),
+                    Terminal(Or),
+                ],
             },
         );
 
@@ -682,63 +700,108 @@ lazy_static! {
             (NonTerminal(ArithExpr), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(OpenParen)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(Minus)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(Question)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(Bang)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(StringLit)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(FloatLit)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ArithExpr), Terminal(IntegerLit)),
             GrammarRule {
                 lhs: NonTerminal(ArithExpr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)), NonTerminal(Term), NonTerminal(RightRecArithExpr), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArithExpr)),
+                    NonTerminal(Term),
+                    NonTerminal(RightRecArithExpr),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
 
@@ -761,7 +824,11 @@ lazy_static! {
             (NonTerminal(ArraySizeAmb1), Terminal(IntegerLit)),
             GrammarRule {
                 lhs: NonTerminal(ArraySizeAmb1),
-                rhs: vec![SemanticActionType(MakeTerminalNode), Terminal(IntegerLit), Terminal(CloseSquare)],
+                rhs: vec![
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(IntegerLit),
+                    Terminal(CloseSquare),
+                ],
             },
         );
 
@@ -769,7 +836,10 @@ lazy_static! {
             (NonTerminal(AssignOp), Terminal(Assignment)),
             GrammarRule {
                 lhs: NonTerminal(AssignOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Assignment)), Terminal(Assignment)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Assignment)),
+                    Terminal(Assignment),
+                ],
             },
         );
 
@@ -800,63 +870,99 @@ lazy_static! {
             (NonTerminal(Expr), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(OpenParen)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(Minus)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(Question)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(Bang)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(StringLit)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(FloatLit)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Expr), Terminal(IntegerLit)),
             GrammarRule {
                 lhs: NonTerminal(Expr),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)), NonTerminal(ArithExpr), NonTerminal(ExprAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Expr)),
+                    NonTerminal(ArithExpr),
+                    NonTerminal(ExprAmb1),
+                ],
             },
         );
 
@@ -885,42 +991,72 @@ lazy_static! {
             (NonTerminal(ExprAmb1), Terminal(GreaterEqualThan)),
             GrammarRule {
                 lhs: NonTerminal(ExprAmb1),
-                rhs: vec![NonTerminal(RelOp), NonTerminal(ArithExpr), SemanticActionType(MakeRelativeOperation), SemanticActionType(AddChild)],
+                rhs: vec![
+                    NonTerminal(RelOp),
+                    NonTerminal(ArithExpr),
+                    SemanticActionType(MakeRelativeOperation),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ExprAmb1), Terminal(LessEqualThan)),
             GrammarRule {
                 lhs: NonTerminal(ExprAmb1),
-                rhs: vec![NonTerminal(RelOp), NonTerminal(ArithExpr), SemanticActionType(MakeRelativeOperation), SemanticActionType(AddChild)],
+                rhs: vec![
+                    NonTerminal(RelOp),
+                    NonTerminal(ArithExpr),
+                    SemanticActionType(MakeRelativeOperation),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ExprAmb1), Terminal(GreaterThan)),
             GrammarRule {
                 lhs: NonTerminal(ExprAmb1),
-                rhs: vec![NonTerminal(RelOp), NonTerminal(ArithExpr), SemanticActionType(MakeRelativeOperation), SemanticActionType(AddChild)],
+                rhs: vec![
+                    NonTerminal(RelOp),
+                    NonTerminal(ArithExpr),
+                    SemanticActionType(MakeRelativeOperation),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ExprAmb1), Terminal(LessThan)),
             GrammarRule {
                 lhs: NonTerminal(ExprAmb1),
-                rhs: vec![NonTerminal(RelOp), NonTerminal(ArithExpr), SemanticActionType(MakeRelativeOperation), SemanticActionType(AddChild)],
+                rhs: vec![
+                    NonTerminal(RelOp),
+                    NonTerminal(ArithExpr),
+                    SemanticActionType(MakeRelativeOperation),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ExprAmb1), Terminal(NotEq)),
             GrammarRule {
                 lhs: NonTerminal(ExprAmb1),
-                rhs: vec![NonTerminal(RelOp), NonTerminal(ArithExpr), SemanticActionType(MakeRelativeOperation), SemanticActionType(AddChild)],
+                rhs: vec![
+                    NonTerminal(RelOp),
+                    NonTerminal(ArithExpr),
+                    SemanticActionType(MakeRelativeOperation),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ExprAmb1), Terminal(EqEq)),
             GrammarRule {
                 lhs: NonTerminal(ExprAmb1),
-                rhs: vec![NonTerminal(RelOp), NonTerminal(ArithExpr), SemanticActionType(MakeRelativeOperation), SemanticActionType(AddChild)],
+                rhs: vec![
+                    NonTerminal(RelOp),
+                    NonTerminal(ArithExpr),
+                    SemanticActionType(MakeRelativeOperation),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
@@ -942,7 +1078,13 @@ lazy_static! {
             (NonTerminal(Factor), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(Factor),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Factor)), SemanticActionType(MakeTerminalNode), Terminal(Id), NonTerminal(FactorAmb1), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Factor)),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    NonTerminal(FactorAmb1),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
@@ -960,14 +1102,26 @@ lazy_static! {
             (NonTerminal(Factor), Terminal(Minus)),
             GrammarRule {
                 lhs: NonTerminal(Factor),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::SignedFactor)), NonTerminal(Sign),SemanticActionType(AddChild), NonTerminal(Factor), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::SignedFactor)),
+                    NonTerminal(Sign),
+                    SemanticActionType(AddChild),
+                    NonTerminal(Factor),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Factor), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(Factor),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::SignedFactor)), NonTerminal(Sign),SemanticActionType(AddChild), NonTerminal(Factor), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::SignedFactor)),
+                    NonTerminal(Sign),
+                    SemanticActionType(AddChild),
+                    NonTerminal(Factor),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
@@ -994,7 +1148,12 @@ lazy_static! {
             (NonTerminal(Factor), Terminal(Bang)),
             GrammarRule {
                 lhs: NonTerminal(Factor),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Negation)),Terminal(Bang), NonTerminal(Factor), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Negation)),
+                    Terminal(Bang),
+                    NonTerminal(Factor),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
@@ -1068,8 +1227,8 @@ lazy_static! {
                 rhs: vec![
                     Terminal(OpenParen),
                     NonTerminal(Params),
-                    SemanticActionType(AddChild),
                     Terminal(CloseParen),
+                    SemanticActionType(AddChild),
                     NonTerminal(FactorAmb2),
                 ],
             },
@@ -1219,7 +1378,14 @@ lazy_static! {
             (NonTerminal(FactorAmb2), Terminal(Period)),
             GrammarRule {
                 lhs: NonTerminal(FactorAmb2),
-                rhs: vec![SemanticActionType(MakeTerminalNode), Terminal(Period), SemanticActionType(MakeTerminalNode), Terminal(Id), SemanticActionType(MakeRelativeOperation),NonTerminal(FactorAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Period),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    SemanticActionType(MakeRelativeOperation),
+                    NonTerminal(FactorAmb1),
+                ],
             },
         );
         table.insert(
@@ -1326,7 +1492,7 @@ lazy_static! {
                     Terminal(CloseParen),
                     Terminal(Colon),
                     NonTerminal(FuncDeclAmb1),
-                    SemanticActionType(AddChild)
+                    SemanticActionType(AddChild),
                 ],
             },
         );
@@ -1363,7 +1529,11 @@ lazy_static! {
             (NonTerminal(FuncDeclAmb1), Terminal(Void)),
             GrammarRule {
                 lhs: NonTerminal(FuncDeclAmb1),
-                rhs: vec![SemanticActionType(MakeTerminalNode), Terminal(Void), Terminal(SemiColon)],
+                rhs: vec![
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Void),
+                    Terminal(SemiColon),
+                ],
             },
         );
 
@@ -1371,7 +1541,12 @@ lazy_static! {
             (NonTerminal(FuncDef), Terminal(Func)),
             GrammarRule {
                 lhs: NonTerminal(FuncDef),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncDef)), NonTerminal(FuncHead), NonTerminal(FuncBody), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncDef)),
+                    NonTerminal(FuncHead),
+                    NonTerminal(FuncBody),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
 
@@ -1379,7 +1554,13 @@ lazy_static! {
             (NonTerminal(FuncHead), Terminal(Func)),
             GrammarRule {
                 lhs: NonTerminal(FuncHead),
-                rhs: vec![Terminal(Func), SemanticActionType(MakeTerminalNode), Terminal(Id), SemanticActionType(AddChild), NonTerminal(FuncHeadAmb1)],
+                rhs: vec![
+                    Terminal(Func),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    SemanticActionType(AddChild),
+                    NonTerminal(FuncHeadAmb1),
+                ],
             },
         );
 
@@ -1396,7 +1577,7 @@ lazy_static! {
                     Terminal(CloseParen),
                     Terminal(Colon),
                     NonTerminal(FuncHeadAmb2),
-                    SemanticActionType(AddChild)
+                    SemanticActionType(AddChild),
                 ],
             },
         );
@@ -1415,7 +1596,7 @@ lazy_static! {
                     Terminal(CloseParen),
                     Terminal(Colon),
                     NonTerminal(FuncHeadAmb2),
-                    SemanticActionType(AddChild)
+                    SemanticActionType(AddChild),
                 ],
             },
         );
@@ -1468,7 +1649,7 @@ lazy_static! {
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
                     SemanticActionType(AddChild),
-                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParamDim)),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArrayDim)),
                     NonTerminal(ReptFuncParams0),
                     SemanticActionType(AddChild),
                     SemanticActionType(AddChild),
@@ -1480,7 +1661,12 @@ lazy_static! {
             (NonTerminal(FuncParams), Terminal(CloseParen)),
             GrammarRule {
                 lhs: NonTerminal(FuncParams),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParams)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParams)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
@@ -1495,7 +1681,7 @@ lazy_static! {
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
                     SemanticActionType(AddChild),
-                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParamDim)),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArrayDim)),
                     NonTerminal(ReptFuncParams0),
                     SemanticActionType(AddChild),
                     SemanticActionType(AddChild),
@@ -1515,7 +1701,7 @@ lazy_static! {
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
                     SemanticActionType(AddChild),
-                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParamDim)),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArrayDim)),
                     NonTerminal(ReptFuncParams0),
                     SemanticActionType(AddChild),
                     SemanticActionType(AddChild),
@@ -1535,7 +1721,7 @@ lazy_static! {
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
                     SemanticActionType(AddChild),
-                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParamDim)),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArrayDim)),
                     NonTerminal(ReptFuncParams0),
                     SemanticActionType(AddChild),
                     SemanticActionType(AddChild),
@@ -1562,35 +1748,55 @@ lazy_static! {
             (NonTerminal(MemberDecl), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(MemberDecl),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)), NonTerminal(VarDecl), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)),
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(MemberDecl), Terminal(StringType)),
             GrammarRule {
                 lhs: NonTerminal(MemberDecl),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)), NonTerminal(VarDecl), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)),
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(MemberDecl), Terminal(FloatType)),
             GrammarRule {
                 lhs: NonTerminal(MemberDecl),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)), NonTerminal(VarDecl), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)),
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(MemberDecl), Terminal(IntegerType)),
             GrammarRule {
                 lhs: NonTerminal(MemberDecl),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)), NonTerminal(VarDecl), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberVarDeclaration)),
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(MemberDecl), Terminal(Func)),
             GrammarRule {
                 lhs: NonTerminal(MemberDecl),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberFuncDeclaration)), NonTerminal(FuncDecl), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::MemberFuncDeclaration)),
+                    NonTerminal(FuncDecl),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
 
@@ -1598,21 +1804,30 @@ lazy_static! {
             (NonTerminal(MultOp), Terminal(And)),
             GrammarRule {
                 lhs: NonTerminal(MultOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::And)), Terminal(And)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::And)),
+                    Terminal(And),
+                ],
             },
         );
         table.insert(
             (NonTerminal(MultOp), Terminal(Div)),
             GrammarRule {
                 lhs: NonTerminal(MultOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Div)), Terminal(Div)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Div)),
+                    Terminal(Div),
+                ],
             },
         );
         table.insert(
             (NonTerminal(MultOp), Terminal(Mult)),
             GrammarRule {
                 lhs: NonTerminal(MultOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Mult)), Terminal(Mult)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Mult)),
+                    Terminal(Mult),
+                ],
             },
         );
 
@@ -1641,63 +1856,108 @@ lazy_static! {
             (NonTerminal(OptFuncBody), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(Continue)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(Break)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(Return)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(Write)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(Read)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(While)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(If)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(OptFuncBody), Terminal(CloseCurly)),
             GrammarRule {
                 lhs: NonTerminal(OptFuncBody),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::VarBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
@@ -1718,70 +1978,120 @@ lazy_static! {
             (NonTerminal(Params), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(CloseParen)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(OpenParen)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(Minus)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(Question)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(Bang)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(StringLit)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(FloatLit)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Params), Terminal(IntegerLit)),
             GrammarRule {
                 lhs: NonTerminal(Params),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncCallParams)),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
 
@@ -1974,42 +2284,60 @@ lazy_static! {
             (NonTerminal(RelOp), Terminal(GreaterEqualThan)),
             GrammarRule {
                 lhs: NonTerminal(RelOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::GreaterEqualThan)), Terminal(GreaterEqualThan)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::GreaterEqualThan)),
+                    Terminal(GreaterEqualThan),
+                ],
             },
         );
         table.insert(
             (NonTerminal(RelOp), Terminal(LessEqualThan)),
             GrammarRule {
                 lhs: NonTerminal(RelOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::LessEqualThan)), Terminal(LessEqualThan)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::LessEqualThan)),
+                    Terminal(LessEqualThan),
+                ],
             },
         );
         table.insert(
             (NonTerminal(RelOp), Terminal(GreaterThan)),
             GrammarRule {
                 lhs: NonTerminal(RelOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::GreaterThan)), Terminal(GreaterThan)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::GreaterThan)),
+                    Terminal(GreaterThan),
+                ],
             },
         );
         table.insert(
             (NonTerminal(RelOp), Terminal(LessThan)),
             GrammarRule {
                 lhs: NonTerminal(RelOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::LessThan)), Terminal(LessThan)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::LessThan)),
+                    Terminal(LessThan),
+                ],
             },
         );
         table.insert(
             (NonTerminal(RelOp), Terminal(NotEq)),
             GrammarRule {
                 lhs: NonTerminal(RelOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::NotEqual)), Terminal(NotEq)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::NotEqual)),
+                    Terminal(NotEq),
+                ],
             },
         );
         table.insert(
             (NonTerminal(RelOp), Terminal(EqEq)),
             GrammarRule {
                 lhs: NonTerminal(RelOp),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Equal)), Terminal(EqEq)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Equal)),
+                    Terminal(EqEq),
+                ],
             },
         );
 
@@ -2130,56 +2458,88 @@ lazy_static! {
             (NonTerminal(ReptFuncBody), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(Continue)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(Break)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(Return)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(Write)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(Read)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(While)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptFuncBody), Terminal(If)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncBody),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptFuncBody)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncBody),
+                ],
             },
         );
         table.insert(
@@ -2208,7 +2568,11 @@ lazy_static! {
             (NonTerminal(ReptFuncParams0), Terminal(OpenSquare)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncParams0),
-                rhs: vec![NonTerminal(ArraySize), SemanticActionType(AddChild), NonTerminal(ReptFuncParams0)],
+                rhs: vec![
+                    NonTerminal(ArraySize),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncParams0),
+                ],
             },
         );
 
@@ -2231,7 +2595,7 @@ lazy_static! {
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
                     SemanticActionType(AddChild),
-                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::FuncParamDim)),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ArrayDim)),
                     NonTerminal(ReptFuncParamsTail),
                     SemanticActionType(AddChild),
                     SemanticActionType(AddChild),
@@ -2258,7 +2622,11 @@ lazy_static! {
             (NonTerminal(ReptFuncParamsTail), Terminal(OpenSquare)),
             GrammarRule {
                 lhs: NonTerminal(ReptFuncParamsTail),
-                rhs: vec![NonTerminal(ArraySize), SemanticActionType(AddChild), NonTerminal(ReptFuncParams0)],
+                rhs: vec![
+                    NonTerminal(ArraySize),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptFuncParams0),
+                ],
             },
         );
 
@@ -2273,7 +2641,13 @@ lazy_static! {
             (NonTerminal(ReptOptClassDecl), Terminal(Comma)),
             GrammarRule {
                 lhs: NonTerminal(ReptOptClassDecl),
-                rhs: vec![Terminal(Comma), SemanticActionType(MakeTerminalNode), Terminal(Id), SemanticActionType(AddChild), NonTerminal(ReptOptClassDecl)],
+                rhs: vec![
+                    Terminal(Comma),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptOptClassDecl),
+                ],
             },
         );
 
@@ -2281,28 +2655,44 @@ lazy_static! {
             (NonTerminal(ReptOptFuncBody), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(ReptOptFuncBody),
-                rhs: vec![NonTerminal(VarDecl), SemanticActionType(AddChild), NonTerminal(ReptOptFuncBody)],
+                rhs: vec![
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptOptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptOptFuncBody), Terminal(StringType)),
             GrammarRule {
                 lhs: NonTerminal(ReptOptFuncBody),
-                rhs: vec![NonTerminal(VarDecl), SemanticActionType(AddChild), NonTerminal(ReptOptFuncBody)],
+                rhs: vec![
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptOptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptOptFuncBody), Terminal(FloatType)),
             GrammarRule {
                 lhs: NonTerminal(ReptOptFuncBody),
-                rhs: vec![NonTerminal(VarDecl), SemanticActionType(AddChild), NonTerminal(ReptOptFuncBody)],
+                rhs: vec![
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptOptFuncBody),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptOptFuncBody), Terminal(IntegerType)),
             GrammarRule {
                 lhs: NonTerminal(ReptOptFuncBody),
-                rhs: vec![NonTerminal(VarDecl), SemanticActionType(AddChild), NonTerminal(ReptOptFuncBody)],
+                rhs: vec![
+                    NonTerminal(VarDecl),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptOptFuncBody),
+                ],
             },
         );
         table.insert(
@@ -2324,7 +2714,12 @@ lazy_static! {
             (NonTerminal(ReptParams), Terminal(Comma)),
             GrammarRule {
                 lhs: NonTerminal(ReptParams),
-                rhs: vec![Terminal(Comma), NonTerminal(Expr), SemanticActionType(AddChild), NonTerminal(ReptParams)],
+                rhs: vec![
+                    Terminal(Comma),
+                    NonTerminal(Expr),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptParams),
+                ],
             },
         );
 
@@ -2346,7 +2741,11 @@ lazy_static! {
             (NonTerminal(ReptProg0), Terminal(Class)),
             GrammarRule {
                 lhs: NonTerminal(ReptProg0),
-                rhs: vec![NonTerminal(ClassDecl), SemanticActionType(AddChild), NonTerminal(ReptProg0)],
+                rhs: vec![
+                    NonTerminal(ClassDecl),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptProg0),
+                ],
             },
         );
 
@@ -2361,7 +2760,11 @@ lazy_static! {
             (NonTerminal(ReptProg1), Terminal(Func)),
             GrammarRule {
                 lhs: NonTerminal(ReptProg1),
-                rhs: vec![NonTerminal(FuncDef), SemanticActionType(AddChild), NonTerminal(ReptProg1)],
+                rhs: vec![
+                    NonTerminal(FuncDef),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptProg1),
+                ],
             },
         );
 
@@ -2369,56 +2772,88 @@ lazy_static! {
             (NonTerminal(ReptStatBlock), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(Continue)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(Break)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(Return)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(Write)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(Read)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(While)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
             (NonTerminal(ReptStatBlock), Terminal(If)),
             GrammarRule {
                 lhs: NonTerminal(ReptStatBlock),
-                rhs: vec![NonTerminal(Statement), SemanticActionType(AddChild), NonTerminal(ReptStatBlock)],
+                rhs: vec![
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptStatBlock),
+                ],
             },
         );
         table.insert(
@@ -2440,7 +2875,11 @@ lazy_static! {
             (NonTerminal(ReptVarDecl), Terminal(OpenSquare)),
             GrammarRule {
                 lhs: NonTerminal(ReptVarDecl),
-                rhs: vec![NonTerminal(ArraySize), SemanticActionType(AddChild), NonTerminal(ReptVarDecl)],
+                rhs: vec![
+                    NonTerminal(ArraySize),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptVarDecl),
+                ],
             },
         );
 
@@ -2560,7 +2999,11 @@ lazy_static! {
             (NonTerminal(ReptVariable), Terminal(OpenSquare)),
             GrammarRule {
                 lhs: NonTerminal(ReptVariable),
-                rhs: vec![NonTerminal(Indice), SemanticActionType(AddChild), NonTerminal(ReptVariable)],
+                rhs: vec![
+                    NonTerminal(Indice),
+                    SemanticActionType(AddChild),
+                    NonTerminal(ReptVariable),
+                ],
             },
         );
         table.insert(
@@ -2853,70 +3296,112 @@ lazy_static! {
             (NonTerminal(StatBlock), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(SemiColon)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(Continue)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(Break)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(Return)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(Write)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(Read)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(While)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(Else)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), SemanticActionType(MakeEmptyNode), SemanticActionType(AddChild), EPSILON],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    SemanticActionType(MakeEmptyNode),
+                    SemanticActionType(AddChild),
+                    EPSILON,
+                ],
             },
         );
         table.insert(
             (NonTerminal(StatBlock), Terminal(If)),
             GrammarRule {
                 lhs: NonTerminal(StatBlock),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)), NonTerminal(Statement), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::StatBlock)),
+                    NonTerminal(Statement),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
@@ -2936,21 +3421,35 @@ lazy_static! {
             (NonTerminal(Statement), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(Statement),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::GenericStatement)), SemanticActionType(MakeTerminalNode), Terminal(Id), NonTerminal(StatementAmb1), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::GenericStatement)),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    NonTerminal(StatementAmb1),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Statement), Terminal(Continue)),
             GrammarRule {
                 lhs: NonTerminal(Statement),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::ContinueStatement)), Terminal(Continue), Terminal(SemiColon)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::ContinueStatement)),
+                    Terminal(Continue),
+                    Terminal(SemiColon),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Statement), Terminal(Break)),
             GrammarRule {
                 lhs: NonTerminal(Statement),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::BreakStatement)), Terminal(Break), Terminal(SemiColon)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::BreakStatement)),
+                    Terminal(Break),
+                    Terminal(SemiColon),
+                ],
             },
         );
         table.insert(
@@ -3079,7 +3578,14 @@ lazy_static! {
             (NonTerminal(StatementAmb1), Terminal(Period)),
             GrammarRule {
                 lhs: NonTerminal(StatementAmb1),
-                rhs: vec![SemanticActionType(MakeTerminalNode), Terminal(Period), SemanticActionType(MakeTerminalNode), Terminal(Id), SemanticActionType(MakeRelativeOperation), NonTerminal(StatementAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Period),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    SemanticActionType(MakeRelativeOperation),
+                    NonTerminal(StatementAmb1),
+                ],
             },
         );
 
@@ -3087,7 +3593,14 @@ lazy_static! {
             (NonTerminal(StatementAmb2), Terminal(Period)),
             GrammarRule {
                 lhs: NonTerminal(StatementAmb2),
-                rhs: vec![SemanticActionType(MakeTerminalNode), Terminal(Period), SemanticActionType(MakeTerminalNode), Terminal(Id), SemanticActionType(MakeRelativeOperation), NonTerminal(StatementAmb1)],
+                rhs: vec![
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Period),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    SemanticActionType(MakeRelativeOperation),
+                    NonTerminal(StatementAmb1),
+                ],
             },
         );
         table.insert(
@@ -3107,7 +3620,12 @@ lazy_static! {
             (NonTerminal(StatementAmb3), Terminal(Period)),
             GrammarRule {
                 lhs: NonTerminal(StatementAmb3),
-                rhs: vec![SemanticActionType(MakeTerminalNode), Terminal(Period), NonTerminal(StatementAmb1), SemanticActionType(MakeRelativeOperation)],
+                rhs: vec![
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Period),
+                    NonTerminal(StatementAmb1),
+                    SemanticActionType(MakeRelativeOperation),
+                ],
             },
         );
         table.insert(
@@ -3122,63 +3640,108 @@ lazy_static! {
             (NonTerminal(Term), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(OpenParen)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(Minus)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(Plus)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(Question)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(Bang)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(StringLit)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(FloatLit)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
         table.insert(
             (NonTerminal(Term), Terminal(IntegerLit)),
             GrammarRule {
                 lhs: NonTerminal(Term),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)), NonTerminal(Factor), NonTerminal(RightRecTerm), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Term)),
+                    NonTerminal(Factor),
+                    NonTerminal(RightRecTerm),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
 
@@ -3288,7 +3851,13 @@ lazy_static! {
             (NonTerminal(Variable), Terminal(Id)),
             GrammarRule {
                 lhs: NonTerminal(Variable),
-                rhs: vec![SemanticActionType(MakeFamilyRootNode(InternalNodeType::Variable)), SemanticActionType(MakeTerminalNode), Terminal(Id), NonTerminal(VariableAmb1), SemanticActionType(AddChild)],
+                rhs: vec![
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::Variable)),
+                    SemanticActionType(MakeTerminalNode),
+                    Terminal(Id),
+                    NonTerminal(VariableAmb1),
+                    SemanticActionType(AddChild),
+                ],
             },
         );
 
@@ -3387,7 +3956,7 @@ lazy_static! {
             (NonTerminal(Visibility), Terminal(IntegerType)),
             GrammarRule {
                 lhs: NonTerminal(Visibility),
-                rhs: vec![SemanticActionType(MakeEmptyNode), EPSILON]
+                rhs: vec![SemanticActionType(MakeEmptyNode), EPSILON],
             },
         );
         table.insert(

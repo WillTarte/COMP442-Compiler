@@ -31,7 +31,8 @@ ___
       - [X] Error recovery
       - [X] Test cases
       - [X] Driver
-
+## Assignment 3 - Semantic Analysis
+### WIP
 ### How to Run
   - Requires Rust 2018 Edition, which can be installed from  https://www.rust-lang.org/
   - From the command line `cargo run -- --file <file> [--lexer | --parser]`

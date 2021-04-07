@@ -10,7 +10,7 @@ use crate::parser::grammar::DerivationTable;
 use crate::parser::grammar::GrammarSymbol::*;
 use crate::parser::grammar::NamedSymbol::Start;
 use crate::parser::grammar::{DerivationRecord, GrammarSymbol};
-use log::{debug, trace, warn};
+use log::{trace, warn};
 
 /// Parses a token stream and produces either a DerivationTable and an AST or an error
 pub fn parse<T>(lexer: T) -> Result<(DerivationTable, SemanticStack), ()>
@@ -38,7 +38,9 @@ where
 
     while *parsing_stack.last().unwrap() != STOP {
         let top_symbol = parsing_stack.last().unwrap().clone();
-        if next_token.is_some() && (next_token.as_ref().unwrap().token_type() == LineComment || next_token.as_ref().unwrap().token_type() == MultilineComment)
+        if next_token.is_some()
+            && (next_token.as_ref().unwrap().token_type() == LineComment
+                || next_token.as_ref().unwrap().token_type() == MultilineComment)
         {
             next_token = token_stream.next();
         }
@@ -55,7 +57,10 @@ where
                         None,
                     ))
                 } else {
-                    warn!("~ Mistmatch! Expected token of type {:?}, but got {:?} instead.", token_t, next_token);
+                    warn!(
+                        "~ Mistmatch! Expected token of type {:?}, but got {:?} instead.",
+                        token_t, next_token
+                    );
                     error = true;
                     while next_token.is_some()
                         && next_token.as_ref().unwrap().token_type() != token_t

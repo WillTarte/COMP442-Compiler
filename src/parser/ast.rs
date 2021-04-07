@@ -1,6 +1,7 @@
 //! Elements related to an Abstract Syntax Tree
 
 use crate::lexer::token::Token;
+use crate::lexer::token::TokenType::StringLit;
 use log::{debug, warn};
 use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
@@ -38,6 +39,13 @@ impl Node {
     pub fn add_child(&mut self, child: Node) {
         self.children.push(child);
     }
+
+    pub fn val(&self) -> Option<&NodeVal> {
+        match &self.val {
+            None => None,
+            Some(nodeval) => Some(nodeval),
+        }
+    }
 }
 
 impl Debug for Node {
@@ -54,7 +62,11 @@ impl Display for Node {
             }
             Some(node_val) => match node_val {
                 NodeVal::Leaf(token) => {
-                    write!(f, "{}", token)
+                    if token.token_type() == StringLit {
+                        write!(f, "Token: {}", "String Lit") //fixme
+                    } else {
+                        write!(f, "{}", token)
+                    }
                 }
                 NodeVal::Internal(internal) => {
                     write!(f, "{}", internal)
@@ -64,7 +76,7 @@ impl Display for Node {
     }
 }
 
-/// The sementic stack is used to proccess semantic actions into an Abstract Syntax Tree composed of [Node]s
+/// The semantic stack is used to proccess semantic actions into an Abstract Syntax Tree composed of [Node]s
 #[derive(Debug)]
 pub struct SemanticStack(pub(crate) Vec<Node>);
 
@@ -170,7 +182,7 @@ impl Display for SemanticAction {
 }
 
 /// Represents possible values held by [Node]s
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum NodeVal {
     Leaf(Token),
     Internal(InternalNodeType),
@@ -196,7 +208,6 @@ pub enum InternalNodeType {
     RelExpr,
     FuncParams,
     FuncParam,
-    FuncParamDim,
     InheritList,
     MemberList,
     ArrayDim,

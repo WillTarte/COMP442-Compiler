@@ -326,8 +326,8 @@ impl TokenFragment {
 /// Represents a full token, which includes a [TokenFragment] and a line number from the input.
 #[derive(Clone, Eq, Debug, PartialEq)]
 pub struct Token {
-    pub token_fragment: TokenFragment,
-    pub line_num: usize,
+    token_fragment: TokenFragment,
+    line_num: usize,
 }
 
 impl Token {
@@ -354,6 +354,10 @@ impl Token {
     /// Returns this token's lexeme
     pub(crate) fn lexeme(&self) -> &str {
         return self.token_fragment.lexeme.as_ref();
+    }
+
+    pub fn line_num(&self) -> usize {
+        self.line_num
     }
 }
 

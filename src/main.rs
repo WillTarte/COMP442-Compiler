@@ -2,6 +2,9 @@ use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
 use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
+use crate::semantics::checking::{SemanticError, WarningType};
+use crate::semantics::symbol_table::{check_semantics, generate_symbol_table};
+use crate::semantics::utils::serialize_symbol_table_to_file;
 use dotenv::dotenv;
 use env_logger;
 use log::{error, info};
@@ -10,6 +13,7 @@ use structopt::StructOpt;
 
 mod lexer;
 mod parser;
+mod semantics;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Compiler Driver")]
@@ -21,6 +25,8 @@ struct Opt {
     lexer: bool,
     #[structopt(short, long)]
     parser: bool,
+    #[structopt(short, long)]
+    symbols: bool,
 }
 
 fn main() {
@@ -57,6 +63,57 @@ fn main() {
                 serialize_derivation_table_to_file(table, file_name)
                     .expect("Failed to serialize derivation table");
                 serialize_tree_to_file(ast, file_name).expect("Failed to serialize AST to file");
+            }
+            Err(_) => {
+                error!("Failed to parse token stream for {}", file_name);
+            }
+        }
+    }
+
+    if opt.symbols {
+        let my_lexer = MyLexerAnalyzer::from_file(&opt.file);
+
+        let file_name: &str = &opt.file.file_stem().unwrap().to_str().unwrap();
+
+        match parse(my_lexer) {
+            Ok((_, mut ast)) => {
+                info!(
+                    "Successfully parsed token stream for {}",
+                    &opt.file.file_name().unwrap().to_str().unwrap()
+                );
+                assert_eq!(ast.0.len(), 1);
+                let root = ast.0.pop().unwrap();
+                let (symbol_table, mut errors) = generate_symbol_table(&root);
+
+                errors.append(&mut check_semantics(&root, &symbol_table));
+
+                for err in errors.iter() {
+                    match err {
+                        SemanticError::Warning(warning) => match warning {
+                            WarningType::OverloadWarning(msg)
+                            | WarningType::ShadowedMemberWarning(msg) => {
+                                log::warn!("{}", msg);
+                            }
+                        },
+                        SemanticError::NoMemberFuncDefinition(msg)
+                        | SemanticError::NoMemberFuncDeclaration(msg)
+                        | SemanticError::MultipleDeclIdent(msg)
+                        | SemanticError::InheritanceCycle(msg)
+                        | SemanticError::UndeclaredClass(msg)
+                        | SemanticError::UndeclaredVariable(msg)
+                        | SemanticError::NotIndexable(msg)
+                        | SemanticError::TooManyIndices(msg)
+                        | SemanticError::FunctionNotFound(msg)
+                        | SemanticError::InvalidParameters(msg)
+                        | SemanticError::TypeMistmatch(msg)
+                        | SemanticError::NotCallable(msg) => {
+                            log::error!("{}", msg);
+                        }
+                    }
+                }
+                info!("Writing symbol tables to file");
+                serialize_symbol_table_to_file(&symbol_table, file_name)
+                    .expect("Failed to serialize symbol table to file");
             }
             Err(_) => {
                 error!("Failed to parse token stream for {}", file_name);
