@@ -323,7 +323,7 @@ fn validate_dot_operator(dot_op: &Node, function_entry: &FunctionEntry, global: 
                             match rhs_token.token_type()
                             {
                                 TokenType::Id => {
-                                    match e.table().find_scope_by_ident(rhs_token.lexeme()) {
+                                    match ce.table().find_scope_by_ident(rhs_token.lexeme()) {
                                         Some(Scope::Function(fe)) => { todo!("validate function call") },
                                         Some(Scope::Variable(ve)) => { todo!("validate variable expr") },
                                         _ => { panic!() }

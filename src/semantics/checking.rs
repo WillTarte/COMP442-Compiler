@@ -285,8 +285,6 @@ pub(crate) fn check_undeclared_types_usage_class(
 pub fn check_circular_inheritance(class: &ClassEntry, global: &SymbolTable) -> Vec<SemanticError> {
     let mut errors: Vec<SemanticError> = Vec::new();
 
-    log::error!("check_circular_inheritance : NOT IMPLEMENTED");
-
     let (ancestors, mut errors1) = get_ancestors_for_class(class, global);
     errors.append(&mut errors1);
 
@@ -457,35 +455,16 @@ pub(crate) fn check_func_def_semantics(def: &Node, global: &SymbolTable) -> Vec<
         }
     };
 
-    if opt_class.is_some() {
-        errors.append(&mut check_member_func_def_semantics(
+    /*if opt_class.is_some() {
+        errors.append(&mut check_member_func_def_semantics( //todo
             def,
             func_decl,
             opt_class.unwrap(),
             global,
         ));
     } else {
-        errors.append(&mut check_free_func_def_semantics(def, func_decl, global));
-    }
+        errors.append(&mut check_free_func_def_semantics(def, func_decl, global)); //todo
+    }*/
 
     errors
-}
-
-#[allow(dead_code)]
-pub(crate) fn check_free_func_def_semantics(
-    def_node: &Node,
-    func_decl: &FunctionEntry,
-    global: &SymbolTable,
-) -> Vec<SemanticError> {
-    todo!()
-}
-
-#[allow(dead_code)]
-pub(crate) fn check_member_func_def_semantics(
-    def_node: &Node,
-    func_decl: &FunctionEntry,
-    class: &ClassEntry,
-    global: &SymbolTable,
-) -> Vec<SemanticError> {
-    todo!()
 }
