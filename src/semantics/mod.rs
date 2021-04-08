@@ -1,4 +1,4 @@
-pub(crate) mod checking;
-pub(crate) mod symbol_table;
-pub(crate) mod utils;
-mod validation;
+pub mod checking;
+pub mod symbol_table;
+pub mod utils;
+pub mod validation;

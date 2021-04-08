@@ -305,43 +305,46 @@ fn validate_return_statement(return_statement: &Node, function_entry: &FunctionE
 
 fn validate_dot_operator(dot_op: &Node, function_entry: &FunctionEntry, global: &SymbolTable) -> Result<Type, SemanticError>
 {
-    let lhs: Result<Type, SemanticError> = todo!("recursive_validate_dot_operator");
+    let lhs: Result<Type, SemanticError> = match dot_op.children[0].val()
+    {
+        Some(NodeVal::Leaf(token)) => {
+            if token.lexeme() == "."
+            {
+                validate_dot_operator(&dot_op.children[0], function_entry, global)
+            }
+            else {
+                // We have an identifier that should be present in the current function scope
+                // todo what if this function is a member of the class
+                let lhs_ident = token.lexeme();
+                if let Some(Scope::Variable(ve)) = function_entry.table().find_scope_by_ident(lhs_ident)
+                {
+                    // todo validate indices
+                    Ok(ve.var_type().clone());
+                }
+                else if let Some(Scope::FunctionParameter(pe)) = function_entry.table().find_scope_by_ident(lhs_ident)
+                {
+                    //todo validate indices
+                    Ok(pe.param_type().clone())
+                }
+                else if  let Some(Scope::Function(fe)) = global.find_scope_by_ident(lhs_ident){
+                    //todo validate func call params
+                    Ok(fe.type_sig().1.clone());
+                }
+                else {
+                    Err(SemanticError::UndeclaredVariable(format!("Undeclared variable {}: line {}", lhs_ident, token.line_num())))
+                }
+            }
+        },
+        _ => { panic!() }
+    };
+
     if lhs.is_err()
     {
         return lhs;
     }
     let lhs = lhs.unwrap();
-    let lhs = match lhs
-    {
-        Type::Custom(lhs_ident) => {
-            if let Some(Scope::Class(ce)) = global.find_scope_by_ident(&lhs_ident)
-            {
-                match dot_op.children[1].val()
-                {
-                    Some(NodeVal::Leaf(rhs_token)) =>
-                        {
-                            match rhs_token.token_type()
-                            {
-                                TokenType::Id => {
-                                    match ce.table().find_scope_by_ident(rhs_token.lexeme()) {
-                                        Some(Scope::Function(fe)) => { todo!("validate function call") },
-                                        Some(Scope::Variable(ve)) => { todo!("validate variable expr") },
-                                        _ => { panic!() }
-                                    }
-                                },
-                                _ => { panic!() }
-                            }
-                        },
-                    _ => { panic!() }
-                }
-            }
-            else {
-                return Err(SemanticError::UndeclaredClass(format!("Undeclared class {}: line {}", lhs_ident, 888))); //todo line num
-            }
-        }
-        _ => { panic!() }
-    };
 
+    //let rhs: Result<Type, SemanticError> = match &Node
     todo!()
 }
 
