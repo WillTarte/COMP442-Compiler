@@ -1,23 +1,23 @@
-use crate::semantics::symbol_table::{SymbolTable, Type, Scope};
+use crate::semantics::symbol_table::{SymbolTable, Type, Scope, FunctionEntry, ClassEntry, VariableEntry, ParameterEntry};
 
-pub fn sizeof(t: &Type, symbols: &SymbolTable) -> usize
+pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32
 {
-    let size: usize = match t
+    let size: u32 = match t
     {
         Type::Integer => { 4 }
         Type::IntegerArray(dim) => {
-            4usize * dim.iter().product::<usize>()
+            4u32 * dim.iter().product::<u32>()
         }
         Type::Float => { 8 }
         Type::FloatArray(dim) => {
-            8usize * dim.iter().product::<usize>()
+            8u32 * dim.iter().product::<u32>()
         }
         Type::String => { todo!() }
         Type::StringArray(dim) => {
-            0usize * dim.iter().product::<usize>()
+            0u32 * dim.iter().product::<u32>()
         }
         Type::Custom(ident) => {
-            let mut temp_size: usize = 0;
+            let mut temp_size: u32 = 0;
             if let Some(Scope::Class(ce)) = symbols.find_scope_by_ident(ident)
             {
                 for scope in ce.table().scopes()
@@ -37,7 +37,7 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> usize
 
         }
         Type::CustomArray(ident, dim) => {
-            let mut temp_size: usize = 0;
+            let mut temp_size: u32 = 0;
             if let Some(Scope::Class(ce)) = symbols.find_scope_by_ident(ident)
             {
                 for scope in ce.table().scopes()
@@ -53,7 +53,7 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> usize
                 }
             }
             else { panic!() }
-            temp_size * dim.iter().product::<usize>()
+            temp_size * dim.iter().product::<u32>()
         }
         Type::Void => { 0 }
     };

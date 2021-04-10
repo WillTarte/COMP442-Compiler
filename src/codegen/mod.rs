@@ -1,5 +1,5 @@
 mod allocator;
-mod generator;
+pub mod generator;
 mod utils;
 mod instruction_set;
 

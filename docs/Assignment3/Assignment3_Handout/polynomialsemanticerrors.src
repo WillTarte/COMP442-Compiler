@@ -34,7 +34,7 @@ class D inherits C {
 	private integer b; 
 };
 
-class E inherits D {                                                   // 14.1 TODO + broken shadowing for variables
+class E inherits D {                                                   // 14.1
 	private integer c; 
 };
 

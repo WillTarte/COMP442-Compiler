@@ -1,0 +1,7 @@
+main {
+    function_call(p1, p2, p3);
+    a = b;
+    a = b.function_call(p1, p2, p3);
+    a.function_call(p1, p2, p3);
+    a[1 + 1].b.c = b;
+}

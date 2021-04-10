@@ -4,8 +4,10 @@
 pub enum Instruction
 {
     LoadWord(Register, Register, i16),
+    LoadWordLabel(Register, Register, String),
     LoadByte(Register, Register, i16),
     StoreWord(Register, Register, i16),
+    StoreWordLabel(Register, Register, String),
     StoreByte(Register, Register, i16),
     Add(Register, Register, Register),
     Substract(Register, Register, Register),
@@ -39,13 +41,22 @@ pub enum Instruction
     GetCharacter(Register),
     PutCharacter(Register),
     BranchIfZero(Register, i16),
+    BranchIfZeroLabel(Register, String),
     BranchIfNonZero(Register, i16),
     Jump(i16),
+    JumpLabel(String),
     JumpRegister(Register),
     JumpLink(Register, i16),
     JumpLinkRegister(Register, Register),
     NoOp,
     Halt,
+
+    Entry,
+    Align,
+    Org(u32),
+    //StoreWord(String),
+    //StoreByte(String), //todo is this correct
+    Res(u32)
 }
 
 impl ToString for Instruction
@@ -56,11 +67,17 @@ impl ToString for Instruction
             Instruction::LoadWord(ri, rj, k) => {
                 format!("lw {:?},{}({:?})", ri, k, rj)
             }
+            Instruction::LoadWordLabel(ri, rj, label) => {
+                format!("lw {:?},{}({:?})", ri, label, rj)
+            }
             Instruction::LoadByte(ri, rj, k) => {
                 format!("lb {:?},{}({:?})", ri, k, rj)
             }
             Instruction::StoreWord(ri, rj, k) => {
                 format!("sw {}({:?}),({:?})", k, rj, ri)
+            }
+            Instruction::StoreWordLabel(ri, rj, label) => {
+                format!("sw {}({:?}),({:?})", label, rj, ri)
             }
             Instruction::StoreByte(ri, rj, k) => {
                 format!("sb {}({:?}),({:?})", k, rj, ri)
@@ -157,11 +174,17 @@ impl ToString for Instruction
             Instruction::BranchIfZero(ri, k) => {
                 format!("bz {:?},{}", ri, k)
             }
+            Instruction::BranchIfZeroLabel(ri, label) => {
+                format!("bz {:?},{}", ri, label)
+            }
             Instruction::BranchIfNonZero(ri, k) => {
                 format!("bnz {:?},{}", ri, k)
             }
             Instruction::Jump(k) => {
                 format!("j {}", k)
+            }
+            Instruction::JumpLabel(label) => {
+                format!("j {}", label)
             }
             Instruction::JumpRegister(ri) => {
                 format!("jr {:?}", ri)
@@ -174,52 +197,22 @@ impl ToString for Instruction
             }
             Instruction::NoOp => { format!("nop") }
             Instruction::Halt => { format!("hlt") }
-        }
-    }
-}
-
-#[derive(Debug)]
-struct TaggedInstruction(String, Instruction);
-
-impl ToString for TaggedInstruction
-{
-    fn to_string(&self) -> String {
-        format!("{}\t{}", self.0, self.1.to_string())
-    }
-}
-
-#[derive(Debug)]
-pub enum Directive
-{
-    Entry,
-    Align,
-    Org(u32),
-    StoreWord(String),
-    StoreByte(String), //todo is this correct
-    Res(u32)
-}
-
-impl ToString for Directive
-{
-    fn to_string(&self) -> String {
-        match self
-        {
-            Directive::Entry => {
+            Instruction::Entry => {
                 format!("entry")
             }
-            Directive::Align => {
+            Instruction::Align => {
                 format!("align")
             }
-            Directive::Org(k) => {
+            Instruction::Org(k) => {
                 format!("org {}", k)
             }
-            Directive::StoreWord(words) => {
+            /*Instruction::StoreWord(words) => {
                 format!("dw {}", words)
             }
-            Directive::StoreByte(bytes) => {
+            Instruction::StoreByte(bytes) => {
                 format!("dw {}", bytes)
-            }
-            Directive::Res(b) => {
+            }*/
+            Instruction::Res(b) => {
                 format!("res {}", b)
             }
         }
@@ -227,12 +220,19 @@ impl ToString for Directive
 }
 
 #[derive(Debug)]
-struct TaggedDirective(String, Directive);
+pub struct TaggedInstruction(pub Option<String>, pub Instruction);
 
-impl ToString for TaggedDirective
+impl ToString for TaggedInstruction
 {
     fn to_string(&self) -> String {
-        format!("{}\t{}", self.0, self.1.to_string())
+        if self.0.is_some()
+        {
+            format!("{}\t\t\t{}", self.0.as_ref().unwrap(), self.1.to_string())
+        }
+        else {
+            format!("\t\t\t{}", self.1.to_string())
+        }
+
     }
 }
 
@@ -254,6 +254,6 @@ pub enum Register
     R12,
     R13,
     R14,
-    R16,
-    Tagged(String),
+    R15,
+    //Tagged(String),
 }

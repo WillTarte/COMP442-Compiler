@@ -1379,7 +1379,7 @@ lazy_static! {
             GrammarRule {
                 lhs: NonTerminal(FactorAmb2),
                 rhs: vec![
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
@@ -3579,7 +3579,7 @@ lazy_static! {
             GrammarRule {
                 lhs: NonTerminal(StatementAmb1),
                 rhs: vec![
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
@@ -3594,7 +3594,7 @@ lazy_static! {
             GrammarRule {
                 lhs: NonTerminal(StatementAmb2),
                 rhs: vec![
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
@@ -3621,7 +3621,7 @@ lazy_static! {
             GrammarRule {
                 lhs: NonTerminal(StatementAmb3),
                 rhs: vec![
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     NonTerminal(StatementAmb1),
                     SemanticActionType(MakeRelativeOperation),
@@ -3867,7 +3867,7 @@ lazy_static! {
                 lhs: NonTerminal(VariableAmb1),
                 rhs: vec![
                     NonTerminal(ReptVariable),
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
@@ -3892,7 +3892,7 @@ lazy_static! {
                     NonTerminal(Params),
                     SemanticActionType(AddChild),
                     Terminal(CloseParen),
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),
@@ -3907,7 +3907,7 @@ lazy_static! {
                 lhs: NonTerminal(VariableAmb1),
                 rhs: vec![
                     NonTerminal(ReptVariable),
-                    SemanticActionType(MakeTerminalNode),
+                    SemanticActionType(MakeFamilyRootNode(InternalNodeType::DotOp)),
                     Terminal(Period),
                     SemanticActionType(MakeTerminalNode),
                     Terminal(Id),

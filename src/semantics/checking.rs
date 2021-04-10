@@ -429,7 +429,7 @@ pub(crate) fn check_func_def_semantics(def: &Node, global: &SymbolTable) -> Vec<
     );
     let mut errors: Vec<SemanticError> = Vec::new();
 
-    let (func_decl, opt_class) = match (&def.children[0].val(), &def.children[1].val()) {
+    let (func_decl, opt_class) = match (def.children()[0].val(), def.children()[1].val()) {
         (Some(NodeVal::Leaf(t1)), Some(NodeVal::Leaf(t2))) => {
             let class = match global.find_scope_by_ident(t1.lexeme()) {
                 Some(Class(e)) => e,
