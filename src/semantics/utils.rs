@@ -226,18 +226,31 @@ pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
     assert_eq!(node.val(), Some(&NodeVal::Internal(InternalNodeType::Main)));
     assert_eq!(node.children().len(), 1);
     assert_eq!(node.children()[0].children().len(), 2);
-    let var_scopes: Vec<Scope> = node.children()[0].children()[0]
-        .children()
-        .iter()
-        .map(|n| Scope::Variable(map_var_decl_to_entry(n)))
-        .collect();
-    FunctionEntry::new(
-        "main",
-        (Vec::new(), Type::Void),
-        SymbolTable::new_from_scopes(var_scopes),
-        999,
-        true,
-    )
+    log::error!("{:?}", node);
+    if node.children()[0].children()[0].children()[0].val() == None
+    {
+        FunctionEntry::new(
+            "main",
+            (Vec::new(), Type::Void),
+            SymbolTable::new(),
+            999,
+            true,
+        )
+    }
+    else {
+        let var_scopes: Vec<Scope> = node.children()[0].children()[0]
+            .children()
+            .iter()
+            .map(|n| Scope::Variable(map_var_decl_to_entry(n)))
+            .collect();
+        FunctionEntry::new(
+            "main",
+            (Vec::new(), Type::Void),
+            SymbolTable::new_from_scopes(var_scopes),
+            999,
+            true,
+        )
+    }
 }
 
 #[allow(dead_code)]
@@ -333,6 +346,10 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
                 return if node.children()[2].children().is_empty() {
                     ty
                 } else {
+                    log::error!("{}", node);
+                    log::error!("{}", node.children()[2]);
+                    log::error!("{:?}", node.children()[2]
+                        .children());
                     let array_dim: Vec<u32> = node.children()[2]
                         .children()
                         .iter()
@@ -367,7 +384,7 @@ pub(crate) fn map_token_to_type(token: &Token) -> Type {
 pub(crate) fn map_to_unsigned(node: &Node) -> Option<u32> // e.g. ArrayDim children() are integer tokens
 {
     match node.val() {
-        None => None,
+        None => Some(0),
         Some(v) => {
             match v {
                 NodeVal::Leaf(t) => {
@@ -474,7 +491,8 @@ pub(crate) fn merge_member_function_tables(
                                 "No member func declaration found for {}::{}",
                                 entry.ident(),
                                 member_func_scope.ident()
-                            ))); //TODO what do we do with the function entry?
+                            )));
+                            global_table.add_scope(member_func_scope);
                         }
                         Some(fscope) => match fscope {
                             Scope::Function(fentry) => {
@@ -555,6 +573,71 @@ pub(crate) fn get_ancestors_for_class<'a>(
     (parents, errors)
 }
 
+pub fn get_class_hierarchy_functions<'a>(class_entry: &'a ClassEntry, global: &'a SymbolTable) -> (Vec<&'a FunctionEntry>, Vec<SemanticError>)
+{
+    let mut functions: Vec<&FunctionEntry> = Vec::new();
+    let (parent_classes, errors) =  get_ancestors_for_class(class_entry, global);
+
+    if errors.len() > 0
+    {
+        return (functions, errors);
+    }
+    else {
+        for scope in class_entry.table().scopes()
+        {
+            if let Scope::Function(fe) = scope
+            {
+                functions.push(fe);
+            }
+        }
+        for parent_class in parent_classes
+        {
+            for scope in parent_class.table().scopes().iter()
+            {
+                if let Scope::Function(fe) = scope
+                {
+                    functions.push(fe);
+                }
+            }
+        }
+
+        return (functions, errors);
+    }
+}
+
+pub fn get_class_hierarchy_data_members<'a>(class_entry: &'a ClassEntry, global: &'a SymbolTable) -> (Vec<&'a VariableEntry>, Vec<SemanticError>)
+{
+    let mut data_members: Vec<&VariableEntry> = Vec::new();
+    let (parent_classes, errors) =  get_ancestors_for_class(class_entry, global);
+
+    if errors.len() > 0
+    {
+        return (data_members, errors);
+    }
+    else {
+        for scope in class_entry.table().scopes()
+        {
+            if let Scope::Variable(ve) = scope
+            {
+                data_members.push(ve);
+            }
+        }
+        for parent_class in parent_classes
+        {
+            for scope in parent_class.table().scopes().iter()
+            {
+                if let Scope::Variable(ve) = scope
+                {
+                    data_members.push(ve);
+                }
+            }
+        }
+
+        return (data_members, errors);
+    }
+}
+
+
 trait IntoMarkDownTable {
     fn md_table(&self) -> Vec<String>;
 }
@@ -563,7 +646,6 @@ impl IntoMarkDownTable for ClassEntry {
     fn md_table(&self) -> Vec<String> {
         let mut rows: Vec<String> = Vec::new();
 
-        //todo inherits
         rows.push(format!(
             "Table: {}<a name=\"{}\"></a>",
             self.ident(),
@@ -591,7 +673,6 @@ impl IntoMarkDownTable for ClassEntry {
                     ));
                 }
                 _ => {
-                    todo!()
                 }
             }
         }
@@ -641,7 +722,6 @@ impl IntoMarkDownTable for FunctionEntry {
                     ));
                 }
                 _ => {
-                    todo!()
                 }
             }
         }

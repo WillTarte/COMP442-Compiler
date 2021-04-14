@@ -1,7 +1,7 @@
-mod allocator;
+pub mod allocator;
 pub mod generator;
-mod utils;
-mod instruction_set;
+pub mod utils;
+pub mod instruction_set;
 
 /*
 public void visit(VarDeclNode node){

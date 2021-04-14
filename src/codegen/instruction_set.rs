@@ -47,6 +47,7 @@ pub enum Instruction
     JumpLabel(String),
     JumpRegister(Register),
     JumpLink(Register, i16),
+    JumpLinkLabel(Register, String),
     JumpLinkRegister(Register, Register),
     NoOp,
     Halt,
@@ -74,10 +75,10 @@ impl ToString for Instruction
                 format!("lb {:?},{}({:?})", ri, k, rj)
             }
             Instruction::StoreWord(ri, rj, k) => {
-                format!("sw {}({:?}),({:?})", k, rj, ri)
+                format!("sw {}({:?}),{:?}", k, rj, ri)
             }
             Instruction::StoreWordLabel(ri, rj, label) => {
-                format!("sw {}({:?}),({:?})", label, rj, ri)
+                format!("sw {}({:?}),{:?}", label, rj, ri)
             }
             Instruction::StoreByte(ri, rj, k) => {
                 format!("sb {}({:?}),({:?})", k, rj, ri)
@@ -191,6 +192,10 @@ impl ToString for Instruction
             }
             Instruction::JumpLink(ri, k) => {
                 format!("jl {:?},{}", ri, k)
+            },
+            Instruction::JumpLinkLabel(ri, label) =>
+            {
+                format!("jl {:?},{}", ri, label)
             }
             Instruction::JumpLinkRegister(ri, rj) => {
                 format!("jlr {:?},{:?}", ri, rj)
@@ -236,10 +241,10 @@ impl ToString for TaggedInstruction
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Register
 {
-    R0,
+    R0, // always 0
     R1,
     R2,
     R3,
@@ -253,7 +258,6 @@ pub enum Register
     R11,
     R12,
     R13,
-    R14,
-    R15,
-    //Tagged(String),
+    R14, // if a member function is called, address to the object is in here
+    R15, // is used at the beginning/end of a function to jump back to the callee
 }

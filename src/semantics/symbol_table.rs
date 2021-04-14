@@ -100,6 +100,18 @@ impl SymbolTable {
         None
     }
 
+    pub fn find_all_scopes_by_ident(&self, ident: &str) -> Vec<&Scope>
+    {
+        let mut ret: Vec<&Scope> = Vec::new();
+        for scope in self.scopes() {
+            if scope.ident() == ident
+            {
+                ret.push(scope);
+            }
+        }
+        ret
+    }
+
     pub fn scopes(&self) -> &Vec<Scope> {
         &self.0
     }

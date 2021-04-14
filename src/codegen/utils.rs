@@ -28,7 +28,7 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32
                     }
                     else if let Scope::Function(fe) = scope
                     {
-                        todo!()
+                        //todo!()
                     }
                 }
             }
