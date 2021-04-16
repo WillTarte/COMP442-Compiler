@@ -100,12 +100,10 @@ impl SymbolTable {
         None
     }
 
-    pub fn find_all_scopes_by_ident(&self, ident: &str) -> Vec<&Scope>
-    {
+    pub fn find_all_scopes_by_ident(&self, ident: &str) -> Vec<&Scope> {
         let mut ret: Vec<&Scope> = Vec::new();
         for scope in self.scopes() {
-            if scope.ident() == ident
-            {
+            if scope.ident() == ident {
                 ret.push(scope);
             }
         }
@@ -145,7 +143,7 @@ impl Type {
             Type::FloatArray(_) => FloatArray(array_dim),
             Type::StringArray(_) => StringArray(array_dim),
             Type::CustomArray(s, _) => CustomArray(s.clone(), array_dim),
-            _ => { self.clone() }
+            _ => self.clone(),
         }
     }
 

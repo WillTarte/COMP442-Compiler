@@ -47,13 +47,11 @@ impl Node {
         }
     }
 
-    pub fn children(&self) -> &Vec<Node>
-    {
+    pub fn children(&self) -> &Vec<Node> {
         &self.children
     }
 
-    pub fn children_mut(&mut self) -> &mut Vec<Node>
-    {
+    pub fn children_mut(&mut self) -> &mut Vec<Node> {
         &mut self.children
     }
 }
@@ -164,13 +162,10 @@ impl SemanticStack {
         top.children.push(child);
     }
 
-    pub fn into_ast_root(mut self) -> Result<Node, ()>
-    {
-        if self.0.len() == 0 || self.0.len() > 1
-        {
+    pub fn into_ast_root(mut self) -> Result<Node, ()> {
+        if self.0.len() == 0 || self.0.len() > 1 {
             return Err(());
-        }
-        else {
+        } else {
             return Ok(self.0.pop().unwrap());
         }
     }
@@ -264,7 +259,7 @@ pub enum InternalNodeType {
     Variable,
     Term,
     StatBlock,
-    DotOp
+    DotOp,
 }
 
 impl Display for InternalNodeType {

@@ -1,21 +1,22 @@
+use crate::codegen::generator::{CodeGenOutput, MoonGenerator};
 use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
+use crate::parser::ast::NodeVal;
 use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
 use crate::semantics::checking::{SemanticError, WarningType};
 use crate::semantics::symbol_table::{check_semantics, generate_symbol_table};
 use crate::semantics::utils::serialize_symbol_table_to_file;
-use crate::codegen::generator::{MoonGenerator, CodeGenOutput};
 use dotenv::dotenv;
 use env_logger;
 use log::{error, info};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+mod codegen;
 mod lexer;
 mod parser;
 mod semantics;
-mod codegen;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Compiler Driver")]
@@ -50,14 +51,20 @@ fn main() {
                 error!("Failed to write output to file.")
             }
         }
-    }
-    else if opt.parser {
+    } else if opt.parser {
         match parse(my_lexer) {
             Ok((table, ast)) => {
                 info!(
                     "Successfully parsed token stream for {}",
                     &opt.file.file_name().unwrap().to_str().unwrap()
                 );
+
+                //let mut v: Vec<NodeVal> = Vec::new();
+                //let root = ast.into_ast_root().unwrap();
+                //post_order_traversal(&root.children()[2].children()[0].children()[1].children()[0].children()[0].children()[1], &mut v);
+
+                // log::info!("{:?}", v);
+
                 info!("Writing derivation table and abstract syntax tree to file");
                 serialize_derivation_table_to_file(table, file_name)
                     .expect("Failed to serialize derivation table");
@@ -67,8 +74,7 @@ fn main() {
                 error!("Failed to parse token stream for {}", file_name);
             }
         }
-    }
-    else if opt.symbols {
+    } else if opt.symbols {
         match parse(my_lexer) {
             Ok((_, mut ast)) => {
                 info!(
@@ -77,8 +83,7 @@ fn main() {
                 );
                 //assert_eq!(ast.0.len(), 1);
                 let root = ast.into_ast_root();
-                if root.is_err()
-                {
+                if root.is_err() {
                     log::error!("Failed to generate Abstract Syntax Tree");
                     return;
                 }
@@ -87,7 +92,6 @@ fn main() {
                 let (symbol_table, mut errors) = generate_symbol_table(&root);
 
                 errors.append(&mut check_semantics(&root, &symbol_table));
-
 
                 for err in errors.iter() {
                     match err {
@@ -124,9 +128,7 @@ fn main() {
                 error!("Failed to parse token stream for {}", file_name);
             }
         }
-    }
-    else if opt.codegen
-    {
+    } else if opt.codegen {
         match parse(my_lexer) {
             Ok((_, mut ast)) => {
                 info!(
@@ -135,8 +137,7 @@ fn main() {
                 );
                 //assert_eq!(ast.0.len(), 1);
                 let root = ast.into_ast_root();
-                if root.is_err()
-                {
+                if root.is_err() {
                     log::error!("Failed to generate Abstract Syntax Tree");
                     return;
                 }
@@ -145,7 +146,6 @@ fn main() {
                 let (symbol_table, mut errors) = generate_symbol_table(&root);
 
                 errors.append(&mut check_semantics(&root, &symbol_table));
-
 
                 for err in errors.iter() {
                     match err {
@@ -174,7 +174,8 @@ fn main() {
                     }
                 }
 
-                if true //todo if errors, dont generate code
+                if true
+                //todo if errors, dont generate code
                 {
                     let mut code_generator = MoonGenerator::new();
 

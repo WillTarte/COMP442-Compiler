@@ -38,7 +38,9 @@ where
 
     while *parsing_stack.last().unwrap() != STOP {
         let top_symbol = parsing_stack.last().unwrap().clone();
-        while next_token.is_some() && (next_token.as_ref().unwrap().token_type() == LineComment || next_token.as_ref().unwrap().token_type() == MultilineComment)
+        while next_token.is_some()
+            && (next_token.as_ref().unwrap().token_type() == LineComment
+                || next_token.as_ref().unwrap().token_type() == MultilineComment)
         {
             next_token = token_stream.next();
         }
@@ -169,17 +171,13 @@ where
         };
     }
 
-    return if next_token.is_some()
-    {
+    return if next_token.is_some() {
         log::error!("Next Token is some");
         Err(())
-    }
-    else if parsing_stack.len() > 1
-    {
+    } else if parsing_stack.len() > 1 {
         log::error!("Parsing stack is not empty");
         Err(())
-    }
-    else if error {
+    } else if error {
         log::error!("Parsing error");
         Err(())
     } else {

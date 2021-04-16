@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
 #[derive(Debug)]
-pub enum Instruction
-{
+pub enum Instruction {
     LoadWord(Register, Register, i16),
     LoadWordLabel(Register, Register, String),
     LoadByte(Register, Register, i16),
@@ -23,7 +22,7 @@ pub enum Instruction
     LessEqual(Register, Register, Register),
     Greater(Register, Register, Register),
     GreaterEqual(Register, Register, Register),
-    AddImmediate(Register, Register, i16),
+    AddImmediate(Register, Register, String),
     SubstractImmediate(Register, Register, i16),
     MultiplyImmediate(Register, Register, i16),
     DivideImmediate(Register, Register, i16),
@@ -57,14 +56,12 @@ pub enum Instruction
     Org(u32),
     //StoreWord(String),
     //StoreByte(String), //todo is this correct
-    Res(u32)
+    Res(u32),
 }
 
-impl ToString for Instruction
-{
+impl ToString for Instruction {
     fn to_string(&self) -> String {
-        match self
-        {
+        match self {
             Instruction::LoadWord(ri, rj, k) => {
                 format!("lw {:?},{}({:?})", ri, k, rj)
             }
@@ -95,7 +92,9 @@ impl ToString for Instruction
             Instruction::Divide(ri, rj, rk) => {
                 format!("divide {:?},{:?},{:?}", ri, rj, rk)
             }
-            Instruction::Modulus(_, _, _) => { unimplemented!()}
+            Instruction::Modulus(_, _, _) => {
+                unimplemented!()
+            }
             Instruction::And(ri, rj, rk) => {
                 format!("and {:?},{:?},{:?}", ri, rj, rk)
             }
@@ -135,7 +134,9 @@ impl ToString for Instruction
             Instruction::DivideImmediate(ri, rj, k) => {
                 format!("devi {:?},{:?},{}", ri, rj, k)
             }
-            Instruction::ModulusImmediate(_, _, _) => { unimplemented!() }
+            Instruction::ModulusImmediate(_, _, _) => {
+                unimplemented!()
+            }
             Instruction::AndImmediate(ri, rj, k) => {
                 format!("andi {:?},{:?},{}", ri, rj, k)
             }
@@ -192,16 +193,19 @@ impl ToString for Instruction
             }
             Instruction::JumpLink(ri, k) => {
                 format!("jl {:?},{}", ri, k)
-            },
-            Instruction::JumpLinkLabel(ri, label) =>
-            {
+            }
+            Instruction::JumpLinkLabel(ri, label) => {
                 format!("jl {:?},{}", ri, label)
             }
             Instruction::JumpLinkRegister(ri, rj) => {
                 format!("jlr {:?},{:?}", ri, rj)
             }
-            Instruction::NoOp => { format!("nop") }
-            Instruction::Halt => { format!("hlt") }
+            Instruction::NoOp => {
+                format!("nop")
+            }
+            Instruction::Halt => {
+                format!("hlt")
+            }
             Instruction::Entry => {
                 format!("entry")
             }
@@ -227,23 +231,18 @@ impl ToString for Instruction
 #[derive(Debug)]
 pub struct TaggedInstruction(pub Option<String>, pub Instruction);
 
-impl ToString for TaggedInstruction
-{
+impl ToString for TaggedInstruction {
     fn to_string(&self) -> String {
-        if self.0.is_some()
-        {
+        if self.0.is_some() {
             format!("{}\t\t\t{}", self.0.as_ref().unwrap(), self.1.to_string())
-        }
-        else {
+        } else {
             format!("\t\t\t{}", self.1.to_string())
         }
-
     }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum Register
-{
+pub enum Register {
     R0, // always 0
     R1,
     R2,

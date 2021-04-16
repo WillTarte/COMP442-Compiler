@@ -1,7 +1,7 @@
 extern crate comp442_compiler;
-use comp442_compiler::semantics::symbol_table::generate_symbol_table;
-use comp442_compiler::codegen::generator::MoonGenerator;
 use common::init;
+use comp442_compiler::codegen::generator::MoonGenerator;
+use comp442_compiler::semantics::symbol_table::generate_symbol_table;
 
 mod common;
 

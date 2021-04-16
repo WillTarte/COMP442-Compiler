@@ -16,7 +16,11 @@ pub fn generate_class_entries(node: &Node) -> Vec<ClassEntry> {
     assert_eq!(node.val(), Some(&NodeVal::Internal(ClassDeclarations)));
     log::info!("Generating class symbol tables");
 
-    let entries: Vec<ClassEntry> = node.children().iter().map(map_class_decl_to_entry).collect();
+    let entries: Vec<ClassEntry> = node
+        .children()
+        .iter()
+        .map(map_class_decl_to_entry)
+        .collect();
 
     entries
 }
@@ -65,8 +69,11 @@ pub fn map_class_decl_to_entry(node: &Node) -> ClassEntry {
 
                             log::info!("Generating symbol table for class {}", ident);
 
-                            let inherits: Vec<Type> =
-                                node.children()[1].children().iter().map(map_to_type).collect();
+                            let inherits: Vec<Type> = node.children()[1]
+                                .children()
+                                .iter()
+                                .map(map_to_type)
+                                .collect();
                             let mut members: Vec<Scope> = node.children()[2]
                                 .children()
                                 .iter()
@@ -227,8 +234,7 @@ pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
     assert_eq!(node.children().len(), 1);
     assert_eq!(node.children()[0].children().len(), 2);
     log::error!("{:?}", node);
-    if node.children()[0].children()[0].children()[0].val() == None
-    {
+    if node.children()[0].children()[0].children()[0].val() == None {
         FunctionEntry::new(
             "main",
             (Vec::new(), Type::Void),
@@ -236,8 +242,7 @@ pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
             999,
             true,
         )
-    }
-    else {
+    } else {
         let var_scopes: Vec<Scope> = node.children()[0].children()[0]
             .children()
             .iter()
@@ -348,8 +353,7 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
                 } else {
                     log::error!("{}", node);
                     log::error!("{}", node.children()[2]);
-                    log::error!("{:?}", node.children()[2]
-                        .children());
+                    log::error!("{:?}", node.children()[2].children());
                     let array_dim: Vec<u32> = node.children()[2]
                         .children()
                         .iter()
@@ -449,9 +453,12 @@ pub(crate) fn map_member_to_scope(node: &Node) -> Scope {
                             Scope::Variable(var)
                         }
                         NodeVal::Internal(InternalNodeType::MemberFuncDeclaration) => {
-                            let mut func = map_func_decl_to_entry(&node.children()[1].children()[0]);
+                            let mut func =
+                                map_func_decl_to_entry(&node.children()[1].children()[0]);
                             func.set_visibility(visibility);
-                            Scope::Function(map_func_decl_to_entry(&node.children()[1].children()[0]))
+                            Scope::Function(map_func_decl_to_entry(
+                                &node.children()[1].children()[0],
+                            ))
                         }
                         _ => {
                             panic!()
@@ -573,29 +580,24 @@ pub(crate) fn get_ancestors_for_class<'a>(
     (parents, errors)
 }
 
-pub fn get_class_hierarchy_functions<'a>(class_entry: &'a ClassEntry, global: &'a SymbolTable) -> (Vec<&'a FunctionEntry>, Vec<SemanticError>)
-{
+pub fn get_class_hierarchy_functions<'a>(
+    class_entry: &'a ClassEntry,
+    global: &'a SymbolTable,
+) -> (Vec<&'a FunctionEntry>, Vec<SemanticError>) {
     let mut functions: Vec<&FunctionEntry> = Vec::new();
-    let (parent_classes, errors) =  get_ancestors_for_class(class_entry, global);
+    let (parent_classes, errors) = get_ancestors_for_class(class_entry, global);
 
-    if errors.len() > 0
-    {
+    if errors.len() > 0 {
         return (functions, errors);
-    }
-    else {
-        for scope in class_entry.table().scopes()
-        {
-            if let Scope::Function(fe) = scope
-            {
+    } else {
+        for scope in class_entry.table().scopes() {
+            if let Scope::Function(fe) = scope {
                 functions.push(fe);
             }
         }
-        for parent_class in parent_classes
-        {
-            for scope in parent_class.table().scopes().iter()
-            {
-                if let Scope::Function(fe) = scope
-                {
+        for parent_class in parent_classes {
+            for scope in parent_class.table().scopes().iter() {
+                if let Scope::Function(fe) = scope {
                     functions.push(fe);
                 }
             }
@@ -605,29 +607,24 @@ pub fn get_class_hierarchy_functions<'a>(class_entry: &'a ClassEntry, global: &'
     }
 }
 
-pub fn get_class_hierarchy_data_members<'a>(class_entry: &'a ClassEntry, global: &'a SymbolTable) -> (Vec<&'a VariableEntry>, Vec<SemanticError>)
-{
+pub fn get_class_hierarchy_data_members<'a>(
+    class_entry: &'a ClassEntry,
+    global: &'a SymbolTable,
+) -> (Vec<&'a VariableEntry>, Vec<SemanticError>) {
     let mut data_members: Vec<&VariableEntry> = Vec::new();
-    let (parent_classes, errors) =  get_ancestors_for_class(class_entry, global);
+    let (parent_classes, errors) = get_ancestors_for_class(class_entry, global);
 
-    if errors.len() > 0
-    {
+    if errors.len() > 0 {
         return (data_members, errors);
-    }
-    else {
-        for scope in class_entry.table().scopes()
-        {
-            if let Scope::Variable(ve) = scope
-            {
+    } else {
+        for scope in class_entry.table().scopes() {
+            if let Scope::Variable(ve) = scope {
                 data_members.push(ve);
             }
         }
-        for parent_class in parent_classes
-        {
-            for scope in parent_class.table().scopes().iter()
-            {
-                if let Scope::Variable(ve) = scope
-                {
+        for parent_class in parent_classes {
+            for scope in parent_class.table().scopes().iter() {
+                if let Scope::Variable(ve) = scope {
                     data_members.push(ve);
                 }
             }
@@ -636,7 +633,6 @@ pub fn get_class_hierarchy_data_members<'a>(class_entry: &'a ClassEntry, global:
         return (data_members, errors);
     }
 }
-
 
 trait IntoMarkDownTable {
     fn md_table(&self) -> Vec<String>;
@@ -672,8 +668,7 @@ impl IntoMarkDownTable for ClassEntry {
                         e.var_type()
                     ));
                 }
-                _ => {
-                }
+                _ => {}
             }
         }
 
@@ -721,8 +716,7 @@ impl IntoMarkDownTable for FunctionEntry {
                         e.param_type()
                     ));
                 }
-                _ => {
-                }
+                _ => {}
             }
         }
 

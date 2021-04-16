@@ -5,7 +5,7 @@ use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, 
 use crate::semantics::symbol_table::Type::{Float, Integer, IntegerArray};
 use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, Scope, SymbolTable, Type};
 use crate::semantics::utils::{get_ancestors_for_class, map_token_to_type};
-use crate::semantics::validation::{validate_statement};
+use crate::semantics::validation::validate_statement;
 use std::collections::HashMap;
 
 #[allow(dead_code)]
@@ -74,63 +74,66 @@ pub fn report_semantic_errors(root: &Node, global: &SymbolTable) -> Vec<Semantic
     log::warn!("WARNING: IF ANY FUNCTIONS ARE OVERLOADED IT WILL CAUSE ISSUES");
 
     // function definitions
-    for function_definition in root.children()[1].children()
-    {
-        match (function_definition.children()[0].val(), function_definition.children()[1].val())
-        {
+    for function_definition in root.children()[1].children() {
+        match (
+            function_definition.children()[0].val(),
+            function_definition.children()[1].val(),
+        ) {
             (Some(NodeVal::Leaf(token1)), Some(NodeVal::Leaf(token2))) => {
                 // member function
-                if let Some(Scope::Class(ce)) = global.find_scope_by_ident(token1.lexeme())
-                {
-                    if let Some(Scope::Function(fe)) = ce.table().find_scope_by_ident(token2.lexeme())
+                if let Some(Scope::Class(ce)) = global.find_scope_by_ident(token1.lexeme()) {
+                    if let Some(Scope::Function(fe)) =
+                        ce.table().find_scope_by_ident(token2.lexeme())
                     {
                         for statement in function_definition.children()[4].children()[1].children()
                         {
                             let statement_res = validate_statement(statement, fe, global);
                         }
+                    } else {
+                        errors.push(SemanticError::FunctionNotFound(format!(
+                            "No member function {} found in {}: line {}",
+                            token2.lexeme(),
+                            ce.ident(),
+                            token2.line_num()
+                        )));
                     }
-                    else {
-                        errors.push(SemanticError::FunctionNotFound(format!("No member function {} found in {}: line {}", token2.lexeme(), ce.ident(), token2.line_num())));
-                    }
+                } else {
+                    errors.push(SemanticError::UndeclaredClass(format!(
+                        "Undeclared class {}: line {}",
+                        token1.lexeme(),
+                        token1.line_num()
+                    )));
                 }
-                else {
-                    errors.push(SemanticError::UndeclaredClass(format!("Undeclared class {}: line {}", token1.lexeme(), token1.line_num())));
-                }
-            },
+            }
             (Some(NodeVal::Leaf(token1)), None) => {
                 // free
-                if let Some(Scope::Function(fe)) = global.find_scope_by_ident(token1.lexeme())
-                {
-                    for statement in function_definition.children()[4].children()[1].children()
-                    {
+                if let Some(Scope::Function(fe)) = global.find_scope_by_ident(token1.lexeme()) {
+                    for statement in function_definition.children()[4].children()[1].children() {
                         let statement_res = validate_statement(statement, fe, global);
-                        if statement_res.is_err()
-                        {
+                        if statement_res.is_err() {
                             errors.push(statement_res.unwrap_err());
                         }
                     }
+                } else {
+                    errors.push(SemanticError::FunctionNotFound(format!(
+                        "No function {} found: line {}",
+                        token1.lexeme(),
+                        token1.line_num()
+                    )));
                 }
-                else {
-                    errors.push(SemanticError::FunctionNotFound(format!("No function {} found: line {}", token1.lexeme(), token1.line_num())));
-                }
-            },
-            _ => panic!()
-
+            }
+            _ => panic!(),
         }
     }
 
-    if let Some(Scope::Function(main)) = global.find_scope_by_ident("main")
-    {
-        for statement in root.children()[2].children()[0].children()[1].children()
-        {
+    if let Some(Scope::Function(main)) = global.find_scope_by_ident("main") {
+        for statement in root.children()[2].children()[0].children()[1].children() {
             let statement_res = validate_statement(statement, main, global);
-            if statement_res.is_err()
-            {
+            if statement_res.is_err() {
                 errors.push(statement_res.unwrap_err());
             }
         }
-    }
-    else {
+    } else {
         panic!();
     }
 
