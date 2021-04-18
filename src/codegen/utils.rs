@@ -4,12 +4,16 @@ use crate::semantics::symbol_table::{Scope, SymbolTable, Type};
 use std::fs::OpenOptions;
 use std::io;
 use std::io::{BufWriter, Write};
+use crate::semantics::utils::get_class_hierarchy_data_members;
 
 /// Returns the size of the given type in bytes
 pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
     let size: u32 = match t {
         Type::Integer => 4,
-        Type::IntegerArray(dim) => 4u32 * dim.iter().product::<u32>(),
+        Type::IntegerArray(dim) => {
+            let size= 4u32 * dim.iter().product::<u32>();
+            if size == 0 { 4 } else { size }
+        },
         Type::Float => 4,
         Type::FloatArray(dim) => 8u32 * dim.iter().product::<u32>(),
         Type::String => {
@@ -19,10 +23,10 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
         Type::Custom(ident) => {
             let mut temp_size: u32 = 0;
             if let Some(Scope::Class(ce)) = symbols.find_scope_by_ident(ident) {
-                for scope in ce.table().scopes() {
-                    if let Scope::Variable(ve) = scope {
-                        temp_size += sizeof(ve.var_type(), symbols);
-                    }
+                let (all_members, _) = get_class_hierarchy_data_members(ce, symbols);
+                for member in all_members
+                {
+                    temp_size += sizeof(member.var_type(), symbols);
                 }
             } else {
                 panic!()
@@ -32,10 +36,10 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
         Type::CustomArray(ident, dim) => {
             let mut temp_size: u32 = 0;
             if let Some(Scope::Class(ce)) = symbols.find_scope_by_ident(ident) {
-                for scope in ce.table().scopes() {
-                    if let Scope::Variable(ve) = scope {
-                        temp_size += sizeof(ve.var_type(), symbols);
-                    }
+                let (all_members, _) = get_class_hierarchy_data_members(ce, symbols);
+                for member in all_members
+                {
+                    temp_size += sizeof(member.var_type(), symbols);
                 }
             } else {
                 panic!()

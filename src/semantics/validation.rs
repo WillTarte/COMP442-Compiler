@@ -71,7 +71,6 @@ fn validate_assignment(
     function_entry: &FunctionEntry,
     global: &SymbolTable,
 ) -> Result<(), SemanticError> {
-    log::warn!("validating assigment statement");
     // check lhs semantics
     let lhs: &Node = &assignment.children()[0];
     let lhs_ty = match lhs.val() {
@@ -111,10 +110,6 @@ fn validate_func_call_statement(
     function_entry: &FunctionEntry,
     global: &SymbolTable,
 ) -> Result<(), SemanticError> {
-    log::warn!(
-        "validating function call statement for {}",
-        func_id.lexeme()
-    );
     let mut func_call_errs: Vec<SemanticError> = Vec::new();
     // member function call if statement is within member function
     if function_entry.member_of().is_some() {

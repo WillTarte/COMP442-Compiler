@@ -55,6 +55,7 @@ pub enum Instruction {
     Align,
     Org(u32),
     Res(u32),
+    Comment(String)
 }
 
 impl ToString for Instruction {
@@ -221,6 +222,9 @@ impl ToString for Instruction {
             }*/
             Instruction::Res(b) => {
                 format!("res {}", b)
+            }
+            Instruction::Comment(comment) => {
+                format!("%{}", comment)
             }
         }
     }

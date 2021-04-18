@@ -236,7 +236,6 @@ pub(crate) fn map_main_to_func_entry(node: &Node) -> FunctionEntry {
     assert_eq!(node.val(), Some(&NodeVal::Internal(InternalNodeType::Main)));
     assert_eq!(node.children().len(), 1);
     assert_eq!(node.children()[0].children().len(), 2);
-    log::error!("{:?}", node);
     if node.children()[0].children()[0].children()[0].val() == None {
         FunctionEntry::new(
             "main",
@@ -354,9 +353,6 @@ pub(crate) fn map_to_type(node: &Node) -> symbol_table::Type {
                 return if node.children()[2].children().is_empty() {
                     ty
                 } else {
-                    log::error!("{}", node);
-                    log::error!("{}", node.children()[2]);
-                    log::error!("{:?}", node.children()[2].children());
                     let array_dim: Vec<u32> = node.children()[2]
                         .children()
                         .iter()

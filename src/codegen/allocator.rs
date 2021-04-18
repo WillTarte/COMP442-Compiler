@@ -75,8 +75,7 @@ impl RegisterAllocator {
                 return reg.clone();
             }
         }
-        log::error!("NO REGISTER AVAILABLE");
-        R1
+        panic!("OUT OF REGISTERS")
     }
 
     pub fn release_register(&mut self, reg: Register) {

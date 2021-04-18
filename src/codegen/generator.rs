@@ -1,11 +1,8 @@
 #![allow(dead_code)]
 use crate::codegen::allocator::{LabelAllocator, RegisterAllocator};
 use crate::codegen::generator::ExprParseStorage::*;
-use crate::codegen::instruction_set::Instruction::{
-    Add, AddImmediate, And, BranchIfZeroLabel, Divide, Entry, Equal, Greater, GreaterEqual, Halt,
-    JumpLabel, JumpLinkLabel, JumpRegister, Less, LessEqual, LoadWordLabel, Multiply, NoOp,
-    NotEqual, Or, Res, StoreWordLabel, Substract, SubstractImmediate,
-};
+use crate::codegen::instruction_set::Instruction::{Add, AddImmediate, And, BranchIfZeroLabel, Divide, Entry, Equal, Greater, GreaterEqual, Halt, JumpLabel, JumpLinkLabel, JumpRegister, Less, LessEqual, LoadWordLabel, Multiply, NoOp, NotEqual, Or, Res, StoreWordLabel, Substract, SubstractImmediate, LoadWord, MultiplyImmediate, StoreWord, Align, Comment};
+use crate::codegen::instruction_set::Register;
 use crate::codegen::instruction_set::Register::*;
 use crate::codegen::instruction_set::{Instruction, TaggedInstruction};
 use crate::codegen::utils::{
@@ -13,7 +10,7 @@ use crate::codegen::utils::{
 };
 use crate::lexer::token::TokenType;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
-use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, Scope, SymbolTable, Type};
+use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, Scope, SymbolTable, Type, ParameterEntry};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
@@ -105,6 +102,11 @@ impl CodeGenerator {
         }
         self.current_label = Some(label.to_string());
     }
+
+    /// Adds a comment to the output
+    pub fn add_comment(&mut self, comment: &str) {
+        self.output.0.push(TaggedInstruction(None, Comment(comment.to_string())));
+    }
 }
 
 /// The MOON code generator
@@ -125,15 +127,18 @@ impl MoonGenerator {
 
     /// Generates the MOON code given an AST and a symbol table
     pub fn generate(&mut self, ast: &Node, symbols: &SymbolTable) {
+        log::info!("Beginning code generation");
         self.visit_class_declarations(&ast.children()[0], symbols);
         self.visit_function_definitions(&ast.children()[1], symbols);
         self.visit_main_function(&ast.children()[2], symbols);
 
+        self.generator.add_comment(" - - - - Resources - - - -");
         self.generator.add_tagged_resource("fn_ptr_stack", 512);
     }
 
     /// Finishes the code generation. Returns the output.
     pub fn finish(mut self) -> CodeGenOutput {
+        log::info!("Finished code generation");
         self.generator.output.append(self.generator.resources);
         self.generator.output
     }
@@ -168,6 +173,8 @@ impl MoonGenerator {
     }
 
     fn visit_main_function(&mut self, main_func: &Node, symbols: &SymbolTable) {
+
+        self.generator.add_comment(" ~ Main ~");
         if let Some(Scope::Function(main)) = symbols.find_scope_by_ident("main") {
             for scope in main.table().scopes() {
                 if let Scope::Variable(ve) = scope {
@@ -177,9 +184,12 @@ impl MoonGenerator {
                 }
             }
 
+            self.generator.add_comment("Body");
             // Generate code for main function body
             self.generator
                 .add_tagged_instruction(TaggedInstruction(Some("fn_main".to_string()), Entry));
+            self.generator.add_instruction(Align);
+            //self.generator.add_instruction(AddImmediate(R14, R0, "topaddr".to_string()));
 
             self.generate_statement_block_code(
                 &main_func.children()[0].children()[1],
@@ -198,6 +208,7 @@ impl MoonGenerator {
         function_definition: &Node,
         symbols: &SymbolTable,
     ) {
+        self.generator.add_comment(&format!(" FUNCTION: {}", fe.ident()));
         // reserve memory for function return value
         self.generator.add_tagged_resource(
             &format!("fnres_{}", fe.ident()),
@@ -221,13 +232,18 @@ impl MoonGenerator {
         self.generator
             .add_tagged_instruction(TaggedInstruction(Some(format!("fn_{}", fe.ident())), NoOp));
 
+        self.generator.add_comment("Header");
+
         self.store_and_inc_fn_ptr();
 
+        self.generator.add_comment("Body");
         self.generate_statement_block_code(
             &function_definition.children()[4].children()[1],
             fe,
             symbols,
         ); //Statement list
+
+        self.generator.add_comment("Tail");
 
         // reset local variables
         for scope in fe.table().scopes().iter() {
@@ -236,6 +252,14 @@ impl MoonGenerator {
                     R0,
                     R0,
                     format!("var_{}_{}", fe.ident(), ve.ident()),
+                ));
+            }
+            else if let Scope::FunctionParameter(pe) = scope
+            {
+                self.generator.add_instruction(StoreWordLabel(
+                    R0,
+                    R0,
+                    format!("para,_{}_{}", fe.ident(), pe.ident()),
                 ));
             }
         }
@@ -268,25 +292,32 @@ impl MoonGenerator {
                     }
                     NodeVal::Internal(ty) => match ty {
                         InternalNodeType::WhileStatement => {
+                            self.generator.add_comment(" ~ While Statement ~");
                             self.generate_while_statement_code(statement, fe, symbols);
                         }
                         InternalNodeType::IfStatement => {
+                            self.generator.add_comment(" ~ If Statement ~");
                             self.generate_if_statement_code(statement, fe, symbols);
                         }
                         InternalNodeType::ReadStatement => {
+                            self.generator.add_comment(" ~ Read Statement ~");
                             self.generate_read_statement_code(statement, fe, symbols);
                         }
                         InternalNodeType::WriteStatement => {
+                            self.generator.add_comment(" ~ Write Statement ~");
                             self.generate_write_statement_code(statement, fe, symbols);
                         }
                         InternalNodeType::ReturnStatement => {
+                            self.generator.add_comment(" ~ Return Statement ~");
                             self.generate_return_statement_code(statement, fe, symbols);
                         }
                         InternalNodeType::BreakStatement => {
+                            self.generator.add_comment(" ~ Break Statement ~");
                             let (_, endwhile_label) = self.label_allocator.current_while_labels();
                             self.generator.add_instruction(JumpLabel(endwhile_label));
                         }
                         InternalNodeType::ContinueStatement => {
+                            self.generator.add_comment(" ~ Continue Statement ~");
                             let (while_label, _) = self.label_allocator.current_while_labels();
                             self.generator.add_instruction(JumpLabel(while_label));
                         }
@@ -312,33 +343,29 @@ impl MoonGenerator {
 
         self.generator.buffer_label(&while_label);
         let rel_expr_res =
-            self.generate_relative_expression_code(&while_statement.children()[0], fe, symbols);
+            self.generate_relative_expression_code(&while_statement.children()[0].children()[0], fe, symbols);
         let rel_expr_reg = self.register_allocator.next_free_register();
+        self.generator.add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
         match rel_expr_res {
             Immediate(val) => {
-                self.generator
-                    .add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
-                self.generator
-                    .add_instruction(AddImmediate(rel_expr_reg, R0, val));
+                self.generator.add_instruction(AddImmediate(rel_expr_reg, R0, val));
             }
             Labelled(label, offset) => {
-                self.generator
-                    .add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
-                self.generator.add_instruction(LoadWordLabel(
-                    rel_expr_reg,
-                    offset,
-                    label.to_string(),
-                ));
+                self.generator.add_instruction(LoadWordLabel(rel_expr_reg, offset, label.to_string()));
                 self.register_allocator.release_register(offset);
             }
             Register(r) => {
-                self.generator
-                    .add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
                 self.generator.add_instruction(Add(rel_expr_reg, R0, r));
+                self.register_allocator.release_register(r);
+            }
+            Pointer(label, offs) => {
+                self.generator.add_instruction(LoadWordLabel(rel_expr_reg, R0, label)); // load address
+                self.generator.add_instruction(Add(rel_expr_reg, rel_expr_reg, offs)); // add offset
+                self.generator.add_instruction(LoadWord(rel_expr_reg, rel_expr_reg, 0)); // load actual value at memory location
+                self.register_allocator.release_register(offs);
             }
         }
-        self.generator
-            .add_instruction(BranchIfZeroLabel(rel_expr_reg, endwhile_label.clone()));
+        self.generator.add_instruction(BranchIfZeroLabel(rel_expr_reg, endwhile_label.clone()));
         self.register_allocator.release_register(rel_expr_reg);
 
         // code for stat block
@@ -369,29 +396,26 @@ impl MoonGenerator {
         let (if_label, else_label, endif_label) = self.label_allocator.next_if_labels();
 
         let rel_expr_res =
-            self.generate_relative_expression_code(&if_statement.children()[0], fe, symbols);
+            self.generate_relative_expression_code(&if_statement.children()[0].children()[0], fe, symbols);
         let rel_expr_reg = self.register_allocator.next_free_register();
+        self.generator.add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
         match rel_expr_res {
             Immediate(val) => {
-                self.generator
-                    .add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
-                self.generator
-                    .add_instruction(AddImmediate(rel_expr_reg, R0, val));
+                self.generator.add_instruction(AddImmediate(rel_expr_reg, R0, val));
             }
             Labelled(label, offset) => {
-                self.generator
-                    .add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
-                self.generator.add_instruction(LoadWordLabel(
-                    rel_expr_reg,
-                    offset,
-                    label.to_string(),
-                ));
+                self.generator.add_instruction(LoadWordLabel(rel_expr_reg, offset, label.to_string()));
                 self.register_allocator.release_register(offset);
             }
             Register(r) => {
-                self.generator
-                    .add_instruction(Substract(rel_expr_reg, rel_expr_reg, rel_expr_reg));
                 self.generator.add_instruction(Add(rel_expr_reg, R0, r));
+                self.register_allocator.release_register(r);
+            }
+            Pointer(label, offs) => {
+                self.generator.add_instruction(LoadWordLabel(rel_expr_reg, R0, label)); // load address
+                self.generator.add_instruction(Add(rel_expr_reg, rel_expr_reg, offs)); // add offset
+                self.generator.add_instruction(LoadWord(rel_expr_reg, rel_expr_reg, 0)); // load actual value at memory location
+                self.register_allocator.release_register(offs);
             }
         }
         self.generator.add_tagged_instruction(TaggedInstruction(
@@ -418,10 +442,24 @@ impl MoonGenerator {
         &mut self,
         read_statement: &Node,
         fe: &FunctionEntry,
-        symbols: &SymbolTable,
+        _symbols: &SymbolTable,
     ) {
-        log::error!("READ STATEMENT CODE GENERATION: NOT IMPLEMENTED");
-        todo!()
+        match read_statement.children()[0].children()[0].val()
+        {
+            Some(NodeVal::Leaf(token)) => {
+                if let Some(Scope::Variable(ve)) = fe.table().find_scope_by_ident(token.lexeme())
+                {
+                    self.generator.add_instruction(JumpLinkLabel(R15, "getint".to_string()));
+                    self.generator.add_instruction(StoreWordLabel(R1, R0, format!("var_{}_{}", fe.ident(), ve.ident())));
+                }
+                else if let Some(Scope::FunctionParameter(pe)) = fe.table().find_scope_by_ident(token.lexeme())
+                {
+                    self.generator.add_instruction(JumpLinkLabel(R15, "getint".to_string()));
+                    self.generator.add_instruction(StoreWordLabel(R1, R0, format!("param_{}_{}", fe.ident(), pe.ident())));
+                }
+            },
+            _ => log::error!("INVALID READ VARIABLE")
+        }
     }
 
     fn generate_write_statement_code(
@@ -430,8 +468,29 @@ impl MoonGenerator {
         fe: &FunctionEntry,
         symbols: &SymbolTable,
     ) {
-        log::error!("WRITE STATEMENT CODE GENERATION: NOT IMPLEMENTED");
-        todo!()
+        let expr_res = self.generate_expression_code(&write_statement.children()[0], fe, symbols);
+        self.generator.add_instruction(Substract(R1, R1, R1));
+        match expr_res
+        {
+            Immediate(imm) => {
+
+                self.generator.add_instruction(AddImmediate(R1, R0, imm));
+            }
+            Labelled(label, offs) => {
+                self.generator.add_instruction(LoadWordLabel(R1, offs, label));
+                self.register_allocator.release_register(offs);
+            }
+            Register(r) => {
+                self.generator.add_instruction(Add(R1, R0, r));
+                self.register_allocator.release_register(r);
+            }
+            Pointer(label, offs) => {
+                self.generator.add_instruction(LoadWordLabel(R1, R0, label));
+                self.generator.add_instruction(Add(R1, R1, offs));
+                self.register_allocator.release_register(offs);
+            }
+        }
+        self.generator.add_instruction(JumpLinkLabel(R15, "putint".to_string()));
     }
 
     fn generate_return_statement_code(
@@ -443,36 +502,24 @@ impl MoonGenerator {
         let expr_result =
             self.generate_expression_code(&return_statement.children()[0], fe, symbols);
         let expr_result_reg = self.register_allocator.next_free_register();
+        self.generator.add_instruction(Substract(expr_result_reg, expr_result_reg, expr_result_reg));
         match expr_result {
             Immediate(val) => {
-                self.generator.add_instruction(Substract(
-                    expr_result_reg,
-                    expr_result_reg,
-                    expr_result_reg,
-                ));
-                self.generator
-                    .add_instruction(AddImmediate(expr_result_reg, R0, val));
+                self.generator.add_instruction(AddImmediate(expr_result_reg, R0, val));
             }
             Labelled(label, offset) => {
-                self.generator.add_instruction(Substract(
-                    expr_result_reg,
-                    expr_result_reg,
-                    expr_result_reg,
-                ));
-                self.generator.add_instruction(LoadWordLabel(
-                    expr_result_reg,
-                    offset,
-                    label.to_string(),
-                ));
+                self.generator.add_instruction(LoadWordLabel(expr_result_reg, offset, label.to_string()));
                 self.register_allocator.release_register(offset);
             }
             Register(r) => {
-                self.generator.add_instruction(Substract(
-                    expr_result_reg,
-                    expr_result_reg,
-                    expr_result_reg,
-                ));
                 self.generator.add_instruction(Add(expr_result_reg, R0, r));
+                self.register_allocator.release_register(r);
+            }
+            Pointer(label, offs) => {
+                self.generator.add_instruction(LoadWordLabel(expr_result_reg, R0, label)); // load address
+                self.generator.add_instruction(Add(expr_result_reg, expr_result_reg, offs)); // add offset
+                self.generator.add_instruction(LoadWord(expr_result_reg, expr_result_reg, 0)); // load actual value at memory location
+                self.register_allocator.release_register(offs);
             }
         }
         self.generator.add_instruction(StoreWordLabel(
@@ -501,9 +548,11 @@ impl MoonGenerator {
             }
             Some(val) => match val {
                 NodeVal::Leaf(_) => {
+                    self.generator.add_comment(" ~ Function Call Statement ~");
                     self.generate_function_call_code(&generic_statement.children()[0], fe, symbols);
                 }
                 NodeVal::Internal(InternalNodeType::Assignment) => {
+                    self.generator.add_comment(" ~ Assignment Statement ~");
                     self.generate_assignment_code(&generic_statement.children()[0], fe, symbols);
                 }
                 NodeVal::Internal(InternalNodeType::DotOp) => {
@@ -550,41 +599,60 @@ impl MoonGenerator {
         }
 
         if let Some(Scope::Function(fe)) = symbols.find_scope_by_ident(function_ident) {
-            let mut param_labels: Vec<String> = Vec::new();
+            let mut params: Vec<&ParameterEntry> = Vec::new();
             for scope in fe.table().scopes() {
                 if let Scope::FunctionParameter(pe) = scope {
-                    param_labels.push(format!("param_{}_{}", fe.ident(), pe.ident()));
+                    params.push(pe);
                 }
             }
-            assert_eq!(param_labels.len(), expr_results.len());
-            for (param_label, expr_res) in param_labels.drain(..).zip(expr_results.drain(..)) {
-                //todo fucking arrays
+            assert_eq!(params.len(), expr_results.len());
+            for (param, expr_res) in params.drain(..).zip(expr_results.drain(..)) {
+                let param_label = format!("param_{}_{}", fe.ident(), param.ident());
+                self.generator.add_comment(&format!("Storing into function parameter {}", param_label));
                 match expr_res {
                     Immediate(imm) => {
                         let param_reg = self.register_allocator.next_free_register();
-                        self.generator
-                            .add_instruction(Substract(param_reg, param_reg, param_reg));
-                        self.generator
-                            .add_instruction(AddImmediate(param_reg, R0, imm));
-                        self.generator
-                            .add_instruction(StoreWordLabel(param_reg, R0, param_label));
+                        self.generator.add_instruction(Substract(param_reg, param_reg, param_reg));
+                        self.generator.add_instruction(AddImmediate(param_reg, R0, imm));
+                        self.generator.add_instruction(StoreWordLabel(param_reg, R0, param_label));
                         self.register_allocator.release_register(param_reg);
                     }
                     Labelled(label, offs) => {
-                        let expr_reg = self.register_allocator.next_free_register();
-                        self.generator
-                            .add_instruction(Substract(expr_reg, expr_reg, expr_reg));
-                        self.generator
-                            .add_instruction(LoadWordLabel(expr_reg, offs, label));
-                        self.generator
-                            .add_instruction(StoreWordLabel(expr_reg, R0, param_label));
-                        self.register_allocator.release_register(expr_reg);
-                        self.register_allocator.release_register(offs);
+                        match param.param_type() {
+                            Type::IntegerArray(_)
+                            | Type::FloatArray(_) => {
+                                self.generator.add_instruction(AddImmediate(offs, offs, label));
+                                self.generator.add_instruction(StoreWordLabel(offs, R0, param_label));
+                                self.register_allocator.release_register(offs);
+                            }
+                            Type::Float | Type::Integer => {
+                                let expr_reg = self.register_allocator.next_free_register();
+                                self.generator.add_instruction(Substract(expr_reg, expr_reg, expr_reg));
+                                self.generator.add_instruction(LoadWordLabel(expr_reg, offs, label));
+                                self.generator.add_instruction(StoreWordLabel(expr_reg, R0, param_label));
+                                self.register_allocator.release_register(expr_reg);
+                                self.register_allocator.release_register(offs);
+                            }
+                            Type::String
+                            | Type::StringArray(_)
+                            | Type::Custom(_)
+                            | Type::CustomArray(_, _) => { unimplemented!("Class and String not implemented") },
+                            _ => panic!()
+                        }
                     }
                     Register(r) => {
-                        self.generator
-                            .add_instruction(StoreWordLabel(r, R0, param_label));
+                        self.generator.add_instruction(StoreWordLabel(r, R0, param_label));
                         self.register_allocator.release_register(r);
+                    }
+                    Pointer(label, offs) => {
+                        // copy the pointer into the param
+                        let ptr_reg = self.register_allocator.next_free_register();
+                        self.generator.add_instruction(Substract(ptr_reg, ptr_reg, ptr_reg));
+                        self.generator.add_instruction(LoadWordLabel(ptr_reg, R0, label));
+                        self.generator.add_instruction(Add(ptr_reg, ptr_reg, offs));
+                        self.generator.add_instruction(StoreWordLabel(ptr_reg, R0, param_label));
+                        self.register_allocator.release_register(ptr_reg);
+                        self.register_allocator.release_register(offs);
                     }
                 }
             }
@@ -632,25 +700,41 @@ impl MoonGenerator {
                             unimplemented!("Class types not implemented")
                         }
 
-                        Type::IntegerArray(_) | Type::FloatArray(_) => {
-                            todo!("indices, follow ptr")
+                        Type::IntegerArray(_dim) | Type::FloatArray(_dim) => {
+                            let idx_res: ExprParseStorage = self.generate_array_indexing_code(ve.var_type(), &assignment_statement.children()[0], function_entry, symbols);
+                            match idx_res
+                            {
+                                Register(offs_reg) => {
+                                    // for local variables, no need for pointer indirection
+                                    ExprParseStorage::Labelled(format!("var_{}_{}", function_entry.ident(), ve.ident()), offs_reg)
+                                },
+                                _ => panic!("Array index was not stored in a register")
+                            }
                         }
                         _ => panic!(),
                     },
                     Some(Scope::FunctionParameter(pe)) => match pe.param_type() {
                         Type::Integer | Type::Float => ExprParseStorage::Labelled(
-                            format!("var_{}_{}", function_entry.ident(), pe.ident()),
+                            format!("param_{}_{}", function_entry.ident(), pe.ident()),
                             R0,
                         ),
                         Type::String | Type::StringArray(_) => {
-                            todo!("strings not implemented")
+                            unimplemented!("String types not implemented")
                         }
                         Type::CustomArray(_, _) | Type::Custom(_) => {
-                            todo!("classes not implemented")
+                            unimplemented!("Class types not implemented")
                         }
 
-                        Type::IntegerArray(_) | Type::FloatArray(_) => {
-                            todo!("indices, follow ptr")
+                        Type::IntegerArray(dim) | Type::FloatArray(dim) => {
+                            let idx_res: ExprParseStorage = self.generate_array_indexing_code(pe.param_type(), &assignment_statement.children()[0], function_entry, symbols);
+                            match idx_res
+                            {
+                                Register(offs_reg) => {
+                                    //for function params, the data is stored elsewhere so we need indirection}
+                                    ExprParseStorage::Pointer(format!("param_{}_{}", function_entry.ident(), pe.ident()), offs_reg)
+                                },
+                                _ => panic!("Array index was not stored in a register")
+                            }
                         }
                         _ => panic!(),
                     },
@@ -668,25 +752,15 @@ impl MoonGenerator {
             symbols,
         );
 
+        self.generator.add_comment(&format!("{:?} = {:?}", lhs, rhs));
         match (lhs, rhs) {
             (Labelled(llabel, loffs), Labelled(rlabel, roffs)) => {
-                if roffs != R0 {
-                    self.generator
-                        .add_instruction(LoadWordLabel(roffs, roffs, rlabel));
-                    self.generator
-                        .add_instruction(StoreWordLabel(roffs, loffs, llabel));
-                    self.register_allocator.release_register(loffs);
-                    self.register_allocator.release_register(roffs);
-                } else {
-                    let rreg = self.register_allocator.next_free_register();
-                    self.generator.add_instruction(Substract(rreg, rreg, rreg));
-                    self.generator
-                        .add_instruction(LoadWordLabel(rreg, R0, rlabel));
-                    self.generator
-                        .add_instruction(StoreWordLabel(rreg, loffs, llabel));
-                    self.register_allocator.release_register(loffs);
-                    self.register_allocator.release_register(rreg);
-                }
+                let rhs_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(LoadWordLabel(rhs_reg, roffs, rlabel));
+                self.generator.add_instruction(StoreWordLabel(rhs_reg, loffs, llabel));
+                self.register_allocator.release_register(loffs);
+                self.register_allocator.release_register(roffs);
+                self.register_allocator.release_register(rhs_reg);
             }
             (Labelled(llabel, loffs), Immediate(imm)) => {
                 let rreg = self.register_allocator.next_free_register();
@@ -698,11 +772,59 @@ impl MoonGenerator {
                 self.register_allocator.release_register(rreg);
             }
             (Labelled(llabel, loffs), Register(r)) => {
-                self.generator
-                    .add_instruction(StoreWordLabel(r, loffs, llabel));
+                self.generator.add_instruction(StoreWordLabel(r, loffs, llabel));
                 self.register_allocator.release_register(loffs);
                 self.register_allocator.release_register(r);
-            }
+            },
+            (Labelled(llabel, loffs), Pointer(rlabel, roffs)) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(LoadWordLabel(temp_reg, R0, rlabel)); // load address into register
+                self.generator.add_instruction(Add(temp_reg, temp_reg, roffs)); // add offset
+                self.generator.add_instruction(LoadWord(temp_reg, temp_reg, 0)); // load actual value
+                self.generator.add_instruction(StoreWordLabel(temp_reg, loffs, llabel));
+                self.register_allocator.release_register(loffs);
+                self.register_allocator.release_register(roffs);
+            },
+            (Pointer(llabel, loffs), Pointer(rlabel, roffs)) => {
+                let lhs_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(lhs_reg, lhs_reg, lhs_reg));
+                let rhs_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(rhs_reg, rhs_reg, rhs_reg));
+
+                self.generator.add_instruction(LoadWordLabel(lhs_reg, R0, llabel)); // load address into register
+                self.generator.add_instruction(Add(lhs_reg, lhs_reg, loffs)); // add offset
+
+                self.generator.add_instruction(LoadWordLabel(rhs_reg, R0, rlabel)); // load address into register
+                self.generator.add_instruction(Add(rhs_reg, rhs_reg, roffs)); // add offset
+                self.generator.add_instruction(LoadWord(rhs_reg, rhs_reg, 0)); // load actual value
+
+                // M[0 + lhs_reg] <- rhs_reg
+                self.generator.add_instruction(StoreWord(rhs_reg, lhs_reg, 0));
+
+                self.register_allocator.release_register(loffs);
+                self.register_allocator.release_register(roffs);
+                self.register_allocator.release_register(lhs_reg);
+                self.register_allocator.release_register(rhs_reg);
+            },
+            (Pointer(llabel, loffs), Labelled(rlabel, roffs)) => {
+                let lhs_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(lhs_reg, lhs_reg, lhs_reg));
+                let rhs_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(rhs_reg, rhs_reg, rhs_reg));
+
+                self.generator.add_instruction(LoadWordLabel(lhs_reg, R0, llabel)); // load address into register
+                self.generator.add_instruction(Add(lhs_reg, lhs_reg, loffs)); // add offset
+
+                self.generator.add_instruction(LoadWordLabel(rhs_reg, roffs, rlabel));
+
+                // M[0 + lhs_reg] <- rhs_reg
+                self.generator.add_instruction(StoreWord(rhs_reg, lhs_reg, 0));
+
+                self.register_allocator.release_register(lhs_reg);
+                self.register_allocator.release_register(rhs_reg);
+                self.register_allocator.release_register(loffs);
+                self.register_allocator.release_register(roffs);
+            },
             _ => panic!(),
         }
 
@@ -746,12 +868,12 @@ impl MoonGenerator {
         symbols: &SymbolTable,
     ) -> ExprParseStorage {
         let left = self.generate_arith_expr_code(
-            &rel_expr.children()[0].children()[0],
+            &rel_expr.children()[0],
             function_entry,
             symbols,
         );
         let right = self.generate_arith_expr_code(
-            &rel_expr.children()[0].children()[1],
+            &rel_expr.children()[1],
             function_entry,
             symbols,
         );
@@ -763,92 +885,161 @@ impl MoonGenerator {
         let mut rr = self.register_allocator.next_free_register();
         self.generator.add_instruction(Substract(rr, rr, rr));
 
-        match (left, right) {
+        match (&left, &right) {
             (Immediate(lval), Immediate(rval)) => {
-                self.generator.add_instruction(AddImmediate(lr, R0, lval));
-                self.generator.add_instruction(AddImmediate(rr, R0, rval));
+                self.generator.add_instruction(AddImmediate(lr, R0, lval.clone()));
+                self.generator.add_instruction(AddImmediate(rr, R0, rval.clone()));
             }
             (Immediate(lval), Labelled(rlabel, roffs)) => {
-                self.generator.add_instruction(AddImmediate(lr, R0, lval));
-                self.generator
-                    .add_instruction(LoadWordLabel(rr, roffs, rlabel));
-                self.register_allocator.release_register(roffs);
+                self.generator.add_instruction(AddImmediate(lr, R0, lval.clone()));
+                self.generator.add_instruction(LoadWordLabel(rr, *roffs, rlabel.clone()));
+                self.register_allocator.release_register(*roffs);
             }
             (Immediate(lval), Register(_rr)) => {
-                self.generator.add_instruction(AddImmediate(lr, R0, lval));
+                self.generator.add_instruction(AddImmediate(lr, R0, lval.clone()));
                 self.register_allocator.release_register(rr);
-                rr = _rr;
+                rr = *_rr;
+            }
+            (Immediate(lval), Pointer(rlabel, roffs)) => {
+                self.generator.add_instruction(AddImmediate(lr, R0, lval.clone()));
+
+                self.generator.add_instruction(LoadWordLabel(rr, R0, rlabel.clone())); // load address
+                self.generator.add_instruction(Add(rr, rr, *roffs)); // add offset
+                self.generator.add_instruction(LoadWord(rr, rr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*roffs);
             }
             (Labelled(llabel, loffs), Immediate(rval)) => {
                 self.generator
-                    .add_instruction(LoadWordLabel(lr, loffs, llabel));
-                self.generator.add_instruction(AddImmediate(rr, R0, rval));
-                self.register_allocator.release_register(loffs);
+                    .add_instruction(LoadWordLabel(lr, *loffs, llabel.clone()));
+                self.generator.add_instruction(AddImmediate(rr, R0, rval.clone()));
+                self.register_allocator.release_register(*loffs);
             }
             (Labelled(llabel, loffs), Labelled(rlabel, roffs)) => {
                 self.generator
-                    .add_instruction(LoadWordLabel(lr, loffs, llabel));
+                    .add_instruction(LoadWordLabel(lr, *loffs, llabel.clone()));
                 self.generator
-                    .add_instruction(LoadWordLabel(rr, roffs, rlabel));
-                self.register_allocator.release_register(loffs);
-                self.register_allocator.release_register(roffs);
+                    .add_instruction(LoadWordLabel(rr, *roffs, rlabel.clone()));
+                self.register_allocator.release_register(*loffs);
+                self.register_allocator.release_register(*roffs);
             }
+            (Labelled(llabel, loffs), Pointer(rlabel, roffs)) => {
+                self.generator
+                    .add_instruction(LoadWordLabel(lr, *loffs, llabel.clone()));
+                self.register_allocator.release_register(*loffs);
+
+                self.generator.add_instruction(LoadWordLabel(rr, R0, rlabel.clone())); // load address
+                self.generator.add_instruction(Add(rr, rr, *roffs)); // add offset
+                self.generator.add_instruction(LoadWord(rr, rr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*roffs);
+            },
             (Labelled(llabel, loffs), Register(_rr)) => {
                 self.generator
-                    .add_instruction(LoadWordLabel(lr, loffs, llabel));
-                self.register_allocator.release_register(loffs);
+                    .add_instruction(LoadWordLabel(lr, *loffs, llabel.clone()));
+                self.register_allocator.release_register(*loffs);
                 self.register_allocator.release_register(rr);
-                rr = _rr;
+                rr = *_rr;
             }
             (Register(_lr), Immediate(rval)) => {
                 self.register_allocator.release_register(lr);
-                lr = _lr;
+                lr = *_lr;
 
-                self.generator.add_instruction(AddImmediate(rr, R0, rval));
+                self.generator.add_instruction(AddImmediate(rr, R0, rval.clone()));
             }
             (Register(_lr), Labelled(rlabel, roffs)) => {
                 self.register_allocator.release_register(lr);
-                lr = _lr;
+                lr = *_lr;
                 self.generator
-                    .add_instruction(LoadWordLabel(rr, roffs, rlabel));
-                self.register_allocator.release_register(roffs);
+                    .add_instruction(LoadWordLabel(rr, *roffs, rlabel.clone()));
+                self.register_allocator.release_register(*roffs);
             }
             (Register(_lr), Register(_rr)) => {
                 self.register_allocator.release_register(lr);
-                lr = _lr;
+                lr = *_lr;
 
                 self.register_allocator.release_register(rr);
-                rr = _rr;
+                rr = *_rr;
+            }
+            (Register(_lr), Pointer(rlabel, roffs)) => {
+                self.register_allocator.release_register(lr);
+                lr = *_lr;
+
+                self.generator.add_instruction(LoadWordLabel(rr, R0, rlabel.clone())); // load address
+                self.generator.add_instruction(Add(rr, rr, *roffs)); // add offset
+                self.generator.add_instruction(LoadWord(rr, rr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*roffs);
+            }
+            (Pointer(llabel, loffs), Immediate(rval)) => {
+                self.generator.add_instruction(LoadWordLabel(lr, R0, llabel.clone())); // load address
+                self.generator.add_instruction(Add(lr, lr, *loffs)); // add offset
+                self.generator.add_instruction(LoadWord(lr, lr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*loffs);
+
+                self.generator.add_instruction(AddImmediate(rr, R0, rval.clone()));
+            }
+            (Pointer(llabel, loffs), Labelled(rlabel, roffs)) => {
+                self.generator.add_instruction(LoadWordLabel(lr, R0, llabel.clone())); // load address
+                self.generator.add_instruction(Add(lr, lr, *loffs)); // add offset
+                self.generator.add_instruction(LoadWord(lr, lr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*loffs);
+
+                self.generator.add_instruction(LoadWordLabel(rr, *roffs, rlabel.clone()));
+                self.register_allocator.release_register(*roffs);
+            }
+            (Pointer(llabel, loffs), Register(_rr)) => {
+                self.generator.add_instruction(LoadWordLabel(lr, R0, llabel.clone())); // load address
+                self.generator.add_instruction(Add(lr, lr, *loffs)); // add offset
+                self.generator.add_instruction(LoadWord(lr, lr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*loffs);
+
+                self.register_allocator.release_register(rr);
+                rr = *_rr;
+            }
+            (Pointer(llabel, loffs), Pointer(rlabel, roffs)) => {
+                self.generator.add_instruction(LoadWordLabel(lr, R0, llabel.clone())); // load address
+                self.generator.add_instruction(Add(lr, lr, *loffs)); // add offset
+                self.generator.add_instruction(LoadWord(lr, lr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*loffs);
+
+                self.generator.add_instruction(LoadWordLabel(rr, R0, rlabel.clone())); // load address
+                self.generator.add_instruction(Add(rr, rr, *roffs)); // add offset
+                self.generator.add_instruction(LoadWord(rr, rr, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*roffs);
             }
         }
 
-        match rel_expr.children()[0].val() {
+        match rel_expr.val() {
             Some(NodeVal::Internal(InternalNodeType::Equal)) => {
+                self.generator.add_comment(&format!("{:?} == {:?}", left, right));
                 self.generator.add_instruction(Equal(lr, lr, rr));
                 self.register_allocator.release_register(rr);
                 return ExprParseStorage::Register(lr);
             }
             Some(NodeVal::Internal(InternalNodeType::NotEqual)) => {
+                self.generator.add_comment(&format!("{:?} <> {:?}", left, right));
                 self.generator.add_instruction(NotEqual(lr, lr, rr));
                 self.register_allocator.release_register(rr);
                 return ExprParseStorage::Register(lr);
             }
             Some(NodeVal::Internal(InternalNodeType::LessThan)) => {
+                self.generator.add_comment(&format!("{:?} < {:?}", left, right));
                 self.generator.add_instruction(Less(lr, lr, rr));
                 self.register_allocator.release_register(rr);
                 return ExprParseStorage::Register(lr);
             }
             Some(NodeVal::Internal(InternalNodeType::LessEqualThan)) => {
+                self.generator.add_comment(&format!("{:?} <= {:?}", left, right));
                 self.generator.add_instruction(LessEqual(lr, lr, rr));
                 self.register_allocator.release_register(rr);
                 return ExprParseStorage::Register(lr);
             }
             Some(NodeVal::Internal(InternalNodeType::GreaterThan)) => {
+                self.generator.add_comment(&format!("{:?} > {:?}", left, right));
                 self.generator.add_instruction(Greater(lr, lr, rr));
                 self.register_allocator.release_register(rr);
                 return ExprParseStorage::Register(lr);
             }
             Some(NodeVal::Internal(InternalNodeType::GreaterEqualThan)) => {
+                self.generator.add_comment(&format!("{:?} >= {:?}", left, right));
                 self.generator.add_instruction(GreaterEqual(lr, lr, rr));
                 self.register_allocator.release_register(rr);
                 return ExprParseStorage::Register(lr);
@@ -875,21 +1066,110 @@ impl MoonGenerator {
         fe: &FunctionEntry,
         symbols: &SymbolTable,
     ) -> ExprParseStorage {
+        self.generator.add_comment("Ternary Operator");
         let (cond_label, then_label, else_label) = self.label_allocator.next_if_labels();
         let temp_label = self.label_allocator.next_temp_label();
+        self.generator.add_tagged_resource(&temp_label, 4);
+
+        let cond_reg = self.register_allocator.next_free_register();
+        self.generator.add_instruction(Substract(cond_reg, cond_reg, cond_reg));
 
         self.generator.buffer_label(&cond_label);
         let cond_res = self.generate_expression_code(&ternary_op.children()[0], fe, symbols);
-        //todo check cond
+
+        match &cond_res
+        {
+            Immediate(val) => {
+                self.generator.add_instruction(AddImmediate(cond_reg, R0, val.clone()));
+            }
+            Labelled(label, offset) => {
+                self.generator.add_instruction(LoadWordLabel(cond_reg, *offset, label.to_string()));
+                self.register_allocator.release_register(*offset);
+            }
+            Register(r) => {
+                self.generator.add_instruction(Add(cond_reg, R0, *r));
+                self.register_allocator.release_register(*r);
+            }
+            Pointer(label, offs) => {
+                self.generator.add_instruction(LoadWordLabel(cond_reg, R0, label.clone())); // load address
+                self.generator.add_instruction(Add(cond_reg, cond_reg, *offs)); // add offset
+                self.generator.add_instruction(LoadWord(cond_reg, cond_reg, 0)); // load actual value at memory location
+                self.register_allocator.release_register(*offs);
+            }
+        }
+        self.generator.add_instruction(BranchIfZeroLabel(cond_reg, else_label.clone()));
+        self.register_allocator.release_register(cond_reg);
 
         self.generator.buffer_label(&then_label);
         let then_res = self.generate_expression_code(&ternary_op.children()[1], fe, symbols);
-        //todo store then res into temp
+        match &then_res
+        {
+            Immediate(imm) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                self.generator.add_instruction(AddImmediate(temp_reg, temp_reg, imm.clone()));
+                self.generator.add_instruction(StoreWordLabel(temp_reg, R0, temp_label.clone()));
+                self.register_allocator.release_register(temp_reg);
+            }
+            Labelled(label, offs) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                self.generator.add_instruction(LoadWordLabel(temp_reg, *offs, label.clone()));
+                self.generator.add_instruction(StoreWordLabel(temp_reg, R0, temp_label.clone()));
+                self.register_allocator.release_register(*offs);
+                self.register_allocator.release_register(temp_reg);
+            }
+            Register(r) => {
+                self.generator.add_instruction(StoreWordLabel(*r, R0, temp_label.clone()));
+                self.register_allocator.release_register(*r);
+            }
+            Pointer(label, offs) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                self.generator.add_instruction(LoadWordLabel(temp_reg, R0, label.clone())); // load address
+                self.generator.add_instruction(Add(temp_reg, temp_reg, *offs)); // add offset
+                self.generator.add_instruction(LoadWord(temp_reg, temp_reg, 0)); // load actual value at memory location
+                self.generator.add_instruction(StoreWordLabel(temp_reg, R0, temp_label.clone()));
+                self.register_allocator.release_register(*offs);
+                self.register_allocator.release_register(temp_reg);
+            }
+        }
 
         self.generator.buffer_label(&else_label);
         let else_res = self.generate_expression_code(&ternary_op.children()[2], fe, symbols);
-        // todo store else res into temp
-
+        match &else_res
+        {
+            Immediate(imm) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                self.generator.add_instruction(AddImmediate(temp_reg, temp_reg, imm.clone()));
+                self.generator.add_instruction(StoreWordLabel(temp_reg, R0, temp_label.clone()));
+                self.register_allocator.release_register(temp_reg);
+            }
+            Labelled(label, offs) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                self.generator.add_instruction(LoadWordLabel(temp_reg, *offs, label.clone()));
+                self.generator.add_instruction(StoreWordLabel(temp_reg, R0, temp_label.clone()));
+                self.register_allocator.release_register(*offs);
+                self.register_allocator.release_register(temp_reg);
+            }
+            Register(r) => {
+                self.generator.add_instruction(StoreWordLabel(*r, R0, temp_label.clone()));
+                self.register_allocator.release_register(*r);
+            }
+            Pointer(label, offs) => {
+                let temp_reg = self.register_allocator.next_free_register();
+                self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                self.generator.add_instruction(LoadWordLabel(temp_reg, R0, label.clone())); // load address
+                self.generator.add_instruction(Add(temp_reg, temp_reg, *offs)); // add offset
+                self.generator.add_instruction(LoadWord(temp_reg, temp_reg, 0)); // load actual value at memory location
+                self.generator.add_instruction(StoreWordLabel(temp_reg, R0, temp_label.clone()));
+                self.register_allocator.release_register(*offs);
+                self.register_allocator.release_register(temp_reg);
+            }
+        }
+        self.generator.add_comment(&format!(" ^^^ ?[ {:?} : {:?} : {:?} ] ^^^", cond_res, then_res, else_res));
         return Labelled(temp_label, R0);
     }
 
@@ -901,10 +1181,9 @@ impl MoonGenerator {
     ) -> ExprParseStorage {
         let mut postfix: Vec<&Node> = Vec::new();
         generate_arith_expr_postfix(arith_expr, &mut postfix);
-        log::warn!("{:?}", postfix);
         let mut eval_stack: Vec<ExprParseStorage> = Vec::new();
-        for postfix_token in postfix {
-            if is_arith_operator(postfix_token) {
+        for postfix_node in postfix {
+            if is_arith_operator(postfix_node) {
                 let op2 = eval_stack.pop().unwrap();
                 let op1 = eval_stack.pop().unwrap();
                 let temp = self.label_allocator.next_temp_label();
@@ -932,6 +1211,16 @@ impl MoonGenerator {
                             .add_instruction(AddImmediate(op2_reg, R0, rimm));
                         self.register_allocator.release_register(loffs);
                     }
+                    (Labelled(llabel, loffs), Pointer(rlabel, roffs)) => {
+                        self.generator.add_instruction(LoadWordLabel(op1_reg, loffs, llabel));
+
+                        self.generator.add_instruction(LoadWordLabel(op2_reg, R0, rlabel));
+                        self.generator.add_instruction(Add(op2_reg, op2_reg, roffs));
+                        self.generator.add_instruction(LoadWord(op2_reg, op2_reg, 0));
+
+                        self.register_allocator.release_register(loffs);
+                        self.register_allocator.release_register(roffs);
+                    }
                     (Immediate(limm), Labelled(rlabel, roffs)) => {
                         self.generator
                             .add_instruction(AddImmediate(op1_reg, R0, limm));
@@ -945,9 +1234,52 @@ impl MoonGenerator {
                         self.generator
                             .add_instruction(AddImmediate(op2_reg, R0, rimm));
                     }
-                    _ => panic!("whoops"),
+                    (Immediate(limm), Pointer(rlabel, roffs)) => {
+                        self.generator.add_instruction(AddImmediate(op1_reg, R0, limm));
+
+                        self.generator.add_instruction(LoadWordLabel(op2_reg, R0, rlabel));
+                        self.generator.add_instruction(Add(op2_reg, op2_reg, roffs));
+                        self.generator.add_instruction(LoadWord(op2_reg, op2_reg, 0));
+
+                        self.register_allocator.release_register(roffs);
+                    },
+                    (Pointer(llabel, loffs), Pointer(rlabel, roffs)) =>
+                    {
+                        self.generator.add_instruction(LoadWordLabel(op1_reg, R0, llabel));
+                        self.generator.add_instruction(Add(op1_reg, op1_reg, loffs));
+                        self.generator.add_instruction(LoadWord(op1_reg, op1_reg, 0));
+
+                        self.generator.add_instruction(LoadWordLabel(op2_reg, R0, rlabel));
+                        self.generator.add_instruction(Add(op2_reg, op2_reg, roffs));
+                        self.generator.add_instruction(LoadWord(op2_reg, op2_reg, 0));
+
+                        self.register_allocator.release_register(loffs);
+                        self.register_allocator.release_register(roffs);
+                    },
+                    (Pointer(llabel, loffs), Labelled(rlabel, roffs)) =>
+                    {
+                        self.generator.add_instruction(LoadWordLabel(op1_reg, R0, llabel));
+                        self.generator.add_instruction(Add(op1_reg, op1_reg, loffs));
+                        self.generator.add_instruction(LoadWord(op1_reg, op1_reg, 0));
+
+                        self.generator.add_instruction(LoadWordLabel(op2_reg, roffs, rlabel));
+
+                        self.register_allocator.release_register(loffs);
+                        self.register_allocator.release_register(roffs);
+                    },
+                    (Pointer(llabel, loffs), Immediate(rimm)) =>
+                    {
+                        self.generator.add_instruction(LoadWordLabel(op1_reg, R0, llabel));
+                        self.generator.add_instruction(Add(op1_reg, op1_reg, loffs));
+                        self.generator.add_instruction(LoadWord(op1_reg, op1_reg, 0));
+
+                        self.generator.add_instruction(AddImmediate(op2_reg, R0, rimm));
+
+                        self.register_allocator.release_register(loffs);
+                    },
+                    _ => panic!()
                 }
-                match postfix_token.val() {
+                match postfix_node.val() {
                     Some(NodeVal::Internal(internal)) => match internal {
                         InternalNodeType::Add => self
                             .generator
@@ -971,27 +1303,27 @@ impl MoonGenerator {
                     },
                     _ => panic!(),
                 }
-                self.generator
-                    .add_instruction(StoreWordLabel(op1_reg, R0, temp.clone()));
+                self.generator.add_instruction(StoreWordLabel(op1_reg, R0, temp.clone()));
                 eval_stack.push(ExprParseStorage::Labelled(temp, R0));
                 self.register_allocator.release_register(op1_reg);
                 self.register_allocator.release_register(op2_reg);
-            } else if is_arith_operand(postfix_token) {
-                match postfix_token.val() {
+            } else if is_arith_operand(postfix_node) {
+                match postfix_node.val() {
                     Some(NodeVal::Internal(InternalNodeType::SignedFactor)) => {
-                        if let Some(NodeVal::Leaf(sign_token)) = postfix_token.children()[0].val() {
+                        if let Some(NodeVal::Leaf(sign_token)) = postfix_node.children()[0].val() {
                             let sign = sign_token.lexeme();
-                            match postfix_token.children()[1].val() {
+                            match postfix_node.children()[1].val() {
                                 Some(NodeVal::Leaf(val_token)) => {
-                                    eval_stack.push(Immediate(format!(
-                                        "{}{}",
-                                        sign,
-                                        val_token.lexeme()
-                                    )));
+                                    match val_token.token_type()
+                                    {
+                                        TokenType::IntegerLit => { eval_stack.push(Immediate(format!("{}{}", sign, val_token.lexeme()))); },
+                                        TokenType::FloatLit => { eval_stack.push(ExprParseStorage::Immediate(format!("{}{}", sign, val_token.lexeme().parse::<f32>().unwrap().to_bits().to_string()))); }, //FIXME
+                                        _ => panic!()
+                                    }
                                 }
                                 Some(NodeVal::Internal(InternalNodeType::ArithExpr)) => {
                                     eval_stack.push(self.generate_arith_expr_code(
-                                        &postfix_token.children()[1],
+                                        &postfix_node.children()[1],
                                         function_entry,
                                         symbols,
                                     ));
@@ -1004,30 +1336,37 @@ impl MoonGenerator {
                     }
                     Some(NodeVal::Internal(InternalNodeType::DotOp)) => {
                         eval_stack.push(self.generate_dot_operator_code(
-                            postfix_token,
+                            postfix_node,
                             function_entry,
                             symbols,
                         ));
                     }
                     Some(NodeVal::Internal(InternalNodeType::TernaryOperation)) => {
                         eval_stack.push(self.generate_ternary_operation_code(
-                            postfix_token,
+                            postfix_node,
                             function_entry,
                             symbols,
                         ));
                     }
                     Some(NodeVal::Leaf(token)) => {
-                        //todo we have to check if it's indexing into the variable, or it's a free function call
                         match token.token_type() {
                             TokenType::Id => {
                                 if let Some(Scope::Variable(ve)) =
                                     function_entry.table().find_scope_by_ident(token.lexeme())
                                 {
-                                    let offset: Register = match ve.var_type() {
-                                        Type::Integer => R0,
-                                        Type::Float => R0,
-                                        Type::IntegerArray(dim) | Type::FloatArray(dim) => {
-                                            todo!()
+                                    let operand: ExprParseStorage = match ve.var_type()
+                                    {
+                                        Type::Integer
+                                        | Type::Float => ExprParseStorage::Labelled(format!("var_{}_{}", function_entry.ident(), ve.ident()), R0),
+                                        Type::IntegerArray(_) | Type::FloatArray(_) => {
+                                            let idx_res = self.generate_array_indexing_code(ve.var_type(), postfix_node, function_entry, symbols);
+                                            match idx_res
+                                            {
+                                                Register(r) => {
+                                                    ExprParseStorage::Labelled(format!("var_{}_{}", function_entry.ident(), ve.ident()), r)
+                                                }
+                                                _ => panic!()
+                                            }
                                         }
                                         Type::String
                                         | Type::StringArray(_)
@@ -1040,17 +1379,23 @@ impl MoonGenerator {
                                         _ => panic!(),
                                     };
 
-                                    eval_stack.push(ExprParseStorage::Labelled(
-                                        format!("var_{}_{}", function_entry.ident(), ve.ident()),
-                                        offset,
-                                    ));
+                                    eval_stack.push(operand);
                                 } else if let Some(Scope::FunctionParameter(pe)) =
                                     function_entry.table().find_scope_by_ident(token.lexeme())
                                 {
-                                    let offset: Register = match pe.param_type() {
-                                        Type::Integer | Type::Float => R0,
-                                        Type::IntegerArray(dim) | Type::FloatArray(dim) => {
-                                            todo!()
+                                    let operand: ExprParseStorage = match pe.param_type()
+                                    {
+                                        Type::Integer
+                                        | Type::Float => ExprParseStorage::Labelled(format!("param_{}_{}", function_entry.ident(), pe.ident()), R0),
+                                        Type::IntegerArray(_) | Type::FloatArray(_) => {
+                                            let idx_res = self.generate_array_indexing_code(pe.param_type(), postfix_node, function_entry, symbols);
+                                            match idx_res
+                                            {
+                                                Register(r) => {
+                                                    ExprParseStorage::Pointer(format!("param_{}_{}", function_entry.ident(), pe.ident()), r)
+                                                }
+                                                _ => panic!()
+                                            }
                                         }
                                         Type::String
                                         | Type::StringArray(_)
@@ -1063,15 +1408,12 @@ impl MoonGenerator {
                                         _ => panic!(),
                                     };
 
-                                    eval_stack.push(ExprParseStorage::Labelled(
-                                        format!("param_{}_{}", function_entry.ident(), pe.ident()),
-                                        offset,
-                                    ));
+                                    eval_stack.push(operand);
                                 } else if let Some(Scope::Function(_)) =
                                     symbols.find_scope_by_ident(token.lexeme())
                                 {
                                     eval_stack.push(self.generate_function_call_code(
-                                        postfix_token,
+                                        postfix_node,
                                         function_entry,
                                         symbols,
                                     ));
@@ -1086,7 +1428,7 @@ impl MoonGenerator {
                             TokenType::FloatLit => {
                                 log::warn!("FLOATING POINTS WILL NOT WORK PROPERLY");
                                 eval_stack
-                                    .push(ExprParseStorage::Immediate(token.lexeme().to_string()));
+                                    .push(ExprParseStorage::Immediate(token.lexeme().parse::<f32>().unwrap().to_bits().to_string())); //FIXME
                             }
                             TokenType::StringLit => {
                                 unimplemented!("String operations are not implemented.");
@@ -1103,6 +1445,71 @@ impl MoonGenerator {
         }
 
         return eval_stack.pop().unwrap();
+    }
+
+    fn generate_array_indexing_code(&mut self, var_type: &Type, var_node: &Node, fe: &FunctionEntry, symbols: &SymbolTable) -> ExprParseStorage {
+        self.generator.add_comment("`~ Computing array indices ~");
+        let idx_reg = self.register_allocator.next_free_register();
+        self.generator.add_instruction(Substract(idx_reg, idx_reg, idx_reg));
+        match var_type
+        {
+            Type::IntegerArray(dim)
+            | Type::FloatArray(dim) => {
+                // step is 4 bytes
+                for (idx, indice_node) in var_node.children().iter().enumerate()
+                {
+                    let col = if idx + 1 >= dim.len() { 1 } else { dim[idx + 1] };
+                    match self.generate_arith_expr_code(&indice_node.children()[0], fe, symbols)
+                    {
+                        Immediate(imm) => {
+                            let temp_reg = self.register_allocator.next_free_register();
+                            self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                            self.generator.add_instruction(AddImmediate(temp_reg, R0, imm)); // indice
+                            self.generator.add_instruction(MultiplyImmediate(temp_reg, temp_reg, 4)); // sizeof
+                            self.generator.add_instruction(MultiplyImmediate(temp_reg, temp_reg, col as i16)); // col
+                            self.generator.add_instruction(Add(idx_reg, idx_reg, temp_reg));
+                            self.register_allocator.release_register(temp_reg);
+                        }
+                        Labelled(label, offs) => {
+                            let temp_reg = self.register_allocator.next_free_register();
+                            self.generator.add_instruction(LoadWordLabel(temp_reg, offs, label)); // indice
+                            self.generator.add_instruction(MultiplyImmediate(temp_reg, temp_reg, 4)); // sizeof
+                            self.generator.add_instruction(MultiplyImmediate(temp_reg, temp_reg, col as i16)); // col
+                            self.generator.add_instruction(Add(idx_reg, idx_reg, temp_reg));
+                            self.register_allocator.release_register(offs);
+                            self.register_allocator.release_register(temp_reg);
+                        }
+                        Register(r) => {
+                            self.generator.add_instruction(MultiplyImmediate(r, r, 4)); // sizeof
+                            self.generator.add_instruction(MultiplyImmediate(r, r, col as i16)); // col
+                            self.generator.add_instruction(Add(idx_reg, idx_reg, r));
+                            self.register_allocator.release_register(r);
+                        }
+                        Pointer(label, offs) => {
+                            let temp_reg = self.register_allocator.next_free_register();
+                            self.generator.add_instruction(Substract(temp_reg, temp_reg, temp_reg));
+                            self.generator.add_instruction(LoadWordLabel(temp_reg, R0, label)); // load address
+                            self.generator.add_instruction(Add(temp_reg, temp_reg, offs)); // add offset
+                            self.generator.add_instruction(LoadWord(temp_reg, temp_reg, 0)); // load actual value at memory location
+
+                            self.generator.add_instruction(MultiplyImmediate(temp_reg, temp_reg, 4)); // sizeof
+                            self.generator.add_instruction(MultiplyImmediate(temp_reg, temp_reg, col as i16)); // col
+                            self.generator.add_instruction(Add(idx_reg, idx_reg, temp_reg));
+
+                            self.register_allocator.release_register(offs);
+                            self.register_allocator.release_register(temp_reg);
+                        }
+                    }
+                }
+            }
+            Type::StringArray(_)
+            | Type::CustomArray(_, _) => {
+                unimplemented!("Class and string array indexing not implemented")
+            }
+            _ => panic!()
+        }
+
+        Register(idx_reg)
     }
 
     /// When jumping to a function, we store the return address from R15 into the next slot of the fn ptr stack
@@ -1122,6 +1529,7 @@ impl MoonGenerator {
     }
 }
 
+#[derive(Debug)]
 pub enum ExprParseStorage {
     /// An immediate value, like an integer or a float
     Immediate(String),
@@ -1129,4 +1537,6 @@ pub enum ExprParseStorage {
     Labelled(String, Register),
     /// A register
     Register(Register),
+    /// Content at label is a memory location
+    Pointer(String, Register),
 }

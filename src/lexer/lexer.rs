@@ -168,7 +168,6 @@ impl LexerAnalyzer for MyLexerAnalyzer {
                 self.line_num,
             ))
         };
-        trace!("Found: {:?}", next_token);
         return next_token;
     }
 
