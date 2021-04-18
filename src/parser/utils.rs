@@ -139,7 +139,7 @@ pub fn serialize_tree_to_file(mut tree: SemanticStack, file_name: &str) -> io::R
             .as_bytes(),
         )?;
 
-        for unlabelled_child in current_root.node.children.drain(..) {
+        for unlabelled_child in current_root.node.children_mut().drain(..) {
             let child_suffix = node_label_count
                 .entry(unlabelled_child.to_string())
                 .or_insert(0);

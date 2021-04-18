@@ -11,7 +11,7 @@ use std::fmt::{Debug, Display, Formatter};
 #[derive(Clone)]
 pub struct Node {
     val: Option<NodeVal>,
-    pub(crate) children: Vec<Node>,
+    children: Vec<Node>,
 }
 
 impl Node {
@@ -46,6 +46,14 @@ impl Node {
             Some(nodeval) => Some(nodeval),
         }
     }
+
+    pub fn children(&self) -> &Vec<Node> {
+        &self.children
+    }
+
+    pub fn children_mut(&mut self) -> &mut Vec<Node> {
+        &mut self.children
+    }
 }
 
 impl Debug for Node {
@@ -63,7 +71,7 @@ impl Display for Node {
             Some(node_val) => match node_val {
                 NodeVal::Leaf(token) => {
                     if token.token_type() == StringLit {
-                        write!(f, "Token: {}", "String Lit") //fixme
+                        write!(f, "Token: {}", "String Lit")
                     } else {
                         write!(f, "{}", token)
                     }
@@ -152,6 +160,14 @@ impl SemanticStack {
 
         debug!("Adding {:?} as a child of {:?}", child.val, top.val);
         top.children.push(child);
+    }
+
+    pub fn into_ast_root(mut self) -> Result<Node, ()> {
+        if self.0.len() == 0 || self.0.len() > 1 {
+            return Err(());
+        } else {
+            return Ok(self.0.pop().unwrap());
+        }
     }
 }
 
@@ -243,6 +259,7 @@ pub enum InternalNodeType {
     Variable,
     Term,
     StatBlock,
+    DotOp,
 }
 
 impl Display for InternalNodeType {

@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["parse","Parses a token stream and produces either a DerivationTable and an AST or an error"]]});

@@ -1,11 +1,9 @@
-use crate::lexer::token::{Token, TokenType};
-use crate::parser::ast::{InternalNodeType, Node, NodeVal};
+use crate::parser::ast::{Node, NodeVal};
 use crate::semantics::checking::WarningType::{OverloadWarning, ShadowedMemberWarning};
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
-use crate::semantics::symbol_table::Type::{Float, Integer, IntegerArray};
 use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, Scope, SymbolTable, Type};
-use crate::semantics::utils::{get_ancestors_for_class, map_token_to_type};
-use std::collections::HashMap;
+use crate::semantics::utils::get_ancestors_for_class;
+use crate::semantics::validation::validate_statement;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -23,6 +21,8 @@ pub enum SemanticError {
     InvalidParameters(String),
     TypeMistmatch(String),
     NotCallable(String),
+    RecursionNotSupported(String),
+    NotClassType(String),
     //MultiplyDeclVariable(String),
     //MultiplyDeclMember(String),
     //MultiplyDeclClass(String),
@@ -60,14 +60,83 @@ pub(crate) fn report_symbol_errors(global: &SymbolTable) -> Vec<SemanticError> {
 
 #[allow(dead_code)]
 pub fn report_semantic_errors(root: &Node, global: &SymbolTable) -> Vec<SemanticError> {
-    let errors: Vec<SemanticError> = Vec::new();
+    let mut errors: Vec<SemanticError> = Vec::new();
 
     // Type check expressions (member access, arith expr, rel expr, assign, statements)
     // Check visibility when accessing class members
     // Check func calls, array indexing
     // Check referenced ID for existence
 
-    log::error!("report_semantic_errors : NOT IMPLEMENTED");
+    log::info!("Checking semantic errors in function bodies");
+    log::warn!("WARNING: IF ANY FUNCTIONS ARE OVERLOADED IT WILL CAUSE ISSUES");
+
+    // function definitions
+    for function_definition in root.children()[1].children() {
+        match (
+            function_definition.children()[0].val(),
+            function_definition.children()[1].val(),
+        ) {
+            (Some(NodeVal::Leaf(token1)), Some(NodeVal::Leaf(token2))) => {
+                // member function
+                if let Some(Scope::Class(ce)) = global.find_scope_by_ident(token1.lexeme()) {
+                    if let Some(Scope::Function(fe)) =
+                        ce.table().find_scope_by_ident(token2.lexeme())
+                    {
+                        for statement in function_definition.children()[4].children()[1].children()
+                        {
+                            let statement_res = validate_statement(statement, fe, global);
+                            if statement_res.is_err() {
+                                errors.push(statement_res.unwrap_err());
+                            }
+                        }
+                    } else {
+                        errors.push(SemanticError::FunctionNotFound(format!(
+                            "No member function {} found in {}: line {}",
+                            token2.lexeme(),
+                            ce.ident(),
+                            token2.line_num()
+                        )));
+                    }
+                } else {
+                    errors.push(SemanticError::UndeclaredClass(format!(
+                        "Undeclared class {}: line {}",
+                        token1.lexeme(),
+                        token1.line_num()
+                    )));
+                }
+            }
+            (Some(NodeVal::Leaf(token1)), None) => {
+                // free
+                if let Some(Scope::Function(fe)) = global.find_scope_by_ident(token1.lexeme()) {
+                    for statement in function_definition.children()[4].children()[1].children() {
+                        let statement_res = validate_statement(statement, fe, global);
+                        if statement_res.is_err() {
+                            errors.push(statement_res.unwrap_err());
+                        }
+                    }
+                } else {
+                    errors.push(SemanticError::FunctionNotFound(format!(
+                        "No function {} found: line {}",
+                        token1.lexeme(),
+                        token1.line_num()
+                    )));
+                }
+            }
+            _ => panic!(),
+        }
+    }
+
+    if let Some(Scope::Function(main)) = global.find_scope_by_ident("main") {
+        for statement in root.children()[2].children()[0].children()[1].children() {
+            let statement_res = validate_statement(statement, main, global);
+            if statement_res.is_err() {
+                errors.push(statement_res.unwrap_err());
+            }
+        }
+    } else {
+        panic!();
+    }
+
     errors
 }
 
@@ -300,12 +369,12 @@ pub fn check_circular_inheritance(class: &ClassEntry, global: &SymbolTable) -> V
 
 #[allow(dead_code)]
 pub(crate) fn check_circular_data_member_dependencies(
-    class: &ClassEntry,
-    global: &SymbolTable,
+    _class: &ClassEntry,
+    _global: &SymbolTable,
 ) -> Vec<SemanticError> {
-    let mut errors: Vec<SemanticError> = Vec::new();
+    let errors: Vec<SemanticError> = Vec::new();
 
-    log::error!("check_circular_data_member_dependencies : NOT IMPLEMENTED"); //todo
+    log::error!("check_circular_data_member_dependencies : NOT IMPLEMENTED");
 
     errors
 }
@@ -419,52 +488,4 @@ fn check_shadowed_members_priv(class: &ClassEntry, ancestor: &ClassEntry) -> Vec
     }
 
     warnings
-}
-
-#[allow(dead_code)]
-pub(crate) fn check_func_def_semantics(def: &Node, global: &SymbolTable) -> Vec<SemanticError> {
-    assert_eq!(
-        def.val(),
-        Some(&NodeVal::Internal(InternalNodeType::FuncDef))
-    );
-    let mut errors: Vec<SemanticError> = Vec::new();
-
-    let (func_decl, opt_class) = match (&def.children[0].val(), &def.children[1].val()) {
-        (Some(NodeVal::Leaf(t1)), Some(NodeVal::Leaf(t2))) => {
-            let class = match global.find_scope_by_ident(t1.lexeme()) {
-                Some(Class(e)) => e,
-                _ => {
-                    return errors;
-                }
-            };
-            match class.table().find_scope_by_ident(t2.lexeme()) {
-                Some(Function(e)) => (e, Some(class)),
-                _ => {
-                    return errors;
-                }
-            }
-        }
-        (Some(NodeVal::Leaf(t1)), None) => match global.find_scope_by_ident(t1.lexeme()) {
-            Some(Function(e)) => (e, None),
-            _ => {
-                return errors;
-            }
-        },
-        _ => {
-            panic!()
-        }
-    };
-
-    /*if opt_class.is_some() {
-        errors.append(&mut check_member_func_def_semantics( //todo
-            def,
-            func_decl,
-            opt_class.unwrap(),
-            global,
-        ));
-    } else {
-        errors.append(&mut check_free_func_def_semantics(def, func_decl, global)); //todo
-    }*/
-
-    errors
 }

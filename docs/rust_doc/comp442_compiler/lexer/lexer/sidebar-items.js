@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["MyLexerAnalyzer","My Implementation of a Lexer Analyzer"]],"trait":[["LexerAnalyzer","Interface for a Lexer Analyzer"]]});

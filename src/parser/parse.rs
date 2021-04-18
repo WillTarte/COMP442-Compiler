@@ -38,12 +38,13 @@ where
 
     while *parsing_stack.last().unwrap() != STOP {
         let top_symbol = parsing_stack.last().unwrap().clone();
-        if next_token.is_some()
+        while next_token.is_some()
             && (next_token.as_ref().unwrap().token_type() == LineComment
                 || next_token.as_ref().unwrap().token_type() == MultilineComment)
         {
             next_token = token_stream.next();
         }
+
         trace!("Top Symbol: {:?}", top_symbol);
         trace!("Lookahead: {:?}", next_token);
         match top_symbol {
@@ -170,7 +171,14 @@ where
         };
     }
 
-    return if next_token.is_some() || parsing_stack.len() > 1 || error {
+    return if next_token.is_some() {
+        log::error!("Next Token is some");
+        Err(())
+    } else if parsing_stack.len() > 1 {
+        log::error!("Parsing stack is not empty");
+        Err(())
+    } else if error {
+        log::error!("Parsing error");
         Err(())
     } else {
         Ok((derivation_table, semantic_stack))

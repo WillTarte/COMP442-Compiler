@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["comp442_compiler"] = [{"text":"impl&lt;'a, A, B&gt; Borrow&lt;dyn KeyPair&lt;A, B&gt; + 'a&gt; for (A, B) <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;A: Eq + Hash + 'a,<br>&nbsp;&nbsp;&nbsp;&nbsp;B: Eq + Hash + 'a,&nbsp;</span>","synthetic":false,"types":[]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["ast","Elements related to an Abstract Syntax Tree"],["data","First & Follow sets + Parsing table"],["grammar","Grammar elements"],["parse","Parsing algorithm"],["utils","Utilities for the parsing"]]});

@@ -352,7 +352,7 @@ impl Token {
     }
 
     /// Returns this token's lexeme
-    pub(crate) fn lexeme(&self) -> &str {
+    pub fn lexeme(&self) -> &str {
         return self.token_fragment.lexeme.as_ref();
     }
 

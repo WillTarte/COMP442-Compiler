@@ -1,8 +1,6 @@
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::checking::{report_semantic_errors, report_symbol_errors, SemanticError};
-use crate::semantics::symbol_table::Type::{
-    CustomArray, FloatArray, Integer, IntegerArray, StringArray,
-};
+use crate::semantics::symbol_table::Type::{CustomArray, FloatArray, IntegerArray, StringArray};
 use crate::semantics::utils::{
     generate_class_entries, generate_function_entries, map_main_to_func_entry,
     merge_member_function_tables,
@@ -62,19 +60,6 @@ impl SymbolTable {
 
     pub fn merge(&mut self, mut other: SymbolTable) {
         self.0.append(other.scopes_mut());
-        /*let mut errors: Vec<SemanticError> = Vec::new();
-        for other_scope in other.scopes_mut().drain(..)
-        {
-            for scope in self.scopes().iter()
-            {
-                if scope.ident() == other_scope.ident()
-                {
-                    errors.push(SemanticError::MultipleDeclIdent(format!("Multiply declared ident {}", other_scope.ident())));
-                }
-            }
-            self.scopes_mut().push(other_scope);
-        }
-        errors*/
     }
 
     pub fn find_scope_by_ident(&self, ident: &str) -> Option<&Scope> {
@@ -113,6 +98,16 @@ impl SymbolTable {
         None
     }
 
+    pub fn find_all_scopes_by_ident(&self, ident: &str) -> Vec<&Scope> {
+        let mut ret: Vec<&Scope> = Vec::new();
+        for scope in self.scopes() {
+            if scope.ident() == ident {
+                ret.push(scope);
+            }
+        }
+        ret
+    }
+
     pub fn scopes(&self) -> &Vec<Scope> {
         &self.0
     }
@@ -125,18 +120,18 @@ impl SymbolTable {
 #[derive(Clone, Eq, PartialEq)]
 pub enum Type {
     Integer,
-    IntegerArray(Vec<usize>),
+    IntegerArray(Vec<u32>),
     Float,
-    FloatArray(Vec<usize>),
+    FloatArray(Vec<u32>),
     String,
-    StringArray(Vec<usize>),
+    StringArray(Vec<u32>),
     Custom(String),
-    CustomArray(String, Vec<usize>),
+    CustomArray(String, Vec<u32>),
     Void,
 }
 
 impl Type {
-    pub fn to_array_type(&self, array_dim: Vec<usize>) -> Self {
+    pub fn to_array_type(&self, array_dim: Vec<u32>) -> Self {
         match self {
             Type::Integer => IntegerArray(array_dim),
             Type::Float => FloatArray(array_dim),
@@ -146,7 +141,7 @@ impl Type {
             Type::FloatArray(_) => FloatArray(array_dim),
             Type::StringArray(_) => StringArray(array_dim),
             Type::CustomArray(s, _) => CustomArray(s.clone(), array_dim),
-            _ => { self.clone() }
+            _ => self.clone(),
         }
     }
 
@@ -459,18 +454,18 @@ impl ParameterEntry {
 #[allow(dead_code)]
 pub fn generate_symbol_table(root: &Node) -> (SymbolTable, Vec<SemanticError>) {
     assert_eq!(root.val(), Some(&NodeVal::Internal(InternalNodeType::Root)));
-    assert_eq!(root.children.len(), 3); // class declarations, func definitions, main
+    assert_eq!(root.children().len(), 3); // class declarations, func definitions, main
 
     log::info!("Generating Global symbol table");
 
     let mut global_table = SymbolTable::new();
 
-    let class_entries: Vec<ClassEntry> = generate_class_entries(&root.children[0]);
+    let class_entries: Vec<ClassEntry> = generate_class_entries(&root.children()[0]);
 
     let (free_function_entries, mut member_function_entries) =
-        generate_function_entries(&root.children[1]);
+        generate_function_entries(&root.children()[1]);
 
-    let main_entry: FunctionEntry = map_main_to_func_entry(&root.children[2]);
+    let main_entry: FunctionEntry = map_main_to_func_entry(&root.children()[2]);
 
     global_table.add_scopes(class_entries.into_iter().map(Scope::Class).collect());
     global_table.add_scopes(

@@ -1,0 +1,22 @@
+main {
+    var
+    {
+        integer a;
+        integer b;
+    }
+
+    a = 5;
+    b = 10;
+
+    if(a > 4)
+    then
+    {
+        a = 0;
+    }
+    else
+    {
+        a = 4;
+    };
+
+    b = ?[ b == 10 : 1 : 0];
+}
