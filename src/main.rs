@@ -1,7 +1,7 @@
-use crate::codegen::generator::{CodeGenOutput, MoonGenerator};
+use crate::codegen::generator::MoonGenerator;
+use crate::codegen::utils::write_moon_code_to_file;
 use crate::lexer::lexer::MyLexerAnalyzer;
 use crate::lexer::utils::lexer_serialize::serialize_lexer_to_file;
-use crate::parser::ast::NodeVal;
 use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
 use crate::semantics::checking::{SemanticError, WarningType};
@@ -59,12 +59,6 @@ fn main() {
                     &opt.file.file_name().unwrap().to_str().unwrap()
                 );
 
-                //let mut v: Vec<NodeVal> = Vec::new();
-                //let root = ast.into_ast_root().unwrap();
-                //post_order_traversal(&root.children()[2].children()[0].children()[1].children()[0].children()[0].children()[1], &mut v);
-
-                // log::info!("{:?}", v);
-
                 info!("Writing derivation table and abstract syntax tree to file");
                 serialize_derivation_table_to_file(table, file_name)
                     .expect("Failed to serialize derivation table");
@@ -76,7 +70,7 @@ fn main() {
         }
     } else if opt.symbols {
         match parse(my_lexer) {
-            Ok((_, mut ast)) => {
+            Ok((_, ast)) => {
                 info!(
                     "Successfully parsed token stream for {}",
                     &opt.file.file_name().unwrap().to_str().unwrap()
@@ -130,7 +124,7 @@ fn main() {
         }
     } else if opt.codegen {
         match parse(my_lexer) {
-            Ok((_, mut ast)) => {
+            Ok((_, ast)) => {
                 info!(
                     "Successfully parsed token stream for {}",
                     &opt.file.file_name().unwrap().to_str().unwrap()
@@ -183,7 +177,8 @@ fn main() {
 
                     let output = code_generator.finish();
 
-                    log::info!("{}", output);
+                    log::info!("Writing moon code to file");
+                    write_moon_code_to_file(output, file_name).unwrap();
 
                     return;
                 }

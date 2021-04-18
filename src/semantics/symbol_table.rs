@@ -1,8 +1,6 @@
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::checking::{report_semantic_errors, report_symbol_errors, SemanticError};
-use crate::semantics::symbol_table::Type::{
-    CustomArray, FloatArray, Integer, IntegerArray, StringArray,
-};
+use crate::semantics::symbol_table::Type::{CustomArray, FloatArray, IntegerArray, StringArray};
 use crate::semantics::utils::{
     generate_class_entries, generate_function_entries, map_main_to_func_entry,
     merge_member_function_tables,

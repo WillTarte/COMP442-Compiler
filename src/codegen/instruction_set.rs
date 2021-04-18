@@ -23,7 +23,7 @@ pub enum Instruction {
     Greater(Register, Register, Register),
     GreaterEqual(Register, Register, Register),
     AddImmediate(Register, Register, String),
-    SubstractImmediate(Register, Register, i16),
+    SubstractImmediate(Register, Register, String),
     MultiplyImmediate(Register, Register, i16),
     DivideImmediate(Register, Register, i16),
     ModulusImmediate(Register, Register, i16),
@@ -54,8 +54,6 @@ pub enum Instruction {
     Entry,
     Align,
     Org(u32),
-    //StoreWord(String),
-    //StoreByte(String), //todo is this correct
     Res(u32),
 }
 
@@ -90,7 +88,7 @@ impl ToString for Instruction {
                 format!("mul {:?},{:?},{:?}", ri, rj, rk)
             }
             Instruction::Divide(ri, rj, rk) => {
-                format!("divide {:?},{:?},{:?}", ri, rj, rk)
+                format!("div {:?},{:?},{:?}", ri, rj, rk)
             }
             Instruction::Modulus(_, _, _) => {
                 unimplemented!()
@@ -132,7 +130,7 @@ impl ToString for Instruction {
                 format!("muli {:?},{:?},{}", ri, rj, k)
             }
             Instruction::DivideImmediate(ri, rj, k) => {
-                format!("devi {:?},{:?},{}", ri, rj, k)
+                format!("divi {:?},{:?},{}", ri, rj, k)
             }
             Instruction::ModulusImmediate(_, _, _) => {
                 unimplemented!()
@@ -257,6 +255,6 @@ pub enum Register {
     R11,
     R12,
     R13,
-    R14, // if a member function is called, address to the object is in here
+    R14, // fn ptr offset
     R15, // is used at the beginning/end of a function to jump back to the callee
 }

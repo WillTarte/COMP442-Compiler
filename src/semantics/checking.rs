@@ -1,12 +1,9 @@
-use crate::lexer::token::{Token, TokenType};
-use crate::parser::ast::{InternalNodeType, Node, NodeVal};
+use crate::parser::ast::{Node, NodeVal};
 use crate::semantics::checking::WarningType::{OverloadWarning, ShadowedMemberWarning};
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
-use crate::semantics::symbol_table::Type::{Float, Integer, IntegerArray};
 use crate::semantics::symbol_table::{ClassEntry, FunctionEntry, Scope, SymbolTable, Type};
-use crate::semantics::utils::{get_ancestors_for_class, map_token_to_type};
+use crate::semantics::utils::get_ancestors_for_class;
 use crate::semantics::validation::validate_statement;
-use std::collections::HashMap;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -88,6 +85,9 @@ pub fn report_semantic_errors(root: &Node, global: &SymbolTable) -> Vec<Semantic
                         for statement in function_definition.children()[4].children()[1].children()
                         {
                             let statement_res = validate_statement(statement, fe, global);
+                            if statement_res.is_err() {
+                                errors.push(statement_res.unwrap_err());
+                            }
                         }
                     } else {
                         errors.push(SemanticError::FunctionNotFound(format!(
@@ -369,12 +369,12 @@ pub fn check_circular_inheritance(class: &ClassEntry, global: &SymbolTable) -> V
 
 #[allow(dead_code)]
 pub(crate) fn check_circular_data_member_dependencies(
-    class: &ClassEntry,
-    global: &SymbolTable,
+    _class: &ClassEntry,
+    _global: &SymbolTable,
 ) -> Vec<SemanticError> {
-    let mut errors: Vec<SemanticError> = Vec::new();
+    let errors: Vec<SemanticError> = Vec::new();
 
-    log::error!("check_circular_data_member_dependencies : NOT IMPLEMENTED"); //todo
+    log::error!("check_circular_data_member_dependencies : NOT IMPLEMENTED");
 
     errors
 }
@@ -488,41 +488,4 @@ fn check_shadowed_members_priv(class: &ClassEntry, ancestor: &ClassEntry) -> Vec
     }
 
     warnings
-}
-
-#[allow(dead_code)]
-pub(crate) fn check_func_def_semantics(def: &Node, global: &SymbolTable) -> Vec<SemanticError> {
-    assert_eq!(
-        def.val(),
-        Some(&NodeVal::Internal(InternalNodeType::FuncDef))
-    );
-    let mut errors: Vec<SemanticError> = Vec::new();
-
-    let (func_decl, opt_class) = match (def.children()[0].val(), def.children()[1].val()) {
-        (Some(NodeVal::Leaf(t1)), Some(NodeVal::Leaf(t2))) => {
-            let class = match global.find_scope_by_ident(t1.lexeme()) {
-                Some(Class(e)) => e,
-                _ => {
-                    return errors;
-                }
-            };
-            match class.table().find_scope_by_ident(t2.lexeme()) {
-                Some(Function(e)) => (e, Some(class)),
-                _ => {
-                    return errors;
-                }
-            }
-        }
-        (Some(NodeVal::Leaf(t1)), None) => match global.find_scope_by_ident(t1.lexeme()) {
-            Some(Function(e)) => (e, None),
-            _ => {
-                return errors;
-            }
-        },
-        _ => {
-            panic!()
-        }
-    };
-
-    errors
 }

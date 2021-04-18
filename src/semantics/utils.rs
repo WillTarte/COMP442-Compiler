@@ -195,11 +195,14 @@ pub(crate) fn map_func_def_to_entry(node: &Node) -> FunctionEntry {
         log::info!("Generating symbol table for function {}", ident1);
     }
 
-    let params: Vec<ParameterEntry> = node.children()[2]
-        .children()
-        .iter()
-        .map(map_func_param_to_entry)
-        .collect();
+    let params: Vec<ParameterEntry> = match node.children()[2].children()[0].val() {
+        None => Vec::new(),
+        Some(_) => node.children()[2]
+            .children()
+            .iter()
+            .map(map_func_param_to_entry)
+            .collect(),
+    };
     let return_ty = map_to_type(&node.children()[3]);
     let ty_signature: (Vec<Type>, Type) = (
         params.iter().map(|p| p.param_type().clone()).collect(),
@@ -389,16 +392,12 @@ pub(crate) fn map_to_unsigned(node: &Node) -> Option<u32> // e.g. ArrayDim child
 {
     match node.val() {
         None => Some(0),
-        Some(v) => {
-            match v {
-                NodeVal::Leaf(t) => {
-                    Some(t.lexeme().parse::<u32>().unwrap()) // todo this is yikes
-                }
-                NodeVal::Internal(_) => {
-                    panic!()
-                }
+        Some(v) => match v {
+            NodeVal::Leaf(t) => Some(t.lexeme().parse::<u32>().unwrap()),
+            NodeVal::Internal(_) => {
+                panic!()
             }
-        }
+        },
     }
 }
 
@@ -607,6 +606,7 @@ pub fn get_class_hierarchy_functions<'a>(
     }
 }
 
+#[allow(dead_code)]
 pub fn get_class_hierarchy_data_members<'a>(
     class_entry: &'a ClassEntry,
     global: &'a SymbolTable,

@@ -10,7 +10,7 @@ pub(crate) struct LabelAllocator {
 }
 
 impl LabelAllocator {
-    fn current_while_labels(&self) -> (String, String) {
+    pub fn current_while_labels(&self) -> (String, String) {
         (
             format!("while_{}", self.while_statement_count),
             format!("endwhile_{}", self.while_statement_count),
@@ -80,7 +80,15 @@ impl RegisterAllocator {
     }
 
     pub fn release_register(&mut self, reg: Register) {
-        let entry = self.0.entry(reg);
-        *entry.or_insert(true) = true;
+        match reg {
+            R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 | R9 | R10 | R11 | R12 | R13 => {
+                let entry = self.0.entry(reg);
+                *entry.or_insert(true) = true;
+            }
+            R0 => {}
+            R14 | R15 => {
+                panic!("tried to release R14 / R15")
+            }
+        }
     }
 }

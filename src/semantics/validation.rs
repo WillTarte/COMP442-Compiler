@@ -1,11 +1,9 @@
 use crate::lexer::token::{Token, TokenType};
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
 use crate::semantics::checking::SemanticError;
-use crate::semantics::symbol_table::Scope::{FunctionParameter, Variable};
-use crate::semantics::symbol_table::Type::{Float, Integer, Void};
+use crate::semantics::symbol_table::Type::{Float, Integer};
 use crate::semantics::symbol_table::{FunctionEntry, Scope, SymbolTable, Type};
 use crate::semantics::utils::{get_class_hierarchy_functions, map_token_to_type};
-use std::borrow::Borrow;
 
 #[allow(dead_code)]
 pub(crate) fn validate_statement(
@@ -231,8 +229,6 @@ fn validate_indices(
     function_entry: &FunctionEntry,
     global: &SymbolTable,
 ) -> Result<(), SemanticError> {
-    log::warn!("validating indices");
-    /// validate Arith expr -> should return integer
     for indice in indices {
         let res = validate_arith_expr(&indice.children()[0], function_entry, global);
         if res.is_err() {
@@ -333,9 +329,9 @@ fn validate_while_statement(
 }
 
 fn validate_read_statement(
-    read_statement: &Node,
-    function_entry: &FunctionEntry,
-    global: &SymbolTable,
+    _read_statement: &Node,
+    _function_entry: &FunctionEntry,
+    _global: &SymbolTable,
 ) -> Result<(), SemanticError> {
     // validate variable
     //<variable> ::= #MakeFamilyRootNode("Variable") MakeTerminalNode 'id' <variableAmb1> #AddChild
@@ -425,7 +421,7 @@ fn validate_dot_operator(
         Type::Custom(class_ident) => {
             if let Some(Scope::Class(ce)) = global.find_scope_by_ident(&class_ident) {
                 match ce.table().find_scope_by_ident(rhs_token.lexeme()) {
-                    Some(Scope::Function(cfe)) => {
+                    Some(Scope::Function(_)) => {
                         if dot_op.children().len() < 3 {
                             return Err(SemanticError::InvalidParameters(format!(
                                 "No function matched parameters for {}: line {}",
@@ -450,7 +446,7 @@ fn validate_dot_operator(
                             )));
                         }
 
-                        let (function_candidates, errors) =
+                        let (function_candidates, _errors) =
                             get_class_hierarchy_functions(ce, global);
                         for function in function_candidates {
                             let res = validate_function_call(
@@ -1090,8 +1086,15 @@ fn validate_mult_op(
         | Some(NodeVal::Internal(InternalNodeType::And)) => {
             validate_mult_op(&op_node.children()[0], function_entry, global)
         }
+        Some(NodeVal::Leaf(token)) => match token.token_type() {
+            TokenType::Id => validate_ident(token, &op_node.children()[1], function_entry, global),
+            TokenType::IntegerLit => Ok(Type::Integer),
+            TokenType::FloatLit => Ok(Type::Float),
+            _ => panic!(),
+        },
         _ => {
-            panic!("Failed to match child of add op")
+            log::error!("{:?}", op_node.children()[0]);
+            panic!("Failed to match child of mult op")
         }
     };
     if lhs_res.is_err() {

@@ -12,14 +12,17 @@ For class declarations:
   - For var declarations:
     - Allocate local variable with proper label
 ___
-### List
+### Implemented
   - Generate Function Code
     - [X] Allocate for parameters, return value
-    - [X] Can call 1 function at a time (no nested function calls)
+    - [X] Handle function call statement (no recursion)
     - [X] Handle return statement
     - [X] Handle while statement
     - [X] handle if statement
+    - [X] handle break/continue statements
     - [ ] Handle read/write statements
-    - [ ] Handle assignment statement
-    - [ ] Handle function call statement
-  - [ ] Generate Class code
+    - [X] Handle assignment statement
+    - [ ] Handle array indexing
+### Not implemented
+    - Correct floating point arithmetics
+    - Class semantics (can allocate, but won't compile if they are used)

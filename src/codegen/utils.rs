@@ -1,7 +1,9 @@
+use crate::codegen::generator::CodeGenOutput;
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
-use crate::semantics::symbol_table::{
-    ClassEntry, FunctionEntry, ParameterEntry, Scope, SymbolTable, Type, VariableEntry,
-};
+use crate::semantics::symbol_table::{Scope, SymbolTable, Type};
+use std::fs::OpenOptions;
+use std::io;
+use std::io::{BufWriter, Write};
 
 /// Returns the size of the given type in bytes
 pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
@@ -11,7 +13,7 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
         Type::Float => 4,
         Type::FloatArray(dim) => 8u32 * dim.iter().product::<u32>(),
         Type::String => {
-            todo!()
+            unimplemented!("Sizeof for string is not implemented")
         }
         Type::StringArray(dim) => 0u32 * dim.iter().product::<u32>(),
         Type::Custom(ident) => {
@@ -20,8 +22,6 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
                 for scope in ce.table().scopes() {
                     if let Scope::Variable(ve) = scope {
                         temp_size += sizeof(ve.var_type(), symbols);
-                    } else if let Scope::Function(fe) = scope {
-                        //todo!()
                     }
                 }
             } else {
@@ -35,8 +35,6 @@ pub fn sizeof(t: &Type, symbols: &SymbolTable) -> u32 {
                 for scope in ce.table().scopes() {
                     if let Scope::Variable(ve) = scope {
                         temp_size += sizeof(ve.var_type(), symbols);
-                    } else if let Scope::Function(fe) = scope {
-                        todo!()
                     }
                 }
             } else {
@@ -58,6 +56,17 @@ pub fn generate_arith_expr_postfix<'a>(arith_expr: &'a Node, acc: &mut Vec<&'a N
 }
 
 fn post_order_traversal<'a>(root: &'a Node, acc: &mut Vec<&'a Node>) {
+    match root.val() {
+        Some(NodeVal::Internal(InternalNodeType::DotOp))
+        | Some(NodeVal::Internal(InternalNodeType::SignedFactor))
+        | Some(NodeVal::Internal(InternalNodeType::TernaryOperation))
+        | Some(NodeVal::Leaf(_)) => {
+            acc.push(root);
+            return;
+        }
+        _ => {}
+    }
+
     // recurse on left subtree
     if root.children().len() > 0 {
         post_order_traversal(&root.children()[0], acc);
@@ -69,39 +78,6 @@ fn post_order_traversal<'a>(root: &'a Node, acc: &mut Vec<&'a Node>) {
     // add to accumulator
     if is_arith_operator(root) || is_arith_operand(root) {
         acc.push(root)
-    }
-}
-
-fn is_arith_expr_token(v: Option<&NodeVal>) -> bool {
-    match v {
-        None => false,
-        Some(val) => {
-            match val {
-                NodeVal::Leaf(_) => true,
-                NodeVal::Internal(internal) => {
-                    match internal
-                    {
-                        InternalNodeType::Add
-                        | InternalNodeType::Sub
-                        | InternalNodeType::Or
-                        //InternalNodeType::Negation => {}
-                        | InternalNodeType::SignedFactor
-                        | InternalNodeType::Mult
-                        | InternalNodeType::Div
-                        | InternalNodeType::And
-                        //InternalNodeType::Equal => {}
-                        //InternalNodeType::NotEqual => {}
-                        //InternalNodeType::GreaterThan => {}
-                        //InternalNodeType::LessThan => {}
-                        //InternalNodeType::GreaterEqualThan => {}
-                        //InternalNodeType::LessEqualThan => {}
-                        | InternalNodeType::DotOp => { true }
-                        _ => false
-
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -123,10 +99,28 @@ pub fn is_arith_operator(node: &Node) -> bool {
 pub fn is_arith_operand(node: &Node) -> bool {
     match node.val() {
         Some(NodeVal::Internal(internal)) => match internal {
-            InternalNodeType::SignedFactor | InternalNodeType::DotOp => true,
+            InternalNodeType::SignedFactor
+            | InternalNodeType::DotOp
+            | InternalNodeType::TernaryOperation => true,
             _ => false,
         },
         Some(NodeVal::Leaf(_)) => true,
         _ => false,
     }
+}
+
+pub fn write_moon_code_to_file(code: CodeGenOutput, file_name: &str) -> io::Result<()> {
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(format!("{}.m", file_name))?;
+    let mut buf_writer = BufWriter::new(file);
+
+    for line in code.into_iter() {
+        buf_writer.write(format!("{}\n", line.to_string()).as_bytes())?;
+    }
+    buf_writer.flush()?;
+
+    Ok(())
 }
