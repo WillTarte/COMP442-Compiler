@@ -1,7 +1,7 @@
 use crate::lexer::token::{Token, TokenType};
 use crate::parser::ast::InternalNodeType::{ClassDeclarations, FunctionDefinitions};
 use crate::parser::ast::{InternalNodeType, Node, NodeVal};
-use crate::semantics::checking::SemanticError;
+use crate::semantics::checking::{SemanticError};
 use crate::semantics::symbol_table;
 use crate::semantics::symbol_table::Scope::{Class, Function, FunctionParameter, Variable};
 use crate::semantics::symbol_table::{
@@ -10,6 +10,7 @@ use crate::semantics::symbol_table::{
 use std::fs::OpenOptions;
 use std::io;
 use std::io::{BufWriter, Write};
+use crate::semantics::checking::WarningType::{OverloadWarning, ShadowedMemberWarning};
 
 #[allow(dead_code)]
 pub fn generate_class_entries(node: &Node) -> Vec<ClassEntry> {
@@ -760,5 +761,30 @@ pub fn serialize_symbol_table_to_file(global: &SymbolTable, file_name: &str) -> 
         buf_writer.flush()?;
     }
 
+    Ok(())
+}
+
+#[allow(dead_code)]
+pub fn write_semantic_error_to_file(errors: Vec<SemanticError>, file_name: &str) -> io::Result<()>
+{
+    log::info!("Writing semantic errors to file");
+
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(format!("{}.outsemanticerrors", file_name))?;
+    let mut buf_writer = BufWriter::new(file);
+
+    for error in errors
+    {
+        match error
+        {
+            SemanticError::Warning(_) => { buf_writer.write(format!("WARNING: {:?}", error).as_bytes())?; },
+            _ => { buf_writer.write(format!("ERROR: {:?}", error).as_bytes())?; }
+        }
+    }
+
+    buf_writer.flush()?;
     Ok(())
 }

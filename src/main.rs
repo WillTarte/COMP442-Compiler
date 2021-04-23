@@ -6,7 +6,7 @@ use crate::parser::parse::parse;
 use crate::parser::utils::{serialize_derivation_table_to_file, serialize_tree_to_file};
 use crate::semantics::checking::{SemanticError, WarningType};
 use crate::semantics::symbol_table::{check_semantics, generate_symbol_table};
-use crate::semantics::utils::serialize_symbol_table_to_file;
+use crate::semantics::utils::{serialize_symbol_table_to_file, write_semantic_error_to_file};
 use dotenv::dotenv;
 use env_logger;
 use log::{error, info};
@@ -87,32 +87,7 @@ fn main() {
 
                 errors.append(&mut check_semantics(&root, &symbol_table));
 
-                for err in errors.iter() {
-                    match err {
-                        SemanticError::Warning(warning) => match warning {
-                            WarningType::OverloadWarning(msg)
-                            | WarningType::ShadowedMemberWarning(msg) => {
-                                log::warn!("{}", msg);
-                            }
-                        },
-                        SemanticError::NoMemberFuncDefinition(msg)
-                        | SemanticError::NoMemberFuncDeclaration(msg)
-                        | SemanticError::MultipleDeclIdent(msg)
-                        | SemanticError::InheritanceCycle(msg)
-                        | SemanticError::UndeclaredClass(msg)
-                        | SemanticError::UndeclaredVariable(msg)
-                        | SemanticError::NotIndexable(msg)
-                        | SemanticError::TooManyIndices(msg)
-                        | SemanticError::FunctionNotFound(msg)
-                        | SemanticError::InvalidParameters(msg)
-                        | SemanticError::TypeMistmatch(msg)
-                        | SemanticError::NotCallable(msg)
-                        | SemanticError::RecursionNotSupported(msg)
-                        | SemanticError::NotClassType(msg) => {
-                            log::error!("{}", msg);
-                        }
-                    }
-                }
+                write_semantic_error_to_file(errors, file_name);
 
                 info!("Writing symbol tables to file");
                 serialize_symbol_table_to_file(&symbol_table, file_name)
@@ -141,35 +116,9 @@ fn main() {
 
                 errors.append(&mut check_semantics(&root, &symbol_table));
 
-                for err in errors.iter() {
-                    match err {
-                        SemanticError::Warning(warning) => match warning {
-                            WarningType::OverloadWarning(msg)
-                            | WarningType::ShadowedMemberWarning(msg) => {
-                                log::warn!("{}", msg);
-                            }
-                        },
-                        SemanticError::NoMemberFuncDefinition(msg)
-                        | SemanticError::NoMemberFuncDeclaration(msg)
-                        | SemanticError::MultipleDeclIdent(msg)
-                        | SemanticError::InheritanceCycle(msg)
-                        | SemanticError::UndeclaredClass(msg)
-                        | SemanticError::UndeclaredVariable(msg)
-                        | SemanticError::NotIndexable(msg)
-                        | SemanticError::TooManyIndices(msg)
-                        | SemanticError::FunctionNotFound(msg)
-                        | SemanticError::InvalidParameters(msg)
-                        | SemanticError::TypeMistmatch(msg)
-                        | SemanticError::NotCallable(msg)
-                        | SemanticError::RecursionNotSupported(msg)
-                        | SemanticError::NotClassType(msg) => {
-                            log::error!("{}", msg);
-                        }
-                    }
-                }
+                write_semantic_error_to_file(errors, file_name);
 
-                if true
-                //todo if errors, dont generate code
+                if true // since we get false positive errors
                 {
                     let mut code_generator = MoonGenerator::new();
 
